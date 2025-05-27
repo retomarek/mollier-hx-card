@@ -668,9 +668,9 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 
 },{}],"8lqZg":[function(require,module,exports,__globalThis) {
 var _card = require("./card");
-// import { ToggleCardWithToolchainEditor } from "./editor";
+var _editor = require("./editor");
 customElements.define("mollier-hx-card", (0, _card.MollierHxCard));
-customElements.define("mollier-hx-card-editor", MollierHxCardEditor);
+customElements.define("mollier-hx-card-editor", (0, _editor.MollierHxCardEditor));
 window.customCards = window.customCards || [];
 window.customCards.push({
     type: "mollier-hx-card",
@@ -678,7 +678,7 @@ window.customCards.push({
     description: "A custom card which creates a mollier hx diagram out of a temperature- and humidity sensor entity."
 });
 
-},{"./card":"gbMuj"}],"gbMuj":[function(require,module,exports,__globalThis) {
+},{"./card":"gbMuj","./editor":"jbkOT"}],"gbMuj":[function(require,module,exports,__globalThis) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "MollierHxCard", ()=>MollierHxCard);
@@ -1508,6 +1508,69 @@ exports.default = (0, _lit.css)`
         flex-wrap: wrap;
     }
 `;
+
+},{"lit":"4antt","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jbkOT":[function(require,module,exports,__globalThis) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "MollierHxCardEditor", ()=>MollierHxCardEditor);
+var _lit = require("lit");
+class MollierHxCardEditor extends (0, _lit.LitElement) {
+    static get properties() {
+        return {
+            // hass: {},
+            _config: {
+                state: true
+            }
+        };
+    }
+    setConfig(config) {
+        this._config = config;
+    }
+    static styles = (0, _lit.css)`
+            .table {
+                display: table;
+            }
+            .row {
+                display: table-row;
+            }
+            .cell {
+                display: table-cell;
+                padding: 0.5em;
+            }
+        `;
+    render() {
+        return (0, _lit.html)`
+            <form class="table">
+                <div class="row">
+                    <label class="label cell" for="header">Header:</label>
+                    <input
+                        @change="${this.handleChangedEvent}"
+                        class="value cell" id="header" value="${this._config.header}"></input>
+                </div>
+                <div class="row">
+                    <label class="label cell" for="entity">Entity:</label>
+                    <input
+                        @change="${this.handleChangedEvent}"
+                        class="value cell" id="entity" value="${this._config.entity}"></input>
+                </div>
+            </form>
+        `;
+    }
+    handleChangedEvent(changedEvent) {
+        // this._config is readonly, copy needed
+        var newConfig = Object.assign({}, this._config);
+        if (changedEvent.target.id == "header") newConfig.header = changedEvent.target.value;
+        else if (changedEvent.target.id == "entity") newConfig.entity = changedEvent.target.value;
+        const messageEvent = new CustomEvent("config-changed", {
+            detail: {
+                config: newConfig
+            },
+            bubbles: true,
+            composed: true
+        });
+        this.dispatchEvent(messageEvent);
+    }
+}
 
 },{"lit":"4antt","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["3VwnP","8lqZg"], "8lqZg", "parcelRequireaf85", {})
 
