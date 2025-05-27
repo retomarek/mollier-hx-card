@@ -2,6 +2,11 @@
   "name": "Mollier hx card",
   "source": "src/index.js",
   "module": "dist/card.js",
+  "filename": "card.js",
+  "type": "module",
+  "render_readme": true,
+  "description": "A Home Assistant dashboard card that renders a Mollier h-x diagram using temperature and humidity sensor data.",
+  "documentation": "https://github.com/retomarek/mollier-hx-card"
   "targets": {
     "module": {
       "includeNodeModules": true
