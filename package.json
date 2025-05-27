@@ -1,0 +1,18 @@
+{
+  "name": "mollier-hx-card",
+  "source": "src/index.js",
+  "output-file": "dist/card.js",
+  "targets": {
+    "default": {
+      "distDir": "dist",
+      "publicUrl": "./"
+    }
+  },
+"scripts": {
+  "watch": "parcel watch",
+  "build": "parcel build src/index.js --dist-dir dist --public-url ./"
+},
+"devDependencies": {
+  "parcel": "^2.8.3"
+}
+}
