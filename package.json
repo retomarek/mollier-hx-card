@@ -1,4 +1,5 @@
 {
+  "name": "Mollier hx card",
   "source": "src/index.js",
   "module": "dist/card.js",
   "targets": {

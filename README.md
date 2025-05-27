@@ -16,6 +16,9 @@ A custom dashboard card for Home Assistant that renders a Mollier h-x (enthalpy 
 
 ---
 
+## my-link
+[![This link opens your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=retomarek&repository=mollier-hx-card&category=Dashboard)
+
 ## Installation via HACS
 
 1. Open Home Assistant.
