@@ -1,8 +1,11 @@
 {
   "name": "mollier-hx-card",
-  "version": "1.0.0",
-  "description": "A Lovelace card that renders a Mollier h-x diagram using temperature and humidity sensor data.",
-  "source": "src/mollier-hx-card.js",
+  "filename": "index.js",
+  "type": "module",
+  "render_readme": true,
+  "description": "A Home Assistant custom card that renders a Mollier h-x diagram using temperature and humidity sensor data.",
+  "documentation": "https://github.com/retomarek/mollier-hx-card",
+  "source": "src/index.js",
   "scripts": {
     "build": "parcel build",
     "watch": "parcel watch"
