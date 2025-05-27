@@ -1,5 +1,5 @@
 import { MollierHxCard } from "./card";
-// import { ToggleCardWithToolchainEditor } from "./editor";
+import { MollierHxCardEditor } from "./editor";
 
 customElements.define(
     "mollier-hx-card",
