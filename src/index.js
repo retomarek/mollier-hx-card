@@ -5,10 +5,10 @@ customElements.define(
     "mollier-hx-card",
     MollierHxCard
 );
-// customElements.define(
-//     "toggle-card-with-toolchain-editor",
-//     ToggleCardWithToolchainEditor
-// );
+customElements.define(
+    "mollier-hx-card-editor",
+    MollierHxCardEditor
+);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
