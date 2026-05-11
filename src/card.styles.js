@@ -19,20 +19,22 @@ export default css`
     .error {
         color: red;
     }
-    /* width + height both 100 % in section layout (parent has a fixed height)
-       — aspect-ratio is ignored there and the SVG's preserveAspectRatio handles
-       proportional content scaling with letterboxing. In masonry layout the
-       parent height is auto, so height: 100 % resolves to auto and the
-       aspect-ratio fallback gives the wrap a width-based height. */
+    /* Container-query sizing: the inner host fits the available space while
+       preserving the chart's 600 : 420 aspect ratio. The fallback aspect-ratio
+       on .diagram-wrap kicks in when the parent has no defined height (masonry
+       layout) — in section/grid layout the height: 100 % wins. */
     .diagram-wrap {
+        container-type: size;
         position: relative;
         width: 100%;
         height: 100%;
         aspect-ratio: 600 / 420;
+        display: grid;
+        place-items: center;
     }
     .mollier-host {
-        position: absolute;
-        inset: 0;
+        width: min(100cqw, calc(100cqh * 600 / 420));
+        height: min(100cqh, calc(100cqw * 420 / 600));
     }
     .mollier-host svg {
         width: 100%;
