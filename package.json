@@ -1,21 +1,28 @@
 {
   "name": "mollier-hx-card",
-  "source": "src/index.js",
-  "output-file": "dist/card.js",
+  "license": "MIT",
+  "source": "src/mollier-hx-card.js",
   "targets": {
     "default": {
       "distDir": "dist",
-      "publicUrl": "./"
+      "publicUrl": "./",
+      "outputFormat": "esmodule",
+      "isLibrary": false
     }
   },
   "scripts": {
-    "watch": "parcel watch",
-    "build": "parcel build src/index.js --dist-dir dist --public-url ./"
+    "watch": "parcel watch src/mollier-hx-card.js --dist-dir dist --public-url ./",
+    "build": "parcel build src/mollier-hx-card.js --dist-dir dist --public-url ./ --no-source-maps"
   },
   "devDependencies": {
     "parcel": "^2.8.3"
   },
   "dependencies": {
+    "d3-array": "^3.2.4",
+    "d3-axis": "^3.0.0",
+    "d3-scale": "^4.0.2",
+    "d3-selection": "^3.0.0",
+    "d3-shape": "^3.2.0",
     "lit": "^3.3.0"
   }
 }

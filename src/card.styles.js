@@ -1,43 +1,55 @@
 import { css } from 'lit';
 
 export default css`
+    :host {
+        display: block;
+        height: 100%;
+    }
+    ha-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .card-content {
+        flex: 1;
+        min-height: 0;
+        padding: 16px;
+        box-sizing: border-box;
+    }
     .error {
         color: red;
     }
-    .dl {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* width + height both 100 % in section layout (parent has a fixed height)
+       — aspect-ratio is ignored there and the SVG's preserveAspectRatio handles
+       proportional content scaling with letterboxing. In masonry layout the
+       parent height is auto, so height: 100 % resolves to auto and the
+       aspect-ratio fallback gives the wrap a width-based height. */
+    .diagram-wrap {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        aspect-ratio: 600 / 420;
     }
-    .dt {
-        display: flex;
-        align-content: center;
-        flex-wrap: wrap;
+    .mollier-host {
+        position: absolute;
+        inset: 0;
     }
-    .dd {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, auto) minmax(0, 2fr));
-        margin: 0;
-    }
-    .toggle {
-        padding: 0.6em;
-        border: grey;
-        border-radius: 50%;
-    }
-    .toggle.on { background-color: green; }
-    .toggle.off{ background-color: red; }
-    .button {
+    .mollier-host svg {
+        width: 100%;
+        height: 100%;
         display: block;
-        border: outset 0.2em;
-        border-radius: 50%;
-        border-color: silver;
-        background-color: silver;
-        width: 1.4em;
-        height: 1.4em;
     }
-    .value {
-        padding-left: 0.5em;
-        display: flex;
-        align-content: center;
-        flex-wrap: wrap;
+    .tooltip {
+        position: absolute;
+        pointer-events: none;
+        display: none;
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 10;
+        transform: translate(-50%, calc(-100% - 6px));
     }
 `;
