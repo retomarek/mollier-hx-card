@@ -3,26 +3,14 @@
 // declarations needed for ES module strict mode.
 
 import * as d3 from './d3.js';
-import {
-    temperature,
-    density,
-    rel_humidity,
-    enthalpy,
-    get_x_y,
-    get_x_y_tx,
-    y_rhox,
-    x_phiy,
-    y_phix,
-    y_hx,
-    x_hy,
-} from './mollier_functions.js';
+import { createMollier } from './mollier_functions.js';
 
 // the Function 'drawHXCoordinates' draws the coordinate-lines of temperature,
 // density, enthalpy and relative humidity into an SVG-element, that will be
-// - with the id "hx_mollier_diagram" - attached to the DOM-element of that 
+// - with the id "hx_mollier_diagram" - attached to the DOM-element of that
 // has the id 'containerId'. In order to fit in the plot you want to draw, the
 // width and height as well as the domain of x- and y-values have to be ind-
-// dicated ('domainX' resp. 'domainY'). The parameter 'p' describes the pressure 
+// dicated ('domainX' resp. 'domainY'). The parameter 'p' describes the pressure
 // of the fluid. Changes of 'p' affect the geometry of the coordinate-lines.
 
 // The unit of the input parameters are as follows:
@@ -30,10 +18,25 @@ import {
 // [domainY] = °C
 // [p] = Pa = N/m^2
 
-function drawHXCoordinates(container,Width,Height,margin,domainX,domainY,p) {
+function drawHXCoordinates(container,Width,Height,margin,domainX,domainY,p,mollier) {
 
     // Loop counters used unscoped in original source — declared here for ES module strict mode.
     let i, dt;
+
+
+    // Resolve the Mollier suite for the chosen convention (default 'classical').
+    if (!mollier) mollier = createMollier();
+    const temperature = mollier.temperature;
+    const density = mollier.density;
+    const rel_humidity = mollier.rel_humidity;
+    const enthalpy = mollier.enthalpy;
+    const get_x_y = mollier.get_x_y;
+    const get_x_y_tx = mollier.get_x_y_tx;
+    const y_phix = mollier.y_phix;
+    const x_phiy = mollier.x_phiy;
+    const y_rhox = mollier.y_rhox;
+    const x_hy = mollier.x_hy;
+    const y_hx = mollier.y_hx;
 
     // Color definition
     let colors = { t: "#63c1ff", rho: "#888888", phi: "#555555", h: "#CCCCCC",};

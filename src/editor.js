@@ -7,7 +7,10 @@ import { html, LitElement } from 'lit';
 const DEFAULTS = {
     days: 7,
     coloring: 'season',
-    pressure: 101325,
+    pressure: 96035,    // ISA pressure at 450 m a.s.l.
+    altitude: 450,
+    air_mode: 'altitude',
+    convention: 'classical',
     x_min: 0,    // g/kg
     x_max: 20,   // g/kg
     y_min: -20,  // °C
@@ -22,13 +25,17 @@ const DEFAULTS = {
 
 function configToData(config) {
     const c = config || {};
+    const hasAltitude = c.altitude !== undefined && c.altitude !== null;
     return {
         header: c.header ?? '',
         temperature_entity: c.temperature_entity ?? '',
         humidity_entity: c.humidity_entity ?? '',
         days: c.days ?? DEFAULTS.days,
         coloring: c.coloring ?? DEFAULTS.coloring,
+        air_mode: hasAltitude ? 'altitude' : 'pressure',
         pressure: c.pressure ?? DEFAULTS.pressure,
+        altitude: c.altitude ?? DEFAULTS.altitude,
+        convention: c.convention ?? DEFAULTS.convention,
         x_min: c.domain_x?.[0] ?? DEFAULTS.x_min,
         x_max: c.domain_x?.[1] ?? DEFAULTS.x_max,
         y_min: c.domain_y?.[0] ?? DEFAULTS.y_min,
@@ -50,10 +57,17 @@ function dataToConfig(data) {
         humidity_entity: data.humidity_entity,
         days: data.days,
         coloring: data.coloring,
-        pressure: data.pressure,
+        convention: data.convention,
         domain_x: [data.x_min, data.x_max],
         domain_y: [data.y_min, data.y_max],
     };
+    // Persist either pressure or altitude — never both — so the card knows
+    // which input the user chose.
+    if (data.air_mode === 'altitude') {
+        config.altitude = data.altitude;
+    } else {
+        config.pressure = data.pressure;
+    }
     if (data.header) config.header = data.header;
     if (data.comfort_enabled) {
         config.comfort_zone = {
@@ -71,7 +85,10 @@ const LABELS = {
     humidity_entity: 'Humidity entity',
     days: 'Days back',
     coloring: 'Coloring',
+    air_mode: 'Air input',
     pressure: 'Pressure',
+    altitude: 'Altitude',
+    convention: 'Convention',
     x_min: 'X min',
     x_max: 'X max',
     y_min: 'Y min',
@@ -142,8 +159,42 @@ function buildSchema(data) {
             ],
         },
         {
-            name: 'pressure',
-            selector: { number: { min: 50000, max: 110000, step: 1, mode: 'box', unit_of_measurement: 'Pa' } },
+            type: 'grid',
+            schema: [
+                {
+                    name: 'air_mode',
+                    selector: {
+                        select: {
+                            mode: 'dropdown',
+                            options: [
+                                { value: 'pressure', label: 'Pressure (Pa)' },
+                                { value: 'altitude', label: 'Altitude (m)' },
+                            ],
+                        },
+                    },
+                },
+                data.air_mode === 'altitude'
+                    ? {
+                        name: 'altitude',
+                        selector: { number: { min: 0, max: 5000, step: 10, mode: 'box', unit_of_measurement: 'm' } },
+                    }
+                    : {
+                        name: 'pressure',
+                        selector: { number: { min: 50000, max: 110000, step: 1, mode: 'box', unit_of_measurement: 'Pa' } },
+                    },
+                {
+                    name: 'convention',
+                    selector: {
+                        select: {
+                            mode: 'dropdown',
+                            options: [
+                                { value: 'classical', label: 'Classical (Recknagel)' },
+                                { value: 'glueck', label: 'Glück' },
+                            ],
+                        },
+                    },
+                },
+            ],
         },
         {
             type: 'expandable',

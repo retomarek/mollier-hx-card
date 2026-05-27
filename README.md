@@ -73,7 +73,9 @@ comfort_zone:
 | `header` | string | — | Optional card header. |
 | `days` | number | `7` | How many days of history to display. The recorder keeps long-term statistics for one year by default. |
 | `coloring` | string | `season` | One of `season`, `age`, `chronological`. |
-| `pressure` | number | `101325` | Ambient air pressure in Pa. Only adjust this if you are above ~500 m. |
+| `pressure` | number | `101325` | Ambient air pressure in Pa. Mutually exclusive with `altitude`. |
+| `altitude` | number | — | Altitude in m above sea level. When set, the pressure is computed from the International Standard Atmosphere (valid up to ~5000 m) and overrides `pressure`. |
+| `convention` | string | `classical` | Mollier coordinate convention. `classical` (per kg of dry air, Recknagel/Sprenger — isotherms tilt slightly *up* with x) or `glueck` (per kg of moist air — isotherms tilt slightly *down*). Physical quantities are identical; only the (x, y) parametrisation differs. |
 | `domain_x` | `[min, max]` | `[0, 20]` | Visible range of the absolute-humidity axis, in **g/kg**. |
 | `domain_y` | `[min, max]` | `[-20, 50]` | Visible range of the temperature axis, in **°C**. |
 | `comfort_zone` | object | — | Optional. Draws a translucent yellow-green polygon for an indoor-comfort range. See below. |

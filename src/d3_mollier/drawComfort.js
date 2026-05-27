@@ -2,14 +2,12 @@
 // Keep math in sync with upstream. Only added ES6 imports/exports.
 
 import * as d3 from './d3.js';
-import {
-    get_x_y,
-    get_x_y_phix,
-    get_x_y_tx,
-} from './mollier_functions.js';
+import { createMollier } from './mollier_functions.js';
 
 // function that draws a Comfort-zone polygon to a container with defined width and height
-function drawComfort(container,Width,Height,margin,domainX,domainY,rangeT,rangePhi,rangeX,p) {
+function drawComfort(container,Width,Height,margin,domainX,domainY,rangeT,rangePhi,rangeX,p,mollier) {
+
+	if (!mollier) mollier = createMollier();
 
 	// handle margin
     let environment = container.append("svg")
@@ -19,7 +17,7 @@ function drawComfort(container,Width,Height,margin,domainX,domainY,rangeT,rangeP
 
     let width = Width - margin.left - margin.right;
 	let height = Height - margin.top - margin.bottom;
-	
+
 	let plot = environment.append("g")
 					.attr("transform","translate("+margin.left+","+margin.top+")")
 					.append("svg")
@@ -34,7 +32,7 @@ function drawComfort(container,Width,Height,margin,domainX,domainY,rangeT,rangeP
 					.x(function(d) { return x(d.x); })
 					.y(function(d) { return y(d.y); });
 
-	let pathos = createComfort(rangeT,rangePhi,rangeX,p);
+	let pathos = createComfort(rangeT,rangePhi,rangeX,p,mollier);
 	plot.selectAll("path")
 				.data([pathos])
 				.enter()
@@ -50,7 +48,12 @@ function drawComfort(container,Width,Height,margin,domainX,domainY,rangeT,rangeP
 // that describes the Comfortzone that is defined with the three Comfort-ranges: rangeT,
 // rangePhi and rangeX.
 
-function createComfort(rangeT,rangePhi,rangeX,p) { 
+function createComfort(rangeT,rangePhi,rangeX,p,mollier) {
+	if (!mollier) mollier = createMollier();
+	const get_x_y = mollier.get_x_y;
+	const get_x_y_tx = mollier.get_x_y_tx;
+	const get_x_y_phix = mollier.get_x_y_phix;
+
 	rangeT = sortRange(rangeT); // safety measurements
 	rangePhi = sortRange(rangePhi);
 	rangeX = sortRange(rangeX);

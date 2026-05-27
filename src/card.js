@@ -2,12 +2,14 @@ import { html, LitElement, nothing } from 'lit';
 import * as d3 from './d3_mollier/d3.js';
 import { drawHXCoordinates } from './d3_mollier/CoordinateGenerator.js';
 import { createComfort } from './d3_mollier/drawComfort.js';
-import { get_x_y } from './d3_mollier/mollier_functions.js';
+import { createMollier } from './d3_mollier/mollier_functions.js';
 import styles from './card.styles';
 
 const DEFAULT_PRESSURE = 101325;
 const DEFAULT_DAYS = 7;
 const DEFAULT_COLORING = 'season';
+const DEFAULT_CONVENTION = 'classical';
+const VALID_CONVENTIONS = ['classical', 'glueck'];
 // Internal units are kg/kg for x and °C for y; user config is expressed in
 // g/kg (x) and °C (y) — see _parseDomainX below.
 const DEFAULT_DOMAIN_X = [0.0, 0.020];
@@ -31,6 +33,13 @@ function seasonForMonth(month /* 0-11 */) {
     if (month <= 4) return 'spring';
     if (month <= 7) return 'summer';
     return 'autumn';
+}
+
+// International Standard Atmosphere — converts altitude [m above sea level]
+// to ambient pressure [Pa]. Valid up to ~11 km (troposphere). Standard
+// reference state: p₀ = 101325 Pa, T₀ = 288.15 K, L = 0.0065 K/m.
+function pressureFromAltitude(altitudeM) {
+    return 101325 * Math.pow(1 - 2.25577e-5 * altitudeM, 5.25588);
 }
 
 // Convert a user-supplied 2-element [min, max] domain to internal units; users
@@ -78,6 +87,8 @@ export class MollierHxCard extends LitElement {
             _comfortZone: { state: true },
             _domainX: { state: true },
             _domainY: { state: true },
+            _convention: { state: true },
+            _currentPoint: { state: true },
             _error: { state: true },
         };
     }
@@ -92,12 +103,21 @@ export class MollierHxCard extends LitElement {
         this._header = config.header === "" || config.header === undefined ? nothing : config.header;
         this._tempEntity = config.temperature_entity;
         this._humEntity = config.humidity_entity;
-        this._pressure = Number(config.pressure) || DEFAULT_PRESSURE;
+        // Altitude takes precedence over an explicit pressure if both are set.
+        if (Number.isFinite(Number(config.altitude))) {
+            this._pressure = pressureFromAltitude(Number(config.altitude));
+        } else {
+            this._pressure = Number(config.pressure) || DEFAULT_PRESSURE;
+        }
         this._days = Math.max(1, Number(config.days) || DEFAULT_DAYS);
         this._coloring = config.coloring || DEFAULT_COLORING;
         this._comfortZone = parseComfortZone(config.comfort_zone);
         this._domainX = parseDomain(config.domain_x, DEFAULT_DOMAIN_X, 1 / 1000);
         this._domainY = parseDomain(config.domain_y, DEFAULT_DOMAIN_Y, 1);
+        this._convention = VALID_CONVENTIONS.includes(config.convention)
+            ? config.convention
+            : DEFAULT_CONVENTION;
+        this._mollier = createMollier(this._convention);
         if (this._hass) this._maybeFetch();
     }
 
@@ -105,6 +125,30 @@ export class MollierHxCard extends LitElement {
         const firstAttach = !this._hass;
         this._hass = hass;
         if (firstAttach && this._tempEntity) this._maybeFetch();
+        this._updateCurrentPoint();
+    }
+
+    _updateCurrentPoint() {
+        if (!this._hass || !this._tempEntity || !this._humEntity || !this._mollier) {
+            this._currentPoint = null;
+            return;
+        }
+        const ts = this._hass.states[this._tempEntity];
+        const hs = this._hass.states[this._humEntity];
+        if (!ts || !hs) { this._currentPoint = null; return; }
+        const t = parseFloat(ts.state);
+        const rh = parseFloat(hs.state);
+        if (!Number.isFinite(t) || !Number.isFinite(rh)) { this._currentPoint = null; return; }
+        const phi = rh > 1 ? rh / 100 : rh;
+        const xy = this._mollier.get_x_y(t, phi, this._pressure);
+        if (!Number.isFinite(xy.x) || !Number.isFinite(xy.y)) { this._currentPoint = null; return; }
+        // Only update when the on-screen position would visibly change — avoids
+        // re-rendering on every hass state churn (which fires for unrelated
+        // entities too).
+        const next = { x: xy.x, y: xy.y, t, phi };
+        const prev = this._currentPoint;
+        if (prev && prev.x === next.x && prev.y === next.y) return;
+        this._currentPoint = next;
     }
 
     async _maybeFetch() {
@@ -180,28 +224,30 @@ export class MollierHxCard extends LitElement {
         this._tryDraw();
         this._drawComfort();
         this._drawPoints();
+        this._drawCurrentPoint();
     }
 
     updated() {
         this._tryDraw();
         this._drawComfort();
         this._drawPoints();
+        this._drawCurrentPoint();
     }
 
     _tryDraw() {
         if (this._error) return;
         const host = this.renderRoot.querySelector('.mollier-host');
         if (!host) return;
-        const hash = `${this._domainX[0]}|${this._domainX[1]}|${this._domainY[0]}|${this._domainY[1]}|${this._pressure}`;
+        const hash = `${this._domainX[0]}|${this._domainX[1]}|${this._domainY[0]}|${this._domainY[1]}|${this._pressure}|${this._convention}`;
         const hasSvg = !!host.querySelector('svg');
         if (hasSvg && this._drawHash === hash) {
             this._drawn = true;
             return;
         }
         // Wipe everything and redraw — happens on first mount, after Lit re-mount,
-        // or when domain/pressure changed in the config.
+        // or when domain/pressure/convention changed in the config.
         d3.select(host).selectAll('*').remove();
-        drawHXCoordinates(d3.select(host), WIDTH, HEIGHT, MARGIN, this._domainX, this._domainY, this._pressure);
+        drawHXCoordinates(d3.select(host), WIDTH, HEIGHT, MARGIN, this._domainX, this._domainY, this._pressure, this._mollier);
         // The vendored coordinate generator emits width/height attributes only,
         // so when the SVG is scaled responsively (height: auto), browsers crop
         // the bottom-right instead of scaling the content. Adding a viewBox
@@ -226,7 +272,7 @@ export class MollierHxCard extends LitElement {
         if (!this._comfortZone) return;
 
         const cz = this._comfortZone;
-        const polygon = createComfort(cz.range_t, cz.range_phi, cz.range_x, this._pressure);
+        const polygon = createComfort(cz.range_t, cz.range_phi, cz.range_x, this._pressure, this._mollier);
         if (!Array.isArray(polygon) || polygon.length === 0) return;
         // createComfort wraps the polygon in an extra array for the rangePhi[1] === 0
         // edge case; unwrap so d3.line gets a flat list of {x, y}.
@@ -264,7 +310,7 @@ export class MollierHxCard extends LitElement {
         const yScale = d3.scaleLinear().range([innerH, 0]).domain(this._domainY);
 
         const points = this._dailyData.map((d, i) => {
-            const xy = get_x_y(d.t, d.phi, this._pressure);
+            const xy = this._mollier.get_x_y(d.t, d.phi, this._pressure);
             return {
                 cx: xScale(xy.x),
                 cy: yScale(xy.y),
@@ -339,6 +385,67 @@ export class MollierHxCard extends LitElement {
         }
     }
 
+    _drawCurrentPoint() {
+        if (!this._drawn) return;
+        const host = this.renderRoot.querySelector('.mollier-host');
+        const wrap = this.renderRoot.querySelector('.diagram-wrap');
+        if (!host || !wrap) return;
+        const svg = d3.select(host).select('#hx_mollier_diagram');
+        if (svg.empty()) return;
+
+        // Re-append on every update so this group stays last in paint order
+        // (drawn on top of #data-points and #comfort-zone).
+        svg.select('#current-point').remove();
+        if (!this._currentPoint) return;
+
+        const innerW = WIDTH - MARGIN.left - MARGIN.right;
+        const innerH = HEIGHT - MARGIN.top - MARGIN.bottom;
+        const xScale = d3.scaleLinear().range([0, innerW]).domain(this._domainX);
+        const yScale = d3.scaleLinear().range([innerH, 0]).domain(this._domainY);
+
+        const cx = xScale(this._currentPoint.x);
+        const cy = yScale(this._currentPoint.y);
+
+        const tooltipEl = wrap.querySelector('.tooltip');
+        const layer = svg.append('g')
+            .attr('id', 'current-point')
+            .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+
+        const circle = layer.append('circle')
+            .attr('cx', cx)
+            .attr('cy', cy)
+            .attr('r', 6)
+            .attr('fill', 'black')
+            .attr('stroke', 'white')
+            .attr('stroke-width', 1.5)
+            .style('cursor', 'pointer');
+
+        if (tooltipEl) {
+            const t = this._currentPoint.t;
+            const phi = this._currentPoint.phi;
+            const x = this._currentPoint.x;
+            const node = circle.node();
+            node.addEventListener('mouseover', () => {
+                const wrapRect = wrap.getBoundingClientRect();
+                const r = node.getBoundingClientRect();
+                tooltipEl.innerHTML =
+                    `Now<br>x: ${(x * 1000).toFixed(2)} g/kg`
+                    + `<br>T: ${t.toFixed(2)} °C`
+                    + `<br>φ: ${(phi * 100).toFixed(2)} %`;
+                tooltipEl.style.background = 'black';
+                tooltipEl.style.color = 'white';
+                tooltipEl.style.left = (r.left + r.width / 2 - wrapRect.left) + 'px';
+                tooltipEl.style.top = (r.top - wrapRect.top) + 'px';
+                tooltipEl.style.display = 'block';
+                node.setAttribute('r', 10);
+            });
+            node.addEventListener('mouseout', () => {
+                tooltipEl.style.display = 'none';
+                node.setAttribute('r', 6);
+            });
+        }
+    }
+
     _colorFor(d) {
         if (this._coloring === 'season') {
             return SEASON_COLORS[seasonForMonth(d.date.getMonth())];
@@ -371,25 +478,22 @@ export class MollierHxCard extends LitElement {
             header: "",
             days: 7,
             coloring: "season",
+            altitude: 450,
         };
     }
 
-    // Masonry-layout sizing. One unit ≈ 50 px; the diagram is ~420 px tall
-    // plus header padding, so ~9 fits well.
     getCardSize() {
-        return 9;
+        return 3;
     }
 
-    // Sections/grid-layout sizing. Columns are 1/12 of the row width and rows
-    // are ~56 px each. The SVG is 600×420 — naturally that's ~6 columns wide
-    // and ~8 rows tall on a default dashboard. Allow shrinking to half-width
-    // (responsive CSS handles the scale-down) and expanding to full width.
+    // Omit `rows` so HA defaults to Auto-height — the chart's natural 600:420
+    // aspect ratio (via the CSS fallback) decides the card height. The user
+    // can still toggle Auto-height off and pick row count in the layout tab.
+    // Numeric column bounds keep HA's width slider functional; HA's own "Full
+    // Width" toggle (when present) overrides these for cross-section span.
     getGridOptions() {
         return {
-            rows: 8,
-            columns: 6,
-            min_rows: 6,
-            max_rows: 12,
+            columns: 12,
             min_columns: 4,
             max_columns: 12,
         };
