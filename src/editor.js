@@ -1,4 +1,5 @@
 import { html, LitElement } from 'lit';
+import { localize } from './localize/localize.js';
 
 // The editor uses HA's <ha-form> (loaded by HA's frontend at runtime — not on
 // npm). The form's data model is flat; the YAML config is nested. The pair of
@@ -21,6 +22,9 @@ const DEFAULTS = {
     comfort_phi_max: 60,
     comfort_x_min: 0,
     comfort_x_max: 12,
+    // Warning-band offsets around the comfort zone (pyedautils defaults).
+    orange_dt: 1, orange_dphi: 5, orange_dx: 1,
+    red_dt: 2.5, red_dphi: 10, red_dx: 2.5,
 };
 
 function configToData(config) {
@@ -47,10 +51,18 @@ function configToData(config) {
         comfort_phi_max: c.comfort_zone?.humidity?.[1] ?? DEFAULTS.comfort_phi_max,
         comfort_x_min: c.comfort_zone?.absolute_humidity?.[0] ?? DEFAULTS.comfort_x_min,
         comfort_x_max: c.comfort_zone?.absolute_humidity?.[1] ?? DEFAULTS.comfort_x_max,
+        bands_enabled: !!c.warning_bands,
+        orange_dt: c.warning_bands?.orange?.temperature ?? DEFAULTS.orange_dt,
+        orange_dphi: c.warning_bands?.orange?.humidity ?? DEFAULTS.orange_dphi,
+        orange_dx: c.warning_bands?.orange?.absolute_humidity ?? DEFAULTS.orange_dx,
+        red_dt: c.warning_bands?.red?.temperature ?? DEFAULTS.red_dt,
+        red_dphi: c.warning_bands?.red?.humidity ?? DEFAULTS.red_dphi,
+        red_dx: c.warning_bands?.red?.absolute_humidity ?? DEFAULTS.red_dx,
+        show_compass: !!c.show_compass,
     };
 }
 
-function dataToConfig(data) {
+function dataToConfig(data, previous) {
     const config = {
         type: 'custom:mollier-hx-card',
         temperature_entity: data.temperature_entity,
@@ -75,32 +87,28 @@ function dataToConfig(data) {
             humidity: [data.comfort_phi_min, data.comfort_phi_max],
             absolute_humidity: [data.comfort_x_min, data.comfort_x_max],
         };
+        if (data.bands_enabled) {
+            // Keep YAML-only keys (label, color) the form doesn't edit.
+            const prev = typeof previous?.warning_bands === 'object' ? previous.warning_bands : {};
+            config.warning_bands = {
+                orange: { ...prev.orange, temperature: data.orange_dt, humidity: data.orange_dphi, absolute_humidity: data.orange_dx },
+                red: { ...prev.red, temperature: data.red_dt, humidity: data.red_dphi, absolute_humidity: data.red_dx },
+            };
+        }
+        if (data.show_compass) config.show_compass = true;
     }
     return config;
 }
 
-const LABELS = {
-    header: 'Header',
-    temperature_entity: 'Temperature entity',
-    humidity_entity: 'Humidity entity',
-    days: 'Days back',
-    coloring: 'Coloring',
-    air_mode: 'Air input',
-    pressure: 'Pressure',
-    altitude: 'Altitude',
-    convention: 'Convention',
-    x_min: 'X min',
-    x_max: 'X max',
-    y_min: 'Y min',
-    y_max: 'Y max',
-    comfort_enabled: 'Show comfort zone',
-    comfort_t_min: 'Temperature min',
-    comfort_t_max: 'Temperature max',
-    comfort_phi_min: 'Humidity min',
-    comfort_phi_max: 'Humidity max',
-    comfort_x_min: 'Absolute humidity min',
-    comfort_x_max: 'Absolute humidity max',
-};
+
+const bandRow = (key) => ({
+    type: 'grid',
+    schema: [
+        { name: `${key}_dt`, selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'K' } } },
+        { name: `${key}_dphi`, selector: { number: { min: 0, max: 100, step: 1, mode: 'box', unit_of_measurement: '%' } } },
+        { name: `${key}_dx`, selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'g/kg' } } },
+    ],
+});
 
 const COMFORT_FIELDS = [
     {
@@ -126,7 +134,7 @@ const COMFORT_FIELDS = [
     },
 ];
 
-function buildSchema(data) {
+function buildSchema(data, t) {
     return [
         { name: 'header', selector: { text: {} } },
         {
@@ -149,9 +157,9 @@ function buildSchema(data) {
                         select: {
                             mode: 'dropdown',
                             options: [
-                                { value: 'season', label: 'By season' },
-                                { value: 'age', label: 'By age' },
-                                { value: 'chronological', label: 'Chronological' },
+                                { value: 'season', label: t('editor.options.season') },
+                                { value: 'age', label: t('editor.options.age') },
+                                { value: 'chronological', label: t('editor.options.chronological') },
                             ],
                         },
                     },
@@ -167,8 +175,8 @@ function buildSchema(data) {
                         select: {
                             mode: 'dropdown',
                             options: [
-                                { value: 'pressure', label: 'Pressure (Pa)' },
-                                { value: 'altitude', label: 'Altitude (m)' },
+                                { value: 'pressure', label: t('editor.options.pressure') },
+                                { value: 'altitude', label: t('editor.options.altitude') },
                             ],
                         },
                     },
@@ -188,8 +196,8 @@ function buildSchema(data) {
                         select: {
                             mode: 'dropdown',
                             options: [
-                                { value: 'classical', label: 'Classical (Recknagel)' },
-                                { value: 'glueck', label: 'Glück' },
+                                { value: 'classical', label: t('editor.options.classical') },
+                                { value: 'glueck', label: t('editor.options.glueck') },
                             ],
                         },
                     },
@@ -198,7 +206,7 @@ function buildSchema(data) {
         },
         {
             type: 'expandable',
-            title: 'Axes',
+            title: t('editor.sections.axes'),
             schema: [
                 {
                     type: 'grid',
@@ -218,13 +226,23 @@ function buildSchema(data) {
         },
         {
             type: 'expandable',
-            title: 'Comfort zone',
+            title: t('editor.sections.comfort'),
             expanded: !!data.comfort_enabled,
             schema: [
                 { name: 'comfort_enabled', selector: { boolean: {} } },
                 ...(data.comfort_enabled ? COMFORT_FIELDS : []),
             ],
         },
+        ...(data.comfort_enabled ? [{
+            type: 'expandable',
+            title: t('editor.sections.bands'),
+            expanded: !!(data.bands_enabled || data.show_compass),
+            schema: [
+                { name: 'bands_enabled', selector: { boolean: {} } },
+                ...(data.bands_enabled ? [bandRow('orange'), bandRow('red')] : []),
+                { name: 'show_compass', selector: { boolean: {} } },
+            ],
+        }] : []),
     ];
 }
 
@@ -243,20 +261,21 @@ export class MollierHxCardEditor extends LitElement {
     render() {
         if (!this._config) return html``;
         const data = configToData(this._config);
-        const schema = buildSchema(data);
+        const t = (key) => localize(this.hass, key);
+        const schema = buildSchema(data, t);
         return html`
             <ha-form
                 .hass=${this.hass}
                 .data=${data}
                 .schema=${schema}
-                .computeLabel=${(s) => LABELS[s.name] || s.name}
+                .computeLabel=${(s) => t(`editor.fields.${s.name}`)}
                 @value-changed=${this._valueChanged}
             ></ha-form>
         `;
     }
 
     _valueChanged(ev) {
-        const newConfig = dataToConfig(ev.detail.value);
+        const newConfig = dataToConfig(ev.detail.value, this._config);
         this.dispatchEvent(new CustomEvent('config-changed', {
             detail: { config: newConfig },
             bubbles: true,

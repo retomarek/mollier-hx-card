@@ -1,0 +1,78 @@
+{
+  "card": {
+    "no_statistics": "No daily statistics available. Check that both sensors have state_class: measurement.",
+    "fetch_failed": "Could not load the history: {error}",
+    "now": "Now",
+    "comfort_zone": "Comfort zone",
+    "warning_band": "Warning band",
+    "alarm_band": "Alarm band",
+    "needs_comfort_zone": "The comfort compass needs a comfort zone. Turn it on in the card settings."
+  },
+  "diagram": {
+    "x_axis": "x [g/kg]",
+    "temperature": "Temperature ϑ [°C]",
+    "rel_humidity": "rel. humidity φ [%]",
+    "density": "Density ρ [kg/m³]",
+    "enthalpy": "Enthalpy [kJ/kg]"
+  },
+  "compass": {
+    "title": "Comfort compass",
+    "day": "day",
+    "days": "days",
+    "names": {
+      "ok": "in range", "w": "too warm", "wf": "warm + humid", "f": "too humid", "kf": "cold + humid",
+      "c": "too cold", "ct": "cold + dry", "t": "too dry", "wt": "warm + dry"
+    },
+    "labels": {
+      "f": "too humid", "wf": "warm +\nhumid", "w": "too warm", "wt": "warm +\ndry",
+      "t": "too dry", "ct": "cold +\ndry", "c": "too cold", "kf": "cold +\nhumid"
+    },
+    "stages": { "l": "mild", "d": "moderate", "s": "severe" }
+  },
+  "editor": {
+    "fields": {
+      "header": "Title",
+      "temperature_entity": "Temperature sensor",
+      "humidity_entity": "Humidity sensor",
+      "days": "Days of history",
+      "coloring": "Point colours",
+      "air_mode": "Air pressure from",
+      "pressure": "Air pressure",
+      "altitude": "Altitude",
+      "convention": "Diagram convention",
+      "x_min": "x min",
+      "x_max": "x max",
+      "y_min": "Temperature min",
+      "y_max": "Temperature max",
+      "comfort_enabled": "Show comfort zone",
+      "comfort_t_min": "Temperature min",
+      "comfort_t_max": "Temperature max",
+      "comfort_phi_min": "Humidity min",
+      "comfort_phi_max": "Humidity max",
+      "comfort_x_min": "Absolute humidity min",
+      "comfort_x_max": "Absolute humidity max",
+      "bands_enabled": "Show warning bands",
+      "orange_dt": "Orange ± temperature",
+      "orange_dphi": "Orange ± humidity",
+      "orange_dx": "Orange ± abs. humidity",
+      "red_dt": "Red ± temperature",
+      "red_dphi": "Red ± humidity",
+      "red_dx": "Red ± abs. humidity",
+      "show_compass": "Show comfort compass"
+    },
+    "options": {
+      "season": "By season",
+      "age": "By age",
+      "chronological": "Chronological",
+      "pressure": "Pressure (Pa)",
+      "altitude": "Altitude (m)",
+      "classical": "Classical (Recknagel)",
+      "glueck": "Glück"
+    },
+    "sections": {
+      "axes": "Axes",
+      "comfort": "Comfort zone",
+      "bands": "Warning bands & comfort compass"
+    }
+  }
+}

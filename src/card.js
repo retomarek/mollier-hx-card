@@ -1,8 +1,10 @@
 import { html, LitElement, nothing } from 'lit';
-import * as d3 from './d3_mollier/d3.js';
-import { drawHXCoordinates } from './d3_mollier/CoordinateGenerator.js';
-import { createComfort } from './d3_mollier/drawComfort.js';
-import { createMollier } from './d3_mollier/mollier_functions.js';
+import * as d3 from './d3_mollierhx/d3.js';
+import { drawHXCoordinates } from './d3_mollierhx/coordinateGenerator.js';
+import { createComfort } from './d3_mollierhx/drawComfort.js';
+import { createMollier } from './d3_mollierhx/mollierFunctions.js';
+import { parseWarningBands, bandRanges, compassDistribution, renderCompass } from './compass.js';
+import { localize, getLanguage, DIAGRAM_CAPTIONS } from './localize/localize.js';
 import styles from './card.styles';
 
 const DEFAULT_PRESSURE = 101325;
@@ -85,6 +87,8 @@ export class MollierHxCard extends LitElement {
             _days: { state: true },
             _coloring: { state: true },
             _comfortZone: { state: true },
+            _warningBands: { state: true },
+            _showCompass: { state: true },
             _domainX: { state: true },
             _domainY: { state: true },
             _convention: { state: true },
@@ -112,6 +116,8 @@ export class MollierHxCard extends LitElement {
         this._days = Math.max(1, Number(config.days) || DEFAULT_DAYS);
         this._coloring = config.coloring || DEFAULT_COLORING;
         this._comfortZone = parseComfortZone(config.comfort_zone);
+        this._warningBands = parseWarningBands(config.warning_bands);
+        this._showCompass = !!config.show_compass;
         this._domainX = parseDomain(config.domain_x, DEFAULT_DOMAIN_X, 1 / 1000);
         this._domainY = parseDomain(config.domain_y, DEFAULT_DOMAIN_Y, 1);
         this._convention = VALID_CONVENTIONS.includes(config.convention)
@@ -170,7 +176,7 @@ export class MollierHxCard extends LitElement {
             const tRows = result[this._tempEntity] || [];
             const hRows = result[this._humEntity] || [];
             if (tRows.length === 0 || hRows.length === 0) {
-                this._error = "No daily statistics available — check that the sensors have state_class: measurement.";
+                this._error = { key: 'card.no_statistics' };
                 this._dailyData = [];
                 this.requestUpdate();
                 return;
@@ -196,7 +202,7 @@ export class MollierHxCard extends LitElement {
             this._error = undefined;
             this.requestUpdate();
         } catch (err) {
-            this._error = `History fetch failed: ${err && err.message || err}`;
+            this._error = { key: 'card.fetch_failed', vars: { error: (err && err.message) || err } };
             this.requestUpdate();
         }
     }
@@ -208,16 +214,48 @@ export class MollierHxCard extends LitElement {
             <ha-card header="${this._header}">
                 <div class="card-content">
                     ${this._error
-                        ? html`<p class="error">${this._error}</p>`
+                        ? html`<p class="error">${this._t(this._error.key, this._error.vars)}</p>`
                         : html`
                             <div class="diagram-wrap">
                                 <div class="mollier-host"></div>
                                 <div class="tooltip"></div>
                             </div>
+                            ${this._renderZoneLegend()}
+                            ${this._renderCompass()}
                           `}
                 </div>
             </ha-card>
         `;
+    }
+
+    _t(key, vars) {
+        return localize(this._hass, key, vars);
+    }
+
+    _renderZoneLegend() {
+        if (!this._comfortZone || !this._warningBands) return nothing;
+        const b = this._warningBands;
+        const fmt = (o) => `±${o.dt} K / ±${o.dphi} % / ±${o.dx} g/kg`;
+        return html`
+            <div class="zone-legend">
+                <span><i class="swatch fill"></i>${this._t('card.comfort_zone')}</span>
+                ${['orange', 'red'].map((k) => html`
+                    <span title=${fmt(b[k])}>
+                        <i class="swatch dash" style="border-color:${b[k].color}"></i>${b[k].label || `${this._t(k === 'orange' ? 'card.warning_band' : 'card.alarm_band')} (${fmt(b[k])})`}
+                    </span>`)}
+            </div>
+        `;
+    }
+
+    _renderCompass() {
+        if (!this._showCompass) return nothing;
+        if (!this._comfortZone) {
+            return html`<p class="hint">${this._t('card.needs_comfort_zone')}</p>`;
+        }
+        if (this._dailyData.length === 0) return nothing;
+        const dist = compassDistribution(
+            this._dailyData, this._comfortZone, this._warningBands, this._pressure, this._mollier);
+        return renderCompass(dist, (key, vars) => this._t(key, vars));
     }
 
     firstUpdated() {
@@ -238,7 +276,7 @@ export class MollierHxCard extends LitElement {
         if (this._error) return;
         const host = this.renderRoot.querySelector('.mollier-host');
         if (!host) return;
-        const hash = `${this._domainX[0]}|${this._domainX[1]}|${this._domainY[0]}|${this._domainY[1]}|${this._pressure}|${this._convention}`;
+        const hash = `${this._domainX[0]}|${this._domainX[1]}|${this._domainY[0]}|${this._domainY[1]}|${this._pressure}|${this._convention}|${getLanguage(this._hass)}`;
         const hasSvg = !!host.querySelector('svg');
         if (hasSvg && this._drawHash === hash) {
             this._drawn = true;
@@ -255,6 +293,12 @@ export class MollierHxCard extends LitElement {
         d3.select(host).select('#hx_mollier_diagram')
             .attr('viewBox', `0 0 ${WIDTH} ${HEIGHT}`)
             .attr('preserveAspectRatio', 'xMidYMid meet');
+        // Translate the English captions the vendored generator draws.
+        const t = (key) => this._t(key);
+        d3.select(host).selectAll('#hx_mollier_diagram text').each(function () {
+            const key = DIAGRAM_CAPTIONS[this.textContent];
+            if (key) this.textContent = t(key);
+        });
         this._drawHash = hash;
         this._drawn = true;
     }
@@ -294,6 +338,26 @@ export class MollierHxCard extends LitElement {
             .attr('fill', 'yellowgreen')
             .attr('fill-opacity', 0.4)
             .attr('stroke', 'yellowgreen');
+
+        // Warning bands — dashed outline only, like pyedautils' drawBand().
+        if (!this._warningBands) return;
+        const group = svg.select('#comfort-zone');
+        for (const key of ['orange', 'red']) {
+            const band = this._warningBands[key];
+            const r = bandRanges(cz, band);
+            const pb = createComfort(r.range_t, r.range_phi, r.range_x, this._pressure, this._mollier);
+            if (!Array.isArray(pb) || pb.length === 0) continue;
+            const pts = Array.isArray(pb[0]) ? pb[0] : pb;
+            if (pts.length < 2) continue;
+            group.append('path')
+                .datum(pts)
+                .attr('class', `warning-band ${key}`)
+                .attr('d', lineGen)
+                .attr('fill', 'none')
+                .attr('stroke', band.color)
+                .attr('stroke-width', 1.8)
+                .attr('stroke-dasharray', '7,4');
+        }
     }
 
     _drawPoints() {
@@ -429,7 +493,7 @@ export class MollierHxCard extends LitElement {
                 const wrapRect = wrap.getBoundingClientRect();
                 const r = node.getBoundingClientRect();
                 tooltipEl.innerHTML =
-                    `Now<br>x: ${(x * 1000).toFixed(2)} g/kg`
+                    `${this._t('card.now')}<br>x: ${(x * 1000).toFixed(2)} g/kg`
                     + `<br>T: ${t.toFixed(2)} °C`
                     + `<br>φ: ${(phi * 100).toFixed(2)} %`;
                 tooltipEl.style.background = 'black';

@@ -1,5 +1,5 @@
-// Vendored from retomarek/pyedautils (pyedautils/data/d3_mollier/mollier_functions.js)
-// Keep math in sync with upstream. Only added ES6 exports at the bottom.
+// Vendored from retomarek/pyedautils (pyedautils/data/d3_mollierhx/mollierFunctions.js) @ c4ca5d3.
+// Keep in sync with upstream by re-copying. Only ES6 imports/exports were added.
 
 // Functions for the Coordinate-transformations in the Mollier hx-diagram
 

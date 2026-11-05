@@ -15,6 +15,9 @@ export default css`
         min-height: 0;
         padding: 16px;
         box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
     .error {
         color: red;
@@ -27,7 +30,8 @@ export default css`
         container-type: size;
         position: relative;
         width: 100%;
-        height: 100%;
+        flex: 1 1 auto;
+        min-height: 0;
         aspect-ratio: 600 / 420;
         display: grid;
         place-items: center;
@@ -53,5 +57,71 @@ export default css`
         white-space: nowrap;
         z-index: 10;
         transform: translate(-50%, calc(-100% - 6px));
+    }
+    .hint {
+        color: var(--secondary-text-color);
+        margin: 0;
+    }
+    .muted {
+        color: var(--secondary-text-color, #8A94A6);
+    }
+    .zone-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 16px;
+        font-size: 12px;
+        color: var(--secondary-text-color);
+    }
+    .zone-legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .swatch {
+        display: inline-block;
+        width: 18px;
+        height: 10px;
+        box-sizing: border-box;
+    }
+    .swatch.fill {
+        background: rgba(154, 205, 50, 0.4);
+        border: 1px solid yellowgreen;
+    }
+    .swatch.dash {
+        height: 0;
+        border-top: 2px dashed;
+    }
+    .compass {
+        flex: 0 0 auto;
+        border-top: 1px solid var(--divider-color, #e0e0e0);
+        padding-top: 12px;
+    }
+    .compass-title {
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    .compass-body {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 16px;
+    }
+    .compass-glyph {
+        flex: 1 1 240px;
+        max-width: 360px;
+        min-width: 0;
+        height: auto;
+        font-family: inherit;
+    }
+    .compass-legend {
+        flex: 1 1 200px;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+    .compass-legend .dot {
+        font-size: 14px;
+    }
+    .stage-key {
+        margin-top: 6px;
     }
 `;

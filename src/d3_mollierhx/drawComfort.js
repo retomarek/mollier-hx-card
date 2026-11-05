@@ -1,8 +1,8 @@
-// Vendored from retomarek/pyedautils (pyedautils/data/d3_mollier/drawComfort.js)
-// Keep math in sync with upstream. Only added ES6 imports/exports.
+// Vendored from retomarek/pyedautils (pyedautils/data/d3_mollierhx/drawComfort.js) @ c4ca5d3.
+// Keep in sync with upstream by re-copying. Only ES6 imports/exports were added.
 
 import * as d3 from './d3.js';
-import { createMollier } from './mollier_functions.js';
+import { createMollier } from './mollierFunctions.js';
 
 // function that draws a Comfort-zone polygon to a container with defined width and height
 function drawComfort(container,Width,Height,margin,domainX,domainY,rangeT,rangePhi,rangeX,p,mollier) {
