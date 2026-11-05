@@ -4,6 +4,10 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Added
+
+- README: the h,x diagram in five minutes, with the dew point and mould risk at cold surfaces and examples for ventilating in winter, heating less (comfort and energy) and airing a cellar in summer.
+
 ## [1.0.0-beta.6] - 2026-11-06
 
 ### Changed

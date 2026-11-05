@@ -35,6 +35,51 @@ Comfort, health and the risk of mould always depend on temperature **and** humid
 
 The h,x diagram shows both in one point: its position gives temperature, relative and absolute humidity at once, and how far each day was from the comfort zone.
 
+## The h,x diagram in five minutes
+
+The Mollier h,x diagram is the map engineers use for moist air. Every state of the air is one point:
+
+- **Up and down** is the temperature (°C).
+- **Left and right** is the absolute humidity *x*, the grams of water in one kilogram of dry air. Left is dry, right is humid.
+- **The curved lines** are the relative humidity φ. The bottom curve, 100 %, is saturation: air cannot hold more water. Cool air down to this curve and water condenses, on windows, cold walls or as fog. That temperature is the **dew point** (see below).
+- The pressure (from your altitude) shifts the curves a little; the card takes it into account.
+
+How processes move the point:
+
+- **Heating or cooling** without adding or removing water moves the point straight **up or down**: *x* stays the same, only the relative humidity changes. Heating makes air relatively drier, cooling relatively more humid.
+- **Adding moisture** (people, showering, cooking, plants, a humidifier) moves it to the **right**. **Removing moisture** (ventilating with dry air, a dehumidifier) moves it to the **left**.
+- **Mixing** two airs, for example room air and outside air when you ventilate, puts the result on the straight line between the two points.
+
+### Dew point: where condensation and mould start
+
+To find the dew point of the room air, go **straight down** from the point to the 100 % curve: the temperature there is the dew point. Any surface colder than that gets wet: the inside of single glazing, window frames, thermal bridges, outside corners, walls behind wardrobes.
+
+Mould does not even need visible water. It starts to grow when the air right at a surface stays above about **80 % relative humidity** for a while, which happens a few degrees **above** the dew point:
+
+| Room air | Water content | Dew point (condensation) | Mould risk at surfaces below |
+| --- | --- | --- | --- |
+| 20 °C, 40 % | 6.1 g/kg | 6.0 °C | 9.3 °C |
+| 21 °C, 50 % | 8.1 g/kg | 10.2 °C | 13.6 °C |
+| 21 °C, 60 % | 9.8 g/kg | 12.9 °C | 16.4 °C |
+
+On a cold winter day, the inside of an outside wall corner or an old window frame can easily be 12–15 °C. At 21 °C and 60 % that is already critical; at 21 °C and 50 % it is borderline; at 40 % it is safe. This is why it pays to give the comfort zone an absolute-humidity limit (12 g/kg in the examples) and to watch days near the right-hand edge of the zone.
+
+### Example: ventilating in winter makes the room drier
+
+Cold outside air holds little water. At 0 °C and 80 % it carries about 3.2 g/kg. Heated to 21 °C in the room, the same air has only about **20 %** relative humidity, because warm air could hold far more. Ventilating therefore moves the room point to the left: the room gets drier. That is why rooms are often too dry in winter, and why airing out works so well against too much humidity. Short, wide-open airing (a few minutes, cross-draught) exchanges the humid air without cooling the walls.
+
+### Example: heating less raises the humidity, and saves energy
+
+Turn the heating down and the point moves straight down: the water content stays, the relative humidity rises. Room air with 6.4 g/kg reads about **35 %** at 23 °C, **40 %** at 21 °C and **42 %** at 20 °C. Relative humidity between about 40 and 60 % is pleasant for most people and easier on eyes and airways; viruses and dust mites also do worse in that range than in very dry or very humid air.
+
+It also helps the environment: as a rule of thumb, every degree less saves around **6 % of heating energy**. A slightly cooler room with comfortable humidity often feels better than a warm, dry one, with a smaller energy bill and lower emissions.
+
+The limit is on the other side: if the relative humidity at cold surfaces (outside walls, window frames, corners behind furniture) climbs above about 80 %, mould can grow. The comfort zone and the warning bands on the card help to stay in between.
+
+### Example: airing a cool cellar in summer can make it damp
+
+Warm summer air carries a lot of water: at 25 °C and 70 % about 14.7 g/kg. Let it into a cellar at 18 °C and it cools below its dew point (about 19 °C): water condenses on the walls. In summer, air a cool cellar in the early morning or at night, when the outside air holds less water. The diagram shows it at a glance: is the outside point to the left of the room point?
+
 ## Features
 
 - **h,x diagram** for your altitude or air pressure. Choose which iso-lines to show: temperature, relative and absolute humidity, density, enthalpy.
