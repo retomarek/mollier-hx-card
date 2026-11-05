@@ -48,6 +48,9 @@ const CONFIG = {
     altitude: 450,
     comfort_zone: { temperature: [20, 26], humidity: [30, 60], absolute_humidity: [0, 12] },
     warning_bands: true,
+    outdoor_temperature_entity: 'sensor.outside_temperature',
+    outdoor_humidity_entity: 'sensor.outside_humidity',
+    outdoor_history: true,
 };
 
 function page(shot) {
@@ -83,7 +86,7 @@ function page(shot) {
   // Deterministic sample: 120 days of room climate, July to November.
   const T = ${JSON.stringify(CONFIG.temperature_entity)}, H = ${JSON.stringify(CONFIG.humidity_entity)};
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const end = new Date('2026-11-05T12:00:00Z'), tR = [], hR = [];
+  const end = new Date('2026-11-05T12:00:00Z'), tR = [], hR = [], oT = [], oH = [];
   for (let i = 120; i >= 1; i--) {
     const d = new Date(end.getTime() - i * 86400000); d.setUTCHours(0, 0, 0, 0);
     const doy = (d - new Date(Date.UTC(2026, 0, 1))) / 86400000;
@@ -92,13 +95,18 @@ function page(shot) {
     let rh = 47 + 10 * season + (rnd() - 0.5) * 16; if (season < 0.1 && rnd() < 0.3) rh -= 11;
     tR.push({ start: d.toISOString(), mean: +t.toFixed(2) });
     hR.push({ start: d.toISOString(), mean: +Math.max(18, Math.min(80, rh)).toFixed(1) });
+    // outside: summer to autumn, cooler and more humid than the room
+    oT.push({ start: d.toISOString(), mean: +(9 + 9 * Math.max(season, -0.4) + (rnd() - 0.5) * 6).toFixed(2) });
+    oH.push({ start: d.toISOString(), mean: +Math.min(98, 78 - 8 * season + (rnd() - 0.5) * 18).toFixed(1) });
   }
   const card = document.getElementById('card');
   card.setConfig(${JSON.stringify(config)});
   card.hass = {
     language: '${shot.lang}', locale: { language: '${shot.lang}' },
-    states: { [T]: { state: '21.8' }, [H]: { state: '43' } },
-    callWS: async () => ({ [T]: tR, [H]: hR }),
+    states: { [T]: { state: '21.8' }, [H]: { state: '43' },
+      'sensor.outside_temperature': { state: '6.8', attributes: { unit_of_measurement: '°C' } }, 'sensor.outside_humidity': { state: '89' } },
+    callWS: async (m) => (m.statistic_ids[0] === T ? { [T]: tR, [H]: hR }
+      : { 'sensor.outside_temperature': oT, 'sensor.outside_humidity': oH }),
   };
 </script></body></html>`;
 }

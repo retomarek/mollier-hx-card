@@ -5,7 +5,11 @@
     "now": "当前",
     "comfort_zone": "舒适区",
     "warning_band": "警告带",
-    "alarm_band": "报警带"
+    "alarm_band": "报警带",
+    "outdoor": "室外",
+    "ventilation_dries": "通风使空气变干",
+    "ventilation_humidifies": "通风使空气变湿",
+    "ventilation_neutral": "通风：无变化"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -49,7 +53,12 @@
       "line_density": "密度",
       "line_enthalpy": "焓",
       "orange_label": "橙色带名称（留空：“警告带”）",
-      "red_label": "红色带名称（留空：“报警带”）"
+      "red_label": "红色带名称（留空：“报警带”）",
+      "outdoor_temperature_entity": "室外温度传感器",
+      "outdoor_humidity_entity": "室外湿度传感器",
+      "outdoor_weather_entity": "天气（备用）",
+      "outdoor_history": "室外日均值",
+      "ventilation_line": "通风线"
     },
     "options": {
       "season": "按季节",
@@ -64,7 +73,8 @@
       "axes": "坐标轴",
       "comfort": "舒适区",
       "bands": "警告带",
-      "lines": "线条"
+      "lines": "线条",
+      "outdoor": "室外空气"
     }
   }
 }

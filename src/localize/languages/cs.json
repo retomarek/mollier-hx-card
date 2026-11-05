@@ -5,7 +5,11 @@
     "now": "Nyní",
     "comfort_zone": "Komfortní zóna",
     "warning_band": "Varovné pásmo",
-    "alarm_band": "Alarmové pásmo"
+    "alarm_band": "Alarmové pásmo",
+    "outdoor": "Venku",
+    "ventilation_dries": "větrání vysušuje",
+    "ventilation_humidifies": "větrání zvlhčuje",
+    "ventilation_neutral": "větrání: beze změny"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -49,7 +53,12 @@
       "line_density": "Hustota",
       "line_enthalpy": "Entalpie",
       "orange_label": "Název oranžového pásma (prázdné: „Varovné pásmo“)",
-      "red_label": "Název červeného pásma (prázdné: „Alarmové pásmo“)"
+      "red_label": "Název červeného pásma (prázdné: „Alarmové pásmo“)",
+      "outdoor_temperature_entity": "Senzor venkovní teploty",
+      "outdoor_humidity_entity": "Senzor venkovní vlhkosti",
+      "outdoor_weather_entity": "Počasí (záloha)",
+      "outdoor_history": "Denní průměry venku",
+      "ventilation_line": "Čára větrání"
     },
     "options": {
       "season": "Podle ročního období",
@@ -64,7 +73,8 @@
       "axes": "Osy",
       "comfort": "Komfortní zóna",
       "bands": "Varovná pásma",
-      "lines": "Čáry"
+      "lines": "Čáry",
+      "outdoor": "Venkovní vzduch"
     }
   }
 }

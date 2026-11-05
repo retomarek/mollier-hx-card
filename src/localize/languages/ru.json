@@ -5,7 +5,11 @@
     "now": "Сейчас",
     "comfort_zone": "Зона комфорта",
     "warning_band": "Полоса предупреждения",
-    "alarm_band": "Полоса тревоги"
+    "alarm_band": "Полоса тревоги",
+    "outdoor": "Снаружи",
+    "ventilation_dries": "проветривание сушит",
+    "ventilation_humidifies": "проветривание увлажняет",
+    "ventilation_neutral": "проветривание: без изменений"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -49,7 +53,12 @@
       "line_density": "Плотность",
       "line_enthalpy": "Энтальпия",
       "orange_label": "Название оранжевой полосы (пусто: «Полоса предупреждения»)",
-      "red_label": "Название красной полосы (пусто: «Полоса тревоги»)"
+      "red_label": "Название красной полосы (пусто: «Полоса тревоги»)",
+      "outdoor_temperature_entity": "Датчик наружной температуры",
+      "outdoor_humidity_entity": "Датчик наружной влажности",
+      "outdoor_weather_entity": "Погода (резерв)",
+      "outdoor_history": "Среднесуточные снаружи",
+      "ventilation_line": "Линия проветривания"
     },
     "options": {
       "season": "По сезону",
@@ -64,7 +73,8 @@
       "axes": "Оси",
       "comfort": "Зона комфорта",
       "bands": "Полосы предупреждения",
-      "lines": "Линии"
+      "lines": "Линии",
+      "outdoor": "Наружный воздух"
     }
   }
 }

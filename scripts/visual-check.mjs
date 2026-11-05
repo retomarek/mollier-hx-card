@@ -31,6 +31,9 @@ const BASE_CONFIG = {
 const READY = '#hx_mollier_diagram, .error, .message';
 // ---------------------------------------------------------------------------
 
+// Outside air with sensors, daily means and the ventilation line.
+const OUTDOOR = { outdoor_temperature_entity: 'sensor.ot', outdoor_humidity_entity: 'sensor.oh', outdoor_history: true };
+
 // width: tile width; rows: sections row count (fixed height = rows*64-8 px);
 // layout: what HA sets ('grid' in sections, 'panel', or null for masonry);
 // data: 'ok' | 'empty' (no statistics) | 'error' (fetch fails); states: live sensor states.
@@ -46,6 +49,9 @@ const CASES = [
     { name: 'no-statistics', theme: 'dark', lang: 'en', width: 500, layout: 'grid', data: 'empty' },
     { name: 'fetch-error-de', theme: 'dark', lang: 'de', width: 500, layout: 'grid', data: 'error' },
     { name: 'sensor-unavailable', theme: 'dark', lang: 'en', width: 500, layout: 'grid', states: { 'sensor.t': 'unavailable' } },
+    { name: 'outdoor-de', theme: 'light', lang: 'de', width: 500, layout: 'grid', config: OUTDOOR },
+    { name: 'outdoor-off-axis', theme: 'dark', lang: 'en', width: 500, layout: 'grid', config: { ...OUTDOOR, domain_y: [15, 30], domain_x: [0, 15] } },
+    { name: 'outdoor-weather-only', theme: 'dark', lang: 'en', width: 390, layout: null, config: { outdoor_weather_entity: 'weather.home' } },
 ];
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -72,7 +78,7 @@ function html(c) {
     const th = THEMES[c.theme];
     const height = c.rows ? c.rows * 64 - 8 : c.height;
     const config = { ...BASE_CONFIG, ...(c.config || {}), ...(c.rows ? { grid_options: { rows: c.rows } } : {}) };
-    const states = { 'sensor.t': '21.8', 'sensor.h': '43', ...(c.states || {}) };
+    const states = { 'sensor.t': '21.8', 'sensor.h': '43', 'sensor.ot': '6.8', 'sensor.oh': '89', ...(c.states || {}) };
     return `<!doctype html><html><head><meta charset="utf-8"><style>
   body { margin: 0; padding: 12px; background: ${th.page}; font-family: Roboto, "Noto Sans", sans-serif; color: ${th.text};
     --primary-text-color: ${th.text}; --secondary-text-color: ${th.muted}; --divider-color: ${th.divider};
@@ -91,13 +97,14 @@ function html(c) {
 <script>${bundle}</script>
 <script>
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const end = new Date('2026-11-05T12:00:00Z'), tR = [], hR = [];
+  const end = new Date('2026-11-05T12:00:00Z'), tR = [], hR = [], oT = [], oH = [];
   for (let i = 120; i >= 1; i--) {
     const d = new Date(end.getTime() - i * 864e5); d.setUTCHours(0, 0, 0, 0);
     const s = Math.cos((((d - new Date(Date.UTC(2026, 0, 1))) / 864e5 - 200) / 365) * 2 * Math.PI);
     let t = 22.4 + 4.4 * Math.max(s, -0.2) + (rnd() - 0.5) * 2.6; if (rnd() < 0.08) t += 2.6;
     let rh = 47 + 10 * s + (rnd() - 0.5) * 16; if (s < 0.1 && rnd() < 0.3) rh -= 11;
     tR.push({ start: d.toISOString(), mean: +t.toFixed(2) }); hR.push({ start: d.toISOString(), mean: +Math.max(18, Math.min(80, rh)).toFixed(1) });
+    oT.push({ start: d.toISOString(), mean: +(9 + 9 * Math.max(s, -0.4) + (rnd() - 0.5) * 6).toFixed(2) }); oH.push({ start: d.toISOString(), mean: +Math.min(98, 78 - 8 * s + (rnd() - 0.5) * 18).toFixed(1) });
   }
   const data = ${JSON.stringify(c.data || 'ok')};
   const card = document.getElementById('card');
@@ -105,11 +112,12 @@ function html(c) {
   card.setConfig(${JSON.stringify(config)});
   card.hass = {
     language: '${c.lang}', locale: { language: '${c.lang}' }, themes: { darkMode: ${c.theme === 'dark'} },
-    states: Object.fromEntries(Object.entries(${JSON.stringify(states)}).map(([k, v]) => [k, { entity_id: k, state: v, attributes: {} }])),
-    callWS: async () => {
+    states: { ...Object.fromEntries(Object.entries(${JSON.stringify(states)}).map(([k, v]) => [k, { entity_id: k, state: v, attributes: {} }])),
+      'weather.home': { entity_id: 'weather.home', state: 'cloudy', attributes: { temperature: 41, temperature_unit: '°F', humidity: 85 } } },
+    callWS: async (msg) => {
       if (data === 'error') throw new Error('Connection lost');
       if (data === 'empty') return {};
-      return { 'sensor.t': tR, 'sensor.h': hR };
+      return msg.statistic_ids[0] === 'sensor.ot' ? { 'sensor.ot': oT, 'sensor.oh': oH } : { 'sensor.t': tR, 'sensor.h': hR };
     },
   };
 </script></body></html>`;

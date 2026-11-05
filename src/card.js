@@ -45,6 +45,8 @@ export function parseLines(cfg) {
     return out;
 }
 
+const OUTDOOR_COLOR = '#2563eb';
+
 const MARGIN = { top: 30, right: 60, bottom: 40, left: 50 };
 const WIDTH = 600;
 const HEIGHT = 420;
@@ -126,6 +128,8 @@ export class MollierHxCard extends LitElement {
             _convention: { state: true },
             _lines: { state: true },
             _currentPoint: { state: true },
+            _outdoorPoint: { state: true },
+            _outdoorDays: { state: true },
             _error: { state: true },
         };
     }
@@ -159,7 +163,17 @@ export class MollierHxCard extends LitElement {
             ? config.convention
             : DEFAULT_CONVENTION;
         this._mollier = createMollier(this._convention);
-        if (this._hass) this._maybeFetch();
+        // Outside air (all optional): sensors for the live point and the daily
+        // means, a weather entity as fallback for the live point.
+        this._outT = config.outdoor_temperature_entity || null;
+        this._outH = config.outdoor_humidity_entity || null;
+        this._outW = config.outdoor_weather_entity || null;
+        this._outHistory = config.outdoor_history === true;
+        this._ventLine = config.ventilation_line !== false;
+        if (this._hass) {
+            this._maybeFetch();
+            this._updateCurrentPoint();
+        }
     }
 
     set hass(hass) {
@@ -169,7 +183,34 @@ export class MollierHxCard extends LitElement {
         this._updateCurrentPoint();
     }
 
+    // Live outside point: outside sensors first, the weather entity as fallback.
+    _updateOutdoorPoint() {
+        const hass = this._hass;
+        if (!hass || !this._mollier || !(this._outT || this._outW)) { this._outdoorPoint = null; return; }
+        let t = NaN, rh = NaN, source = null;
+        if (this._outT && this._outH) {
+            t = stateCelsius(hass.states[this._outT]);
+            rh = parseFloat(hass.states[this._outH]?.state);
+            source = 'sensor';
+        }
+        if ((!Number.isFinite(t) || !Number.isFinite(rh)) && this._outW) {
+            const a = hass.states[this._outW]?.attributes || {};
+            t = Number(a.temperature);
+            if (a.temperature_unit === '°F') t = (t - 32) * 5 / 9;
+            rh = Number(a.humidity);
+            source = 'weather';
+        }
+        if (!Number.isFinite(t) || !Number.isFinite(rh)) { this._outdoorPoint = null; return; }
+        const phi = rh > 1 ? rh / 100 : rh;
+        const xy = this._mollier.get_x_y(t, phi, this._pressure);
+        if (!Number.isFinite(xy.x) || !Number.isFinite(xy.y)) { this._outdoorPoint = null; return; }
+        const prev = this._outdoorPoint;
+        if (prev && prev.x === xy.x && prev.y === xy.y) return;
+        this._outdoorPoint = { x: xy.x, y: xy.y, t, phi, source };
+    }
+
     _updateCurrentPoint() {
+        this._updateOutdoorPoint();
         if (!this._hass || !this._tempEntity || !this._humEntity || !this._mollier) {
             this._currentPoint = null;
             return;
@@ -197,13 +238,19 @@ export class MollierHxCard extends LitElement {
     // config changed is dropped, so a slow old request cannot overwrite a newer one.
     async _maybeFetch(force = false) {
         if (!this._hass || !this._tempEntity || !this._humEntity) return;
-        const key = `${this._tempEntity}|${this._humEntity}|${this._days}`;
+        const outdoor = this._outHistory && this._outT && this._outH;
+        const key = `${this._tempEntity}|${this._humEntity}|${this._days}|${outdoor ? `${this._outT}|${this._outH}` : ''}`;
         if (key === this._fetchKey && !force) return;
         this._fetchKey = key;
         try {
-            const days = await fetchDailyMeans(this._hass, this._tempEntity, this._humEntity, this._days);
+            const [days, outDays] = await Promise.all([
+                fetchDailyMeans(this._hass, this._tempEntity, this._humEntity, this._days),
+                // Outside history is optional: a failure there must not hide the room data.
+                outdoor ? fetchDailyMeans(this._hass, this._outT, this._outH, this._days).catch(() => []) : [],
+            ]);
             if (this._fetchKey !== key) return;
             this._dailyData = days;
+            this._outdoorDays = outDays;
             this._error = days.length ? undefined : { key: 'card.no_statistics' };
         } catch (err) {
             if (this._fetchKey !== key) return;
@@ -273,20 +320,25 @@ export class MollierHxCard extends LitElement {
     // One short line: names only. The limits are in the hover title, so the
     // legend does not wrap at normal card widths.
     _renderZoneLegend() {
-        if (!this._comfortZone) return nothing;
         const cz = this._comfortZone;
-        const b = this._warningBands;
+        const b = cz ? this._warningBands : null;
+        const o = this._outdoorPoint;
+        if (!cz && !o) return nothing;
         const r = (v) => Math.round(v * 10) / 10;
-        const zone = `${r(cz.range_t[0])}–${r(cz.range_t[1])} °C · ${r(cz.range_phi[0] * 100)}–${r(cz.range_phi[1] * 100)} % · `
-            + `${r(cz.range_x[0] * 1000)}–${r(cz.range_x[1] * 1000)} g/kg`;
-        const fmt = (o) => `±${o.dt} K · ±${o.dphi} % · ±${o.dx} g/kg`;
+        const zone = cz ? `${r(cz.range_t[0])}–${r(cz.range_t[1])} °C · ${r(cz.range_phi[0] * 100)}–${r(cz.range_phi[1] * 100)} % · `
+            + `${r(cz.range_x[0] * 1000)}–${r(cz.range_x[1] * 1000)} g/kg` : '';
+        const fmt = (k) => `±${k.dt} K · ±${k.dphi} % · ±${k.dx} g/kg`;
+        const eff = this._ventilationEffect();
+        const outTitle = o ? `${o.t.toFixed(1)} °C · ${(o.phi * 100).toFixed(0)} % · ${(o.x * 1000).toFixed(1)} g/kg` : '';
         return html`
             <div class="zone-legend">
-                <span title=${zone}><i class="swatch fill"></i>${this._t('card.comfort_zone')}</span>
+                ${cz ? html`<span title=${zone}><i class="swatch fill"></i>${this._t('card.comfort_zone')}</span>` : nothing}
                 ${b ? ['orange', 'red'].map((k) => html`
                     <span title=${fmt(b[k])}>
                         <i class="swatch dash" style="border-color:${b[k].color}"></i>${b[k].label || this._t(k === 'orange' ? 'card.warning_band' : 'card.alarm_band')}
                     </span>`) : nothing}
+                ${o ? html`<span title=${outTitle}><i class="swatch outdoor"></i>${this._t('card.outdoor')}${eff && this._ventLine && this._currentPoint
+                    ? html`<span class="effect ${eff}">· ${this._t(`card.ventilation_${eff}`)}</span>` : nothing}</span>` : nothing}
             </div>
         `;
     }
@@ -299,7 +351,9 @@ export class MollierHxCard extends LitElement {
         if (!this._config) return;
         this._tryDraw();
         this._drawComfort();
+        this._drawOutdoorHistory();
         this._drawPoints();
+        this._drawOutdoor();
         this._drawCurrentPoint();
     }
 
@@ -534,6 +588,134 @@ export class MollierHxCard extends LitElement {
                     this.setAttribute('opacity', baseOpacity);
                 });
             });
+        }
+    }
+
+    // Diagram helpers shared by the outside layers.
+    _plot() {
+        const host = this.renderRoot.querySelector('.mollier-host');
+        const wrap = this.renderRoot.querySelector('.diagram-wrap');
+        if (!this._drawn || !host || !wrap) return null;
+        const svg = d3.select(host).select('#hx_mollier_diagram');
+        if (svg.empty()) return null;
+        const innerW = WIDTH - MARGIN.left - MARGIN.right;
+        const innerH = HEIGHT - MARGIN.top - MARGIN.bottom;
+        return {
+            svg, wrap, innerW, innerH,
+            xs: d3.scaleLinear().range([0, innerW]).domain(this._domainX),
+            ys: d3.scaleLinear().range([innerH, 0]).domain(this._domainY),
+        };
+    }
+
+    _dewPoint(t, phi) {
+        return this._mollier.temperature_p_sat(phi * this._mollier.p_sat(t));
+    }
+
+    // 'dries' / 'humidifies' / 'neutral': does airing move the room point left or right?
+    _ventilationEffect() {
+        const o = this._outdoorPoint, r = this._currentPoint;
+        if (!o || !r) return null;
+        const dx = (o.x - r.x) * 1000;               // g/kg
+        if (dx < -0.3) return 'dries';
+        if (dx > 0.3) return 'humidifies';
+        return 'neutral';
+    }
+
+    // Outside daily means: a faint second cloud below the room points.
+    _drawOutdoorHistory() {
+        const P = this._plot();
+        if (!P) return;
+        P.svg.select('#outdoor-history').remove();
+        const days = this._outHistory ? (this._outdoorDays || []) : [];
+        if (!days.length) return;
+        const layer = P.svg.append('g')
+            .attr('id', 'outdoor-history')
+            .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+        for (const d of days) {
+            const xy = this._mollier.get_x_y(d.t, d.phi, this._pressure);
+            const cx = P.xs(xy.x), cy = P.ys(xy.y);
+            if (!(cx >= 0 && cx <= P.innerW && cy >= 0 && cy <= P.innerH)) continue;
+            layer.append('circle')
+                .attr('cx', cx).attr('cy', cy).attr('r', 3.5)
+                .attr('fill', OUTDOOR_COLOR).attr('fill-opacity', 0.28)
+                .attr('stroke', OUTDOOR_COLOR).attr('stroke-opacity', 0.45).attr('stroke-width', 0.8);
+        }
+    }
+
+    // Live outside point (hollow blue circle) and the ventilation line from the
+    // room point to it. Outside the visible range the marker sits on the edge
+    // with an arrow and the value, instead of changing the axes.
+    _drawOutdoor() {
+        const P = this._plot();
+        if (!P) return;
+        P.svg.select('#outdoor').remove();
+        const o = this._outdoorPoint;
+        if (!o) return;
+        const layer = P.svg.append('g')
+            .attr('id', 'outdoor')
+            .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+        const rawX = P.xs(o.x), rawY = P.ys(o.y);
+        const cx = Math.min(P.innerW, Math.max(0, rawX));
+        const cy = Math.min(P.innerH, Math.max(0, rawY));
+        const outside = cx !== rawX || cy !== rawY;
+
+        const r = this._currentPoint;
+        if (this._ventLine && r) {
+            layer.append('line')
+                .attr('x1', P.xs(r.x)).attr('y1', P.ys(r.y))
+                .attr('x2', cx).attr('y2', cy)
+                .attr('stroke', OUTDOOR_COLOR).attr('stroke-width', 1.6)
+                .attr('stroke-dasharray', '4,3').attr('stroke-linecap', 'round');
+        }
+
+        let marker;
+        if (!outside) {
+            marker = layer.append('circle')
+                .attr('cx', cx).attr('cy', cy).attr('r', 6)
+                .attr('fill', 'white').attr('fill-opacity', 0.85)
+                .attr('stroke', OUTDOOR_COLOR).attr('stroke-width', 2.5);
+        } else {
+            // Arrow on the edge, pointing to where the point really is.
+            const ang = Math.atan2(rawY - cy, rawX - cx);
+            const s = 7;
+            const pts = [[s, 0], [-s * 0.6, -s * 0.75], [-s * 0.6, s * 0.75]]
+                .map(([px, py]) => [cx - Math.cos(ang) * s + px * Math.cos(ang) - py * Math.sin(ang),
+                                    cy - Math.sin(ang) * s + px * Math.sin(ang) + py * Math.cos(ang)]);
+            marker = layer.append('polygon')
+                .attr('points', pts.map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' '))
+                .attr('fill', OUTDOOR_COLOR).attr('stroke', 'white').attr('stroke-width', 1);
+            const label = `${o.t.toFixed(1)} °C · ${(o.phi * 100).toFixed(0)} %`;
+            const below = rawY > P.innerH, above = rawY < 0;
+            layer.append('text')
+                .attr('x', Math.min(P.innerW - 2, Math.max(2, cx + (rawX > P.innerW ? -10 : rawX < 0 ? 10 : 0))))
+                .attr('y', below ? cy - 12 : above ? cy + 20 : cy + 4)
+                .attr('text-anchor', rawX > P.innerW ? 'end' : rawX < 0 ? 'start' : 'middle')
+                .attr('font-size', 11).attr('font-weight', 600)
+                .attr('fill', OUTDOOR_COLOR).attr('stroke', 'white').attr('stroke-width', 3).attr('paint-order', 'stroke')
+                .text(label);
+        }
+
+        const tooltipEl = P.wrap.querySelector('.tooltip');
+        if (tooltipEl && marker) {
+            const node = marker.node();
+            node.style.cursor = 'pointer';
+            const show = () => {
+                const wrapRect = P.wrap.getBoundingClientRect();
+                const rr = node.getBoundingClientRect();
+                const eff = this._ventilationEffect();
+                tooltipEl.innerHTML = `${this._t('card.outdoor')}<br>x: ${(o.x * 1000).toFixed(2)} g/kg`
+                    + `<br>T: ${o.t.toFixed(1)} °C<br>φ: ${(o.phi * 100).toFixed(0)} %`
+                    + `<br>Td: ${this._dewPoint(o.t, o.phi).toFixed(1)} °C`
+                    + (eff ? `<br>${this._t(`card.ventilation_${eff}`)}` : '');
+                tooltipEl.style.background = OUTDOOR_COLOR;
+                tooltipEl.style.color = 'white';
+                tooltipEl.style.left = (rr.left + rr.width / 2 - wrapRect.left) + 'px';
+                tooltipEl.style.top = (rr.top - wrapRect.top) + 'px';
+                tooltipEl.style.display = 'block';
+            };
+            node.addEventListener('mouseover', show);
+            node.addEventListener('click', show);
+            node.addEventListener('mouseout', () => { tooltipEl.style.display = 'none'; });
         }
     }
 

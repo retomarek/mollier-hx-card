@@ -5,7 +5,11 @@
     "now": "Agora",
     "comfort_zone": "Zona de conforto",
     "warning_band": "Faixa de aviso",
-    "alarm_band": "Faixa de alarme"
+    "alarm_band": "Faixa de alarme",
+    "outdoor": "Exterior",
+    "ventilation_dries": "ventilar seca",
+    "ventilation_humidifies": "ventilar umedece",
+    "ventilation_neutral": "ventilar: sem mudança"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -49,7 +53,12 @@
       "line_density": "Densidade",
       "line_enthalpy": "Entalpia",
       "orange_label": "Nome da faixa laranja (vazio: “Faixa de aviso”)",
-      "red_label": "Nome da faixa vermelha (vazio: “Faixa de alarme”)"
+      "red_label": "Nome da faixa vermelha (vazio: “Faixa de alarme”)",
+      "outdoor_temperature_entity": "Sensor de temperatura externa",
+      "outdoor_humidity_entity": "Sensor de umidade externa",
+      "outdoor_weather_entity": "Clima (alternativa)",
+      "outdoor_history": "Médias diárias externas",
+      "ventilation_line": "Linha de ventilação"
     },
     "options": {
       "season": "Por estação",
@@ -64,7 +73,8 @@
       "axes": "Eixos",
       "comfort": "Zona de conforto",
       "bands": "Faixas de aviso",
-      "lines": "Linhas"
+      "lines": "Linhas",
+      "outdoor": "Ar exterior"
     }
   }
 }

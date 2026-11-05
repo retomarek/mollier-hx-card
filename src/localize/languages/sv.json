@@ -5,7 +5,11 @@
     "now": "Nu",
     "comfort_zone": "Komfortzon",
     "warning_band": "Varningsband",
-    "alarm_band": "Larmband"
+    "alarm_band": "Larmband",
+    "outdoor": "Ute",
+    "ventilation_dries": "vädring torkar",
+    "ventilation_humidifies": "vädring fuktar",
+    "ventilation_neutral": "vädring: ingen skillnad"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -49,7 +53,12 @@
       "line_density": "Densitet",
       "line_enthalpy": "Entalpi",
       "orange_label": "Namn på orange band (tomt: ”Varningsband”)",
-      "red_label": "Namn på rött band (tomt: ”Larmband”)"
+      "red_label": "Namn på rött band (tomt: ”Larmband”)",
+      "outdoor_temperature_entity": "Utetemperatursensor",
+      "outdoor_humidity_entity": "Utefuktsensor",
+      "outdoor_weather_entity": "Väder (reserv)",
+      "outdoor_history": "Dygnsmedel ute",
+      "ventilation_line": "Vädringslinje"
     },
     "options": {
       "season": "Efter årstid",
@@ -64,7 +73,8 @@
       "axes": "Axlar",
       "comfort": "Komfortzon",
       "bands": "Varningsband",
-      "lines": "Linjer"
+      "lines": "Linjer",
+      "outdoor": "Uteluft"
     }
   }
 }

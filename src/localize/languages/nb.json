@@ -5,7 +5,11 @@
     "now": "Nå",
     "comfort_zone": "Komfortsone",
     "warning_band": "Varselbånd",
-    "alarm_band": "Alarmbånd"
+    "alarm_band": "Alarmbånd",
+    "outdoor": "Ute",
+    "ventilation_dries": "lufting tørker",
+    "ventilation_humidifies": "lufting fukter",
+    "ventilation_neutral": "lufting: ingen endring"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -49,7 +53,12 @@
       "line_density": "Tetthet",
       "line_enthalpy": "Entalpi",
       "orange_label": "Navn på oransje bånd (tomt: «Varselbånd»)",
-      "red_label": "Navn på rødt bånd (tomt: «Alarmbånd»)"
+      "red_label": "Navn på rødt bånd (tomt: «Alarmbånd»)",
+      "outdoor_temperature_entity": "Utetemperatursensor",
+      "outdoor_humidity_entity": "Utefuktsensor",
+      "outdoor_weather_entity": "Vær (reserve)",
+      "outdoor_history": "Døgnmiddel ute",
+      "ventilation_line": "Luftelinje"
     },
     "options": {
       "season": "Etter årstid",
@@ -64,7 +73,8 @@
       "axes": "Akser",
       "comfort": "Komfortsone",
       "bands": "Varselbånd",
-      "lines": "Linjer"
+      "lines": "Linjer",
+      "outdoor": "Uteluft"
     }
   }
 }

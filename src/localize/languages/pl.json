@@ -5,7 +5,11 @@
     "now": "Teraz",
     "comfort_zone": "Strefa komfortu",
     "warning_band": "Pasmo ostrzegawcze",
-    "alarm_band": "Pasmo alarmowe"
+    "alarm_band": "Pasmo alarmowe",
+    "outdoor": "Na zewnątrz",
+    "ventilation_dries": "wietrzenie osusza",
+    "ventilation_humidifies": "wietrzenie nawilża",
+    "ventilation_neutral": "wietrzenie: bez zmian"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -49,7 +53,12 @@
       "line_density": "Gęstość",
       "line_enthalpy": "Entalpia",
       "orange_label": "Nazwa pasma pomarańczowego (puste: „Pasmo ostrzegawcze”)",
-      "red_label": "Nazwa pasma czerwonego (puste: „Pasmo alarmowe”)"
+      "red_label": "Nazwa pasma czerwonego (puste: „Pasmo alarmowe”)",
+      "outdoor_temperature_entity": "Czujnik temperatury zewnętrznej",
+      "outdoor_humidity_entity": "Czujnik wilgotności zewnętrznej",
+      "outdoor_weather_entity": "Pogoda (zapas)",
+      "outdoor_history": "Średnie dobowe na zewnątrz",
+      "ventilation_line": "Linia wietrzenia"
     },
     "options": {
       "season": "Według pory roku",
@@ -64,7 +73,8 @@
       "axes": "Osie",
       "comfort": "Strefa komfortu",
       "bands": "Pasma ostrzegawcze",
-      "lines": "Linie"
+      "lines": "Linie",
+      "outdoor": "Powietrze zewnętrzne"
     }
   }
 }

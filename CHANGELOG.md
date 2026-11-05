@@ -4,9 +4,15 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-beta.7] - 2026-11-06
+
 ### Added
 
-- README: the h,x diagram in five minutes, with the dew point and mould risk at cold surfaces and examples for ventilating in winter, heating less (comfort and energy) and airing a cellar in summer.
+- Outside air (optional): current outside point from sensors or a weather entity, outside daily means (`outdoor_history`) and a ventilation line with "ventilating dries / adds moisture" in the legend. Points beyond the axes are shown as an arrow on the edge. Also in the visual editor, translated into all 14 languages.
+
+### Added
+
+- README: links to Wikipedia (Mollier-h-x-Diagramm, Psychrometrics); the h,x diagram in five minutes, with the dew point and mould risk at cold surfaces and examples for ventilating in winter, heating less (comfort and energy) and airing a cellar in summer.
 
 ## [1.0.0-beta.6] - 2026-11-06
 
@@ -100,7 +106,8 @@ Replaces 1.0.0-beta.4, which was published by mistake from the wrong commit and 
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.6...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.7...HEAD
+[1.0.0-beta.7]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.7
 [1.0.0-beta.6]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.6
 [1.0.0-beta.5]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.5
 [1.0.0-beta.3]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.3

@@ -37,7 +37,7 @@ The h,x diagram shows both in one point: its position gives temperature, relativ
 
 ## The h,x diagram in five minutes
 
-The Mollier h,x diagram is the map engineers use for moist air. Every state of the air is one point:
+The Mollier h,x diagram is the map engineers use for moist air ([Wikipedia, German](https://de.wikipedia.org/wiki/Mollier-h-x-Diagramm); in English-speaking countries the same physics is drawn as the [psychrometric chart](https://en.wikipedia.org/wiki/Psychrometrics), rotated and mirrored). Every state of the air is one point:
 
 - **Up and down** is the temperature (°C).
 - **Left and right** is the absolute humidity *x*, the grams of water in one kilogram of dry air. Left is dry, right is humid.
@@ -86,6 +86,7 @@ Warm summer air carries a lot of water: at 25 °C and 70 % about 14.7 g/kg. Let 
 - **One point per day** from the recorder's long-term statistics, coloured by season, by age or connected in time order, plus a live point for the current reading.
 - **Comfort zone** as a polygon from temperature, relative and absolute humidity limits.
 - **Warning bands**: orange and red dashed bands as ± offsets around the comfort zone.
+- **Outside air** (optional): the current outside point, the outside daily means and a ventilation line to the room point. The legend tells you whether airing dries the room or adds moisture.
 - **Fits any dashboard**: fills a sections tile with a fixed height, keeps its aspect ratio (capped and centred) everywhere else, so it also looks right at full width.
 - **Visual editor** with entity pickers limited to sensors that have long-term statistics.
 - **Translated** into 14 languages, following your Home Assistant language. Corrections welcome, see [Translations](#translations).
@@ -122,6 +123,10 @@ comfort_zone:
 warning_bands: true
 lines:
   density: true        # off by default, like enthalpy
+outdoor_temperature_entity: sensor.outside_temperature
+outdoor_humidity_entity: sensor.outside_humidity
+outdoor_weather_entity: weather.home   # fallback for the current outside point
+outdoor_history: true
 ```
 
 ### Options
@@ -140,6 +145,11 @@ lines:
 | `domain_y` | `[min, max]` | `[-10, 40]` | Temperature axis in °C. |
 | `comfort_zone` | object | | Comfort zone, see below. |
 | `warning_bands` | `true` or object | | Needs `comfort_zone`. `true` uses the defaults, see below. |
+| `outdoor_temperature_entity` | string | | Outside temperature sensor. With `outdoor_humidity_entity` it gives the current outside point. |
+| `outdoor_humidity_entity` | string | | Outside relative-humidity sensor. |
+| `outdoor_weather_entity` | string | | A `weather.*` entity, used for the current outside point when the outside sensors are missing or unavailable. |
+| `outdoor_history` | boolean | `false` | Also show the outside daily means as a faint cloud. Needs the outside **sensors** with long-term statistics (a weather entity has none). |
+| `ventilation_line` | boolean | `true` | Dashed line from the current room point to the outside point, plus "ventilating dries / adds moisture" in the legend. |
 | `lines` | object | | Which iso-lines to draw: `temperature`, `relative_humidity`, `absolute_humidity` (on by default), `density`, `enthalpy` (off by default). |
 
 #### `comfort_zone`
@@ -170,6 +180,16 @@ warning_bands:
 
 These are the defaults. `label` (the name in the legend, also editable in the visual editor) and `color` are optional per band.
 
+### Outside air and ventilation
+
+With an outside sensor pair (or a weather entity) the card adds the outside air to the diagram:
+
+- **The current outside point** is a hollow blue circle. If it lies outside the visible axis range (cold winter days with a narrow range), an arrow on the edge points to it, with its value.
+- **The ventilation line** runs from the current room point to the outside point. When you air the room, the room air moves along this line. The legend says what that does: if the outside point is to the **left** (less water per kg of air), **airing dries the room**, even if the outside air has 90 % relative humidity. If it is to the right, airing brings moisture in, typical for a cool cellar in summer.
+- **Outside daily means** (`outdoor_history: true`) show the season at a glance and how often airing would have helped.
+
+Hover or tap the outside point for its temperature, humidity, water content and dew point. See [The h,x diagram in five minutes](#the-hx-diagram-in-five-minutes) for the background.
+
 ### Size in the dashboard
 
 In a sections dashboard the card takes the full width and sets its own height. Set a row count under *Layout* to give it a fixed height; the diagram then fills the tile. At full width without a row count the diagram is capped at 480 px height and centred.
@@ -195,6 +215,7 @@ The diagram math and D3 drawing code come from [pyedautils](https://github.com/r
 
 - [pyedautils](https://github.com/retomarek/pyedautils), Python Energy Data Analysis Utilities: diagram math, D3 drawing code and warning bands.
 - Thermodynamic relations from chapters 2.1 and 2.2 of *Glück: Zustands- und Stoffwerte – Wasser – Dampf – Luft*.
+- Background: [Mollier-h-x-Diagramm](https://de.wikipedia.org/wiki/Mollier-h-x-Diagramm) and [Psychrometrics](https://en.wikipedia.org/wiki/Psychrometrics) on Wikipedia.
 
 ## License
 

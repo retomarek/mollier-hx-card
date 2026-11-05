@@ -55,6 +55,11 @@ function configToData(config) {
         comfort_x_min: c.comfort_zone?.absolute_humidity?.[0] ?? DEFAULTS.comfort_x_min,
         comfort_x_max: c.comfort_zone?.absolute_humidity?.[1] ?? DEFAULTS.comfort_x_max,
         ...Object.fromEntries(Object.entries(parseLines(c.lines)).map(([k, v]) => [`line_${k}`, v])),
+        outdoor_temperature_entity: c.outdoor_temperature_entity ?? '',
+        outdoor_humidity_entity: c.outdoor_humidity_entity ?? '',
+        outdoor_weather_entity: c.outdoor_weather_entity ?? '',
+        outdoor_history: c.outdoor_history === true,
+        ventilation_line: c.ventilation_line !== false,
         bands_enabled: !!c.warning_bands,
         orange_dt: c.warning_bands?.orange?.temperature ?? DEFAULTS.orange_dt,
         orange_dphi: c.warning_bands?.orange?.humidity ?? DEFAULTS.orange_dphi,
@@ -72,6 +77,7 @@ function configToData(config) {
 const OWNED_KEYS = [
     'type', 'temperature_entity', 'humidity_entity', 'header', 'days', 'coloring', 'convention',
     'domain_x', 'domain_y', 'lines', 'altitude', 'pressure', 'comfort_zone', 'warning_bands',
+    'outdoor_temperature_entity', 'outdoor_humidity_entity', 'outdoor_weather_entity', 'outdoor_history', 'ventilation_line',
 ];
 
 function dataToConfig(data, previous = {}) {
@@ -96,6 +102,13 @@ function dataToConfig(data, previous = {}) {
         if (data[`line_${k}`] !== LINE_DEFAULTS[k]) lines[k] = data[`line_${k}`];
     }
     if (Object.keys(lines).length) config.lines = lines;
+    // Outside air: only what is set; defaults stay out of the YAML.
+    for (const k of ['outdoor_temperature_entity', 'outdoor_humidity_entity', 'outdoor_weather_entity']) {
+        if (data[k]) config[k] = data[k];
+    }
+    const hasOutdoor = data.outdoor_temperature_entity || data.outdoor_weather_entity;
+    if (hasOutdoor && data.outdoor_history) config.outdoor_history = true;
+    if (hasOutdoor && data.ventilation_line === false) config.ventilation_line = false;
     // Persist either pressure or altitude, never both. Do not write the default
     // pressure unless it was set before, so opening the editor changes nothing.
     if (data.air_mode === 'altitude') {
@@ -238,6 +251,28 @@ function buildSchema(data, t) {
                 {
                     type: 'grid',
                     schema: LINE_KEYS.map((k) => ({ name: `line_${k}`, selector: { boolean: {} } })),
+                },
+            ],
+        },
+        {
+            type: 'expandable',
+            title: t('editor.sections.outdoor'),
+            expanded: !!(data.outdoor_temperature_entity || data.outdoor_weather_entity),
+            schema: [
+                {
+                    type: 'grid',
+                    schema: [
+                        { name: 'outdoor_temperature_entity', selector: { statistic: { device_class: 'temperature' } } },
+                        { name: 'outdoor_humidity_entity', selector: { statistic: { device_class: 'humidity' } } },
+                    ],
+                },
+                { name: 'outdoor_weather_entity', selector: { entity: { domain: 'weather' } } },
+                {
+                    type: 'grid',
+                    schema: [
+                        { name: 'outdoor_history', selector: { boolean: {} } },
+                        { name: 'ventilation_line', selector: { boolean: {} } },
+                    ],
                 },
             ],
         },

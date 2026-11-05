@@ -5,7 +5,11 @@
     "now": "Ora",
     "comfort_zone": "Zona di comfort",
     "warning_band": "Banda di avviso",
-    "alarm_band": "Banda di allarme"
+    "alarm_band": "Banda di allarme",
+    "outdoor": "Esterno",
+    "ventilation_dries": "arieggiare asciuga",
+    "ventilation_humidifies": "arieggiare umidifica",
+    "ventilation_neutral": "arieggiare: nessun effetto"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -49,7 +53,12 @@
       "line_density": "Densità",
       "line_enthalpy": "Entalpia",
       "orange_label": "Nome banda arancione (vuoto: «Banda di avviso»)",
-      "red_label": "Nome banda rossa (vuoto: «Banda di allarme»)"
+      "red_label": "Nome banda rossa (vuoto: «Banda di allarme»)",
+      "outdoor_temperature_entity": "Sensore temperatura esterna",
+      "outdoor_humidity_entity": "Sensore umidità esterna",
+      "outdoor_weather_entity": "Meteo (riserva)",
+      "outdoor_history": "Medie giornaliere esterne",
+      "ventilation_line": "Linea di ventilazione"
     },
     "options": {
       "season": "Per stagione",
@@ -64,7 +73,8 @@
       "axes": "Assi",
       "comfort": "Zona di comfort",
       "bands": "Bande di avviso",
-      "lines": "Linee"
+      "lines": "Linee",
+      "outdoor": "Aria esterna"
     }
   }
 }

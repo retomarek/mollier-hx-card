@@ -129,6 +129,19 @@ export default css`
         background: rgba(154, 205, 50, 0.4);
         border: 1px solid yellowgreen;
     }
+    .swatch.outdoor {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        border: 2.5px solid #2563eb;
+        background: #fff;
+    }
+    .zone-legend .effect {
+        margin-left: 4px;
+        font-weight: 500;
+    }
+    .zone-legend .effect.dries { color: #b45309; }
+    .zone-legend .effect.humidifies { color: #2563eb; }
     .swatch.dash {
         height: 0;
         border-top: 2px dashed;
