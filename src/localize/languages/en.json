@@ -5,8 +5,7 @@
     "now": "Now",
     "comfort_zone": "Comfort zone",
     "warning_band": "Warning band",
-    "alarm_band": "Alarm band",
-    "needs_comfort_zone": "The comfort compass needs a comfort zone. Turn it on in the card settings."
+    "alarm_band": "Alarm band"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -14,37 +13,6 @@
     "rel_humidity": "rel. humidity φ [%]",
     "density": "Density ρ [kg/m³]",
     "enthalpy": "Enthalpy [kJ/kg]"
-  },
-  "compass": {
-    "title": "Comfort compass",
-    "day": "day",
-    "days": "days",
-    "names": {
-      "ok": "in range",
-      "w": "too warm",
-      "wf": "warm + humid",
-      "f": "too humid",
-      "kf": "cold + humid",
-      "c": "too cold",
-      "ct": "cold + dry",
-      "t": "too dry",
-      "wt": "warm + dry"
-    },
-    "labels": {
-      "f": "too humid",
-      "wf": "warm +\nhumid",
-      "w": "too warm",
-      "wt": "warm +\ndry",
-      "t": "too dry",
-      "ct": "cold +\ndry",
-      "c": "too cold",
-      "kf": "cold +\nhumid"
-    },
-    "stages": {
-      "l": "mild",
-      "d": "moderate",
-      "s": "severe"
-    }
   },
   "editor": {
     "fields": {
@@ -75,8 +43,11 @@
       "red_dt": "Red ± temperature",
       "red_dphi": "Red ± humidity",
       "red_dx": "Red ± abs. humidity",
-      "show_compass": "Show comfort compass",
-      "compass_fixed": "Fixed scale (compare rooms)"
+      "line_temperature": "Temperature",
+      "line_relative_humidity": "Relative humidity",
+      "line_absolute_humidity": "Absolute humidity",
+      "line_density": "Density",
+      "line_enthalpy": "Enthalpy"
     },
     "options": {
       "season": "By season",
@@ -90,7 +61,8 @@
     "sections": {
       "axes": "Axes",
       "comfort": "Comfort zone",
-      "bands": "Warning bands & comfort compass"
+      "bands": "Warning bands",
+      "lines": "Lines"
     }
   }
 }

@@ -5,8 +5,7 @@
     "now": "Jetzt",
     "comfort_zone": "Komfortzone",
     "warning_band": "Warnband",
-    "alarm_band": "Alarmband",
-    "needs_comfort_zone": "Der Komfort-Kompass braucht eine Komfortzone. Schalte sie in den Karteneinstellungen ein."
+    "alarm_band": "Alarmband"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -14,37 +13,6 @@
     "rel_humidity": "rel. Feuchte φ [%]",
     "density": "Dichte ρ [kg/m³]",
     "enthalpy": "Enthalpie [kJ/kg]"
-  },
-  "compass": {
-    "title": "Komfort-Kompass",
-    "day": "Tag",
-    "days": "Tage",
-    "names": {
-      "ok": "im Zielband",
-      "w": "zu warm",
-      "wf": "warm + feucht",
-      "f": "zu feucht",
-      "kf": "kalt + feucht",
-      "c": "zu kalt",
-      "ct": "kalt + trocken",
-      "t": "zu trocken",
-      "wt": "warm + trocken"
-    },
-    "labels": {
-      "f": "zu feucht",
-      "wf": "warm +\nfeucht",
-      "w": "zu warm",
-      "wt": "warm +\ntrocken",
-      "t": "zu trocken",
-      "ct": "kalt +\ntrocken",
-      "c": "zu kalt",
-      "kf": "kalt +\nfeucht"
-    },
-    "stages": {
-      "l": "leicht",
-      "d": "mittel",
-      "s": "stark"
-    }
   },
   "editor": {
     "fields": {
@@ -75,8 +43,11 @@
       "red_dt": "Rot ± Temperatur",
       "red_dphi": "Rot ± Feuchte",
       "red_dx": "Rot ± abs. Feuchte",
-      "show_compass": "Komfort-Kompass anzeigen",
-      "compass_fixed": "Feste Skala (Räume vergleichen)"
+      "line_temperature": "Temperatur",
+      "line_relative_humidity": "Relative Feuchte",
+      "line_absolute_humidity": "Absolute Feuchte",
+      "line_density": "Dichte",
+      "line_enthalpy": "Enthalpie"
     },
     "options": {
       "season": "Nach Jahreszeit",
@@ -90,7 +61,8 @@
     "sections": {
       "axes": "Achsen",
       "comfort": "Komfortzone",
-      "bands": "Warnbänder & Komfort-Kompass"
+      "bands": "Warnbänder",
+      "lines": "Linien"
     }
   }
 }

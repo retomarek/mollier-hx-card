@@ -1,5 +1,8 @@
 import { html, LitElement } from 'lit';
 import { localize } from './localize/localize.js';
+import { LINE_DEFAULTS, parseLines } from './card.js';
+
+const LINE_KEYS = Object.keys(LINE_DEFAULTS);
 
 // The editor uses HA's <ha-form> (loaded by HA's frontend at runtime — not on
 // npm). The form's data model is flat; the YAML config is nested. The pair of
@@ -8,9 +11,9 @@ import { localize } from './localize/localize.js';
 const DEFAULTS = {
     days: 7,
     coloring: 'season',
-    pressure: 96035,    // ISA pressure at 450 m a.s.l.
-    altitude: 450,
-    air_mode: 'altitude',
+    pressure: 101325,   // the card's default when neither pressure nor altitude is set
+    altitude: 450,      // only a suggestion when the user switches to altitude
+    air_mode: 'pressure',
     convention: 'classical',
     x_min: 0,    // g/kg
     x_max: 20,   // g/kg
@@ -51,6 +54,7 @@ function configToData(config) {
         comfort_phi_max: c.comfort_zone?.humidity?.[1] ?? DEFAULTS.comfort_phi_max,
         comfort_x_min: c.comfort_zone?.absolute_humidity?.[0] ?? DEFAULTS.comfort_x_min,
         comfort_x_max: c.comfort_zone?.absolute_humidity?.[1] ?? DEFAULTS.comfort_x_max,
+        ...Object.fromEntries(Object.entries(parseLines(c.lines)).map(([k, v]) => [`line_${k}`, v])),
         bands_enabled: !!c.warning_bands,
         orange_dt: c.warning_bands?.orange?.temperature ?? DEFAULTS.orange_dt,
         orange_dphi: c.warning_bands?.orange?.humidity ?? DEFAULTS.orange_dphi,
@@ -58,13 +62,20 @@ function configToData(config) {
         red_dt: c.warning_bands?.red?.temperature ?? DEFAULTS.red_dt,
         red_dphi: c.warning_bands?.red?.humidity ?? DEFAULTS.red_dphi,
         red_dx: c.warning_bands?.red?.absolute_humidity ?? DEFAULTS.red_dx,
-        show_compass: !!c.show_compass,
-        compass_fixed: c.compass_scale === 'fixed',
     };
 }
 
-function dataToConfig(data, previous) {
-    const config = {
+// Keys this form owns. Everything else in the existing config (grid_options,
+// visibility, view_layout, card_mod, YAML-only options) is kept as it is.
+const OWNED_KEYS = [
+    'type', 'temperature_entity', 'humidity_entity', 'header', 'days', 'coloring', 'convention',
+    'domain_x', 'domain_y', 'lines', 'altitude', 'pressure', 'comfort_zone', 'warning_bands',
+];
+
+function dataToConfig(data, previous = {}) {
+    const config = { ...previous };
+    for (const k of OWNED_KEYS) delete config[k];
+    Object.assign(config, {
         type: 'custom:mollier-hx-card',
         temperature_entity: data.temperature_entity,
         humidity_entity: data.humidity_entity,
@@ -73,15 +84,21 @@ function dataToConfig(data, previous) {
         convention: data.convention,
         domain_x: [data.x_min, data.x_max],
         domain_y: [data.y_min, data.y_max],
-    };
-    // Persist either pressure or altitude — never both — so the card knows
-    // which input the user chose.
+    });
+    if (data.header) config.header = data.header;
+    // Store only the lines that differ from the defaults, to keep YAML short.
+    const lines = {};
+    for (const k of LINE_KEYS) {
+        if (data[`line_${k}`] !== LINE_DEFAULTS[k]) lines[k] = data[`line_${k}`];
+    }
+    if (Object.keys(lines).length) config.lines = lines;
+    // Persist either pressure or altitude, never both. Do not write the default
+    // pressure unless it was set before, so opening the editor changes nothing.
     if (data.air_mode === 'altitude') {
         config.altitude = data.altitude;
-    } else {
+    } else if (previous.pressure !== undefined || data.pressure !== DEFAULTS.pressure) {
         config.pressure = data.pressure;
     }
-    if (data.header) config.header = data.header;
     if (data.comfort_enabled) {
         config.comfort_zone = {
             temperature: [data.comfort_t_min, data.comfort_t_max],
@@ -90,15 +107,11 @@ function dataToConfig(data, previous) {
         };
         if (data.bands_enabled) {
             // Keep YAML-only keys (label, color) the form doesn't edit.
-            const prev = typeof previous?.warning_bands === 'object' ? previous.warning_bands : {};
+            const prev = typeof previous.warning_bands === 'object' && previous.warning_bands ? previous.warning_bands : {};
             config.warning_bands = {
                 orange: { ...prev.orange, temperature: data.orange_dt, humidity: data.orange_dphi, absolute_humidity: data.orange_dx },
                 red: { ...prev.red, temperature: data.red_dt, humidity: data.red_dphi, absolute_humidity: data.red_dx },
             };
-        }
-        if (data.show_compass) {
-            config.show_compass = true;
-            if (data.compass_fixed) config.compass_scale = 'fixed';
         }
     }
     return config;
@@ -210,6 +223,16 @@ function buildSchema(data, t) {
         },
         {
             type: 'expandable',
+            title: t('editor.sections.lines'),
+            schema: [
+                {
+                    type: 'grid',
+                    schema: LINE_KEYS.map((k) => ({ name: `line_${k}`, selector: { boolean: {} } })),
+                },
+            ],
+        },
+        {
+            type: 'expandable',
             title: t('editor.sections.axes'),
             schema: [
                 {
@@ -240,12 +263,10 @@ function buildSchema(data, t) {
         ...(data.comfort_enabled ? [{
             type: 'expandable',
             title: t('editor.sections.bands'),
-            expanded: !!(data.bands_enabled || data.show_compass),
+            expanded: !!data.bands_enabled,
             schema: [
                 { name: 'bands_enabled', selector: { boolean: {} } },
                 ...(data.bands_enabled ? [bandRow('orange'), bandRow('red')] : []),
-                { name: 'show_compass', selector: { boolean: {} } },
-                ...(data.show_compass ? [{ name: 'compass_fixed', selector: { boolean: {} } }] : []),
             ],
         }] : []),
     ];

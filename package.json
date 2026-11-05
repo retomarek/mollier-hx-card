@@ -1,13 +1,15 @@
 {
   "name": "mollier-hx-card",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "A Home Assistant custom card that renders a Mollier h-x diagram from temperature and humidity sensor data.",
   "type": "module",
   "source": "src/mollier-hx-card.js",
   "scripts": {
     "build": "parcel build --no-source-maps --no-cache",
     "watch": "parcel watch",
-    "screenshots": "node scripts/screenshots.mjs"
+    "screenshots": "node scripts/screenshots.mjs",
+    "social-preview": "node scripts/social-preview.mjs",
+    "visual-check": "node scripts/visual-check.mjs"
   },
   "targets": {
     "default": {

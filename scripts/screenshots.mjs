@@ -48,7 +48,6 @@ const CONFIG = {
     altitude: 450,
     comfort_zone: { temperature: [20, 26], humidity: [30, 60], absolute_humidity: [0, 12] },
     warning_bands: true,
-    show_compass: true,
 };
 
 function page(shot) {
@@ -115,10 +114,10 @@ try {
         await tab.setViewport({ width: shot.width + 32, height: 800, deviceScaleFactor: 2 });
         await tab.setContent(page(shot), { waitUntil: 'networkidle0' });
         await tab.evaluate(() => document.fonts.ready);
-        // Wait until the card has drawn the diagram and the compass.
+        // Wait until the card has drawn the diagram and the daily points.
         await tab.waitForFunction(() => {
             const root = document.querySelector('mollier-hx-card')?.shadowRoot;
-            return root?.querySelector('#data-points circle') && root.querySelector('.compass-glyph');
+            return root?.querySelector('#data-points circle');
         }, { timeout: 15000 });
         const el = await tab.$('#wrap');
         await el.screenshot({ path: resolve(outDir, shot.file) });

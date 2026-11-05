@@ -4,6 +4,34 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-beta.3] - 2026-11-05
+
+### Added
+
+- Choose which iso-lines to show (`lines`, also in the editor). Density and enthalpy are off by default.
+- Link to pyedautils, the Python Energy Data Analysis Utilities behind the card.
+- Claude Code setup for contributors: `card-reviewer` agent, `visual-check` and `release` skills (`npm run visual-check`).
+
+### Changed
+
+- Sizing follows the dashboard: fills a sections tile with a fixed row count or panel view; otherwise keeps the 600:420 aspect ratio, capped at 480 px height and centred. Grid defaults: 12 columns, at least 6 columns and 7 rows; masonry size 10.
+- Right-hand axis captions are stacked from the top of the axis and sized from their text, so "rel. humidity φ [%]" is no longer cut off.
+- Minimum Home Assistant version is now 2024.11 (sections grid options).
+
+### Fixed
+
+- Fahrenheit sensors: statistics are requested in °C and the live point is converted.
+- The diagram refreshes hourly and retries after a failed load, instead of keeping the data from page load.
+- Only completed days are plotted; today's partial day no longer counts as a full day.
+- A slow, outdated statistics response can no longer overwrite a newer one.
+- The visual editor keeps settings it does not show (`grid_options`, `visibility`, `card_mod`, ...) and no longer writes an altitude or pressure on the first edit.
+- The x-axis caption "x [g/kg]" no longer covers the last tick numbers; the right-hand captions start at the top of the axis; the legend fits on one line (limits shown on hover).
+- "No statistics" is shown as a grey hint instead of an error.
+
+### Removed
+
+- The comfort compass moved to its own card, [comfort-compass-card](https://github.com/retomarek/comfort-compass-card). `show_compass` and `compass_scale` are ignored.
+
 ## [1.0.0-beta.2] - 2026-11-05
 
 ### Added
@@ -37,7 +65,8 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.2...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.3...HEAD
+[1.0.0-beta.3]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.3
 [1.0.0-beta.2]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.1
 [0.1.0]: https://github.com/retomarek/mollier-hx-card/releases/tag/v0.1.0

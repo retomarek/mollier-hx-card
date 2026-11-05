@@ -6,13 +6,13 @@
 
 <p align="center">
   A psychrometric h,x diagram for your Home Assistant dashboard,<br>
-  with comfort zone, warning bands and a comfort compass.
+  with comfort zone and warning bands.
 </p>
 
 <p align="center">
   <a href="https://github.com/retomarek/mollier-hx-card/releases"><img alt="Release" src="https://img.shields.io/github/v/release/retomarek/mollier-hx-card?include_prereleases&style=flat-square&color=41BDF5"></a>
   <a href="https://github.com/hacs/integration"><img alt="HACS Custom" src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square"></a>
-  <img alt="Home Assistant 2024.8+" src="https://img.shields.io/badge/Home%20Assistant-2024.8%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white">
+  <img alt="Home Assistant 2024.11+" src="https://img.shields.io/badge/Home%20Assistant-2024.11%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white">
   <a href="https://github.com/retomarek/mollier-hx-card/actions/workflows/validate.yaml"><img alt="Validate" src="https://img.shields.io/github/actions/workflow/status/retomarek/mollier-hx-card/validate.yaml?branch=main&style=flat-square&label=HACS%20validation"></a>
   <a href="https://github.com/retomarek/mollier-hx-card/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/retomarek/mollier-hx-card/total?style=flat-square&color=9acd32"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/retomarek/mollier-hx-card?style=flat-square"></a>
@@ -23,19 +23,23 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/retomarek/mollier-hx-card/main/docs/screenshot.png" alt="Mollier hx Card in a dark dashboard: h,x diagram with comfort zone, warning bands and 120 daily points, comfort compass below" width="49%">
+  <img src="https://raw.githubusercontent.com/retomarek/mollier-hx-card/main/docs/screenshot.png" alt="Mollier hx Card in a dark dashboard: h,x diagram with comfort zone, warning bands and 120 daily points" width="49%">
   <img src="https://raw.githubusercontent.com/retomarek/mollier-hx-card/main/docs/screenshot-light-de.png" alt="The same card in the light theme with German labels" width="49%">
 </p>
 
-Plot your room climate where it belongs: on a Mollier h,x diagram. The card reads the daily means of a temperature and a humidity sensor from Home Assistant's long-term statistics and plots one point per day. Draw your comfort zone, add orange and red warning bands around it, and the comfort compass sums up how many days were in range, too warm, too humid, too dry or too cold, and how far off they were.
+Plot your room climate where it belongs: on a Mollier h,x diagram. The card reads the daily means of a temperature and a humidity sensor from Home Assistant's long-term statistics and plots one point per day. Draw your comfort zone and add orange and red warning bands around it.
+
+> **Want the summary at a glance?** The [Comfort Compass Card](https://github.com/retomarek/comfort-compass-card) counts how many days were in range, too warm, too humid, too dry or too cold, using the same comfort zone and warning bands.
+
+> **Built on [pyedautils](https://github.com/retomarek/pyedautils)**, the *Python Energy Data Analysis Utilities*: a pip-installable library (`pip install pyedautils`) for analysing and visualising energy and comfort time series. The card draws the same diagram as its `plot_mollier_hx()`, so you can take the same sensor data into Python or Jupyter for deeper analysis.
 
 ## Features
 
-- **Full h,x diagram** with iso-lines for temperature, relative humidity, density and enthalpy, for your altitude or air pressure.
+- **h,x diagram** for your altitude or air pressure. Choose which iso-lines to show: temperature, relative and absolute humidity, density, enthalpy.
 - **One point per day** from the recorder's long-term statistics, coloured by season, by age or connected in time order, plus a live point for the current reading.
 - **Comfort zone** as a polygon from temperature, relative and absolute humidity limits.
 - **Warning bands**: orange and red dashed bands as ± offsets around the comfort zone.
-- **Comfort compass**: an area-true glyph that splits the days into *in range* and eight directions (warm, humid, dry, cold and their mixes), graded mild / moderate / severe by the warning bands. Hover or tap a segment for the details.
+- **Fits any dashboard**: fills a sections tile with a fixed height, keeps its aspect ratio (capped and centred) everywhere else, so it also looks right at full width.
 - **Visual editor** with entity pickers limited to sensors that have long-term statistics.
 - **Translated**: English and German, following your Home Assistant language. More languages are welcome, see [Translations](#translations).
 - **Self-contained**: one JavaScript file, no external requests at runtime.
@@ -79,7 +83,8 @@ comfort_zone:
   humidity: [30, 60]
   absolute_humidity: [0, 12]
 warning_bands: true
-show_compass: true
+lines:
+  density: true        # off by default, like enthalpy
 ```
 
 ### Options
@@ -98,8 +103,7 @@ show_compass: true
 | `domain_y` | `[min, max]` | `[-20, 50]` | Temperature axis in °C. |
 | `comfort_zone` | object | | Comfort zone, see below. |
 | `warning_bands` | `true` or object | | Needs `comfort_zone`. `true` uses the defaults, see below. |
-| `show_compass` | boolean | `false` | Needs `comfort_zone`. Shows the comfort compass below the diagram. |
-| `compass_scale` | string | `fit` | `fit` zooms the compass to its glyph. `fixed` keeps the dashed 100 % circle the same size in every card, so you can compare rooms side by side. |
+| `lines` | object | | Which iso-lines to draw: `temperature`, `relative_humidity`, `absolute_humidity` (on by default), `density`, `enthalpy` (off by default). |
 
 #### `comfort_zone`
 
@@ -129,11 +133,9 @@ warning_bands:
 
 These are the defaults. `label` and `color` are optional per band.
 
-### Comfort compass
+### Size in the dashboard
 
-The compass counts days, using the same daily means as the diagram. Each day is compared with the comfort zone. Humidity counts as too high or too low when **either** the relative or the absolute limit is exceeded. The warning bands set the severity: *mild* is inside the orange band, *moderate* inside the red band, *severe* beyond it. The worse of temperature and humidity decides.
-
-The glyph is area-true. The green disc's area is the share of days in range, and each wedge's area is the share of days off in that direction. Warm is at the top, cold at the bottom, humid on the right and dry on the left, the same as in the h,x diagram.
+In a sections dashboard the card takes the full width and sets its own height. Set a row count under *Layout* to give it a fixed height; the diagram then fills the tile. At full width without a row count the diagram is capped at 480 px height and centred.
 
 ## Translations
 
@@ -143,11 +145,11 @@ To add a language, copy [`src/localize/languages/en.json`](src/localize/language
 
 ## How it works
 
-The diagram math and D3 drawing code come from [pyedautils](https://github.com/retomarek/pyedautils) (`data/d3_mollierhx`), so the card draws the same diagram as `pyedautils.plots.plot_mollier_hx()`. The comfort compass is a port of `pyedautils.comfort.comfort_compass_distribution` and `plot_comfort_compass`. Daily means come from Home Assistant's `recorder/statistics_during_period` WebSocket API.
+The diagram math and D3 drawing code come from [pyedautils](https://github.com/retomarek/pyedautils) (`data/d3_mollierhx`), so the card draws the same diagram as `pyedautils.plots.plot_mollier_hx()`. Daily means come from Home Assistant's `recorder/statistics_during_period` WebSocket API.
 
 ## Credits
 
-- [pyedautils](https://github.com/retomarek/pyedautils): diagram math, D3 drawing code, warning bands and comfort compass.
+- [pyedautils](https://github.com/retomarek/pyedautils), Python Energy Data Analysis Utilities: diagram math, D3 drawing code and warning bands.
 - Thermodynamic relations from chapters 2.1 and 2.2 of *Glück: Zustands- und Stoffwerte – Wasser – Dampf – Luft*.
 
 ## License

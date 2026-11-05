@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap">
+<style>
+html,body{margin:0;width:1280px;height:640px;overflow:hidden}
+body{background:radial-gradient(120% 140% at 0% 0%,#1f3756 0%,#101b29 55%,#0a121c 100%);font-family:Manrope,sans-serif;color:#eef3f8;position:relative}
+.left{position:absolute;left:84px;top:0;bottom:0;width:560px;display:flex;flex-direction:column;justify-content:center;gap:26px}
+.logo{width:132px;height:132px;filter:drop-shadow(0 10px 24px rgba(0,0,0,.45))}
+h1{margin:0;font-size:72px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+p{margin:0;font-size:27px;line-height:1.38;color:#b7c4d3;font-weight:500;max-width:520px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{font-size:18px;font-weight:700;padding:7px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.18);color:#dfe8f1}
+.chip.g{border-color:#9acd32;color:#c9f26f}.chip.o{border-color:#f08a2c;color:#f6b06c}
+.shot{position:absolute;right:-30px;top:70px;width:580px;border-radius:18px;box-shadow:0 30px 70px rgba(0,0,0,.55);transform:rotate(-2deg)}
+</style></head><body>
+<div class="left">
+  <img class="logo" src="../docs/logo.svg">
+  <h1>Mollier hx Card</h1>
+  <p>Psychrometric h,x diagram for Home Assistant, with comfort zone, warning bands and one point per day.</p>
+  <div class="chips"><span class="chip g">Comfort zone</span><span class="chip o">Warning bands</span><span class="chip">One point per day</span></div>
+</div>
+<img class="shot" src="../docs/screenshot.png">
+</body></html>

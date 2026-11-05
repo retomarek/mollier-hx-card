@@ -15,7 +15,7 @@ export function getLanguage(hass) {
 
 const lookup = (obj, path) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
 
-// localize(hass, 'compass.names.ok') or localize(hass, 'card.fetch_failed', { error })
+// localize(hass, 'diagram.density') or localize(hass, 'card.fetch_failed', { error })
 export function localize(hass, key, vars) {
     let value = lookup(LANGUAGES[getLanguage(hass)], key);
     if (typeof value !== 'string') value = lookup(en, key);
@@ -33,3 +33,6 @@ export const DIAGRAM_CAPTIONS = {
     'Density ρ [kg/m³]': 'diagram.density',
     'Enthalpy [kJ/kg]': 'diagram.enthalpy',
 };
+
+// Right-edge captions, top to bottom, re-laid out by the card.
+export const RIGHT_CAPTION_KEYS = ['diagram.rel_humidity', 'diagram.density', 'diagram.enthalpy'];

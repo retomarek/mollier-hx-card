@@ -3,8 +3,9 @@ import * as d3 from './d3_mollierhx/d3.js';
 import { drawHXCoordinates } from './d3_mollierhx/coordinateGenerator.js';
 import { createComfort } from './d3_mollierhx/drawComfort.js';
 import { createMollier } from './d3_mollierhx/mollierFunctions.js';
-import { parseWarningBands, bandRanges, compassDistribution, renderCompass } from './compass.js';
-import { localize, getLanguage, DIAGRAM_CAPTIONS } from './localize/localize.js';
+import { parseWarningBands, bandRanges } from './bands.js';
+import { localize, getLanguage, DIAGRAM_CAPTIONS, RIGHT_CAPTION_KEYS } from './localize/localize.js';
+import { fetchDailyMeans, stateCelsius, REFRESH_MS } from './statistics.js';
 import styles from './card.styles';
 
 const DEFAULT_PRESSURE = 101325;
@@ -16,6 +17,33 @@ const VALID_CONVENTIONS = ['classical', 'glueck'];
 // g/kg (x) and °C (y) — see _parseDomainX below.
 const DEFAULT_DOMAIN_X = [0.0, 0.020];
 const DEFAULT_DOMAIN_Y = [-20.0, 50.0];
+// Iso-line families the user can switch on and off (config key → option of
+// the vendored drawHXCoordinates). Density and enthalpy are off by default.
+export const LINE_DEFAULTS = {
+    temperature: true,
+    relative_humidity: true,
+    absolute_humidity: true,
+    density: false,
+    enthalpy: false,
+};
+const LINE_OPTS = {
+    temperature: 'showTemperature',
+    relative_humidity: 'showRelHumidity',
+    absolute_humidity: 'showAbsHumidity',
+    density: 'showDensity',
+    enthalpy: 'showEnthalpy',
+};
+
+export function parseLines(cfg) {
+    const out = { ...LINE_DEFAULTS };
+    if (cfg && typeof cfg === 'object') {
+        for (const k of Object.keys(LINE_DEFAULTS)) {
+            if (typeof cfg[k] === 'boolean') out[k] = cfg[k];
+        }
+    }
+    return out;
+}
+
 const MARGIN = { top: 30, right: 60, bottom: 40, left: 50 };
 const WIDTH = 600;
 const HEIGHT = 420;
@@ -81,6 +109,10 @@ export class MollierHxCard extends LitElement {
     static get properties() {
         return {
             _header: { state: true },
+            // Set by Home Assistant: "grid" in sections, "panel" in panel view,
+            // unset in masonry. Reflected so the styles can switch modes.
+            layout: { type: String, reflect: true },
+            _fixedHeight: { type: Boolean, reflect: true, attribute: 'fixed-height' },
             _tempEntity: { state: true },
             _humEntity: { state: true },
             _pressure: { state: true },
@@ -88,17 +120,18 @@ export class MollierHxCard extends LitElement {
             _coloring: { state: true },
             _comfortZone: { state: true },
             _warningBands: { state: true },
-            _showCompass: { state: true },
-            _compassFixed: { state: true },
             _domainX: { state: true },
             _domainY: { state: true },
             _convention: { state: true },
+            _lines: { state: true },
             _currentPoint: { state: true },
             _error: { state: true },
         };
     }
 
     setConfig(config) {
+        this._config = config;
+        this._updateSizingMode();
         if (!config.temperature_entity) {
             throw new Error("temperature_entity is required");
         }
@@ -118,10 +151,9 @@ export class MollierHxCard extends LitElement {
         this._coloring = config.coloring || DEFAULT_COLORING;
         this._comfortZone = parseComfortZone(config.comfort_zone);
         this._warningBands = parseWarningBands(config.warning_bands);
-        this._showCompass = !!config.show_compass;
-        this._compassFixed = config.compass_scale === 'fixed';
         this._domainX = parseDomain(config.domain_x, DEFAULT_DOMAIN_X, 1 / 1000);
         this._domainY = parseDomain(config.domain_y, DEFAULT_DOMAIN_Y, 1);
+        this._lines = parseLines(config.lines);
         this._convention = VALID_CONVENTIONS.includes(config.convention)
             ? config.convention
             : DEFAULT_CONVENTION;
@@ -144,7 +176,7 @@ export class MollierHxCard extends LitElement {
         const ts = this._hass.states[this._tempEntity];
         const hs = this._hass.states[this._humEntity];
         if (!ts || !hs) { this._currentPoint = null; return; }
-        const t = parseFloat(ts.state);
+        const t = stateCelsius(ts);
         const rh = parseFloat(hs.state);
         if (!Number.isFinite(t) || !Number.isFinite(rh)) { this._currentPoint = null; return; }
         const phi = rh > 1 ? rh / 100 : rh;
@@ -159,54 +191,54 @@ export class MollierHxCard extends LitElement {
         this._currentPoint = next;
     }
 
-    async _maybeFetch() {
+    // Loads the daily means once per entity/period combination; `force` re-fetches
+    // (hourly timer, retry after an error). A response that arrives after the
+    // config changed is dropped, so a slow old request cannot overwrite a newer one.
+    async _maybeFetch(force = false) {
+        if (!this._hass || !this._tempEntity || !this._humEntity) return;
         const key = `${this._tempEntity}|${this._humEntity}|${this._days}`;
-        if (key === this._fetchKey) return;
+        if (key === this._fetchKey && !force) return;
         this._fetchKey = key;
         try {
-            const end = new Date();
-            const start = new Date(end.getTime() - this._days * 86400000);
-            start.setHours(0, 0, 0, 0);
-            const result = await this._hass.callWS({
-                type: 'recorder/statistics_during_period',
-                start_time: start.toISOString(),
-                end_time: end.toISOString(),
-                statistic_ids: [this._tempEntity, this._humEntity],
-                period: 'day',
-                types: ['mean'],
-            });
-            const tRows = result[this._tempEntity] || [];
-            const hRows = result[this._humEntity] || [];
-            if (tRows.length === 0 || hRows.length === 0) {
-                this._error = { key: 'card.no_statistics' };
-                this._dailyData = [];
-                this.requestUpdate();
-                return;
-            }
-            const byDay = new Map();
-            for (const r of tRows) {
-                const k = String(r.start).slice(0, 10);
-                byDay.set(k, { date: new Date(r.start), t: r.mean });
-            }
-            for (const r of hRows) {
-                const k = String(r.start).slice(0, 10);
-                const e = byDay.get(k);
-                if (e) e.rh = r.mean;
-            }
-            this._dailyData = Array.from(byDay.values())
-                .filter(e => Number.isFinite(e.t) && Number.isFinite(e.rh))
-                .map(e => ({
-                    date: e.date,
-                    t: e.t,
-                    phi: e.rh > 1 ? e.rh / 100 : e.rh,
-                }))
-                .sort((a, b) => a.date - b.date);
-            this._error = undefined;
-            this.requestUpdate();
+            const days = await fetchDailyMeans(this._hass, this._tempEntity, this._humEntity, this._days);
+            if (this._fetchKey !== key) return;
+            this._dailyData = days;
+            this._error = days.length ? undefined : { key: 'card.no_statistics' };
         } catch (err) {
+            if (this._fetchKey !== key) return;
             this._error = { key: 'card.fetch_failed', vars: { error: (err && err.message) || err } };
-            this.requestUpdate();
+            this._fetchKey = null;                  // retry on the next timer tick
         }
+        this.requestUpdate();
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        clearInterval(this._refreshTimer);
+        this._refreshTimer = setInterval(() => this._maybeFetch(true), REFRESH_MS);
+        // Re-attached (e.g. back from another dashboard view): refresh once.
+        if (this._wasConnected) this._maybeFetch(true);
+        this._wasConnected = true;
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        clearInterval(this._refreshTimer);
+        this._refreshTimer = undefined;
+    }
+
+    // Two sizing modes (like HA's own chart and gauge cards):
+    // - fixed: sections view with a row count, or panel view — fill the tile;
+    // - auto: masonry, stacks, sections with auto rows — the diagram takes its
+    //   natural aspect ratio, capped in height and centred, so a full-width
+    //   card does not turn into a 1400 px tall chart.
+    _updateSizingMode() {
+        const rows = this._config?.grid_options?.rows;
+        this._fixedHeight = this.layout === 'panel' || (this.layout === 'grid' && typeof rows === 'number');
+    }
+
+    willUpdate(changed) {
+        if (changed.has('layout')) this._updateSizingMode();
     }
 
     static styles = styles;
@@ -216,7 +248,7 @@ export class MollierHxCard extends LitElement {
             <ha-card header="${this._header}">
                 <div class="card-content">
                     ${this._error
-                        ? html`<p class="error">${this._t(this._error.key, this._error.vars)}</p>`
+                        ? html`<p class="${this._error.key === 'card.no_statistics' ? 'message' : 'error'}">${this._t(this._error.key, this._error.vars)}</p>`
                         : html`
                             <div class="sheet">
                                 <div class="diagram-wrap">
@@ -224,7 +256,6 @@ export class MollierHxCard extends LitElement {
                                     <div class="tooltip"></div>
                                 </div>
                                 ${this._renderZoneLegend()}
-                                ${this._renderCompass()}
                             </div>
                           `}
                 </div>
@@ -236,30 +267,25 @@ export class MollierHxCard extends LitElement {
         return localize(this._hass, key, vars);
     }
 
+    // One short line: names only. The limits are in the hover title, so the
+    // legend does not wrap at normal card widths.
     _renderZoneLegend() {
-        if (!this._comfortZone || !this._warningBands) return nothing;
+        if (!this._comfortZone) return nothing;
+        const cz = this._comfortZone;
         const b = this._warningBands;
-        const fmt = (o) => `±${o.dt} K / ±${o.dphi} % / ±${o.dx} g/kg`;
+        const r = (v) => Math.round(v * 10) / 10;
+        const zone = `${r(cz.range_t[0])}–${r(cz.range_t[1])} °C · ${r(cz.range_phi[0] * 100)}–${r(cz.range_phi[1] * 100)} % · `
+            + `${r(cz.range_x[0] * 1000)}–${r(cz.range_x[1] * 1000)} g/kg`;
+        const fmt = (o) => `±${o.dt} K · ±${o.dphi} % · ±${o.dx} g/kg`;
         return html`
             <div class="zone-legend">
-                <span><i class="swatch fill"></i>${this._t('card.comfort_zone')}</span>
-                ${['orange', 'red'].map((k) => html`
+                <span title=${zone}><i class="swatch fill"></i>${this._t('card.comfort_zone')}</span>
+                ${b ? ['orange', 'red'].map((k) => html`
                     <span title=${fmt(b[k])}>
-                        <i class="swatch dash" style="border-color:${b[k].color}"></i>${b[k].label || `${this._t(k === 'orange' ? 'card.warning_band' : 'card.alarm_band')} (${fmt(b[k])})`}
-                    </span>`)}
+                        <i class="swatch dash" style="border-color:${b[k].color}"></i>${b[k].label || this._t(k === 'orange' ? 'card.warning_band' : 'card.alarm_band')}
+                    </span>`) : nothing}
             </div>
         `;
-    }
-
-    _renderCompass() {
-        if (!this._showCompass) return nothing;
-        if (!this._comfortZone) {
-            return html`<p class="hint">${this._t('card.needs_comfort_zone')}</p>`;
-        }
-        if (this._dailyData.length === 0) return nothing;
-        const dist = compassDistribution(
-            this._dailyData, this._comfortZone, this._warningBands, this._pressure, this._mollier);
-        return renderCompass(dist, (key, vars) => this._t(key, vars), { fixedScale: this._compassFixed });
     }
 
     firstUpdated() {
@@ -280,7 +306,7 @@ export class MollierHxCard extends LitElement {
         if (this._error) return;
         const host = this.renderRoot.querySelector('.mollier-host');
         if (!host) return;
-        const hash = `${this._domainX[0]}|${this._domainX[1]}|${this._domainY[0]}|${this._domainY[1]}|${this._pressure}|${this._convention}|${getLanguage(this._hass)}`;
+        const hash = `${this._domainX[0]}|${this._domainX[1]}|${this._domainY[0]}|${this._domainY[1]}|${this._pressure}|${this._convention}|${getLanguage(this._hass)}|${JSON.stringify(this._lines)}`;
         const hasSvg = !!host.querySelector('svg');
         if (hasSvg && this._drawHash === hash) {
             this._drawn = true;
@@ -289,7 +315,9 @@ export class MollierHxCard extends LitElement {
         // Wipe everything and redraw — happens on first mount, after Lit re-mount,
         // or when domain/pressure/convention changed in the config.
         d3.select(host).selectAll('*').remove();
-        drawHXCoordinates(d3.select(host), WIDTH, HEIGHT, MARGIN, this._domainX, this._domainY, this._pressure, this._mollier);
+        const lineOpts = {};
+        for (const [k, opt] of Object.entries(LINE_OPTS)) lineOpts[opt] = this._lines[k];
+        drawHXCoordinates(d3.select(host), WIDTH, HEIGHT, MARGIN, this._domainX, this._domainY, this._pressure, this._mollier, lineOpts);
         // The vendored coordinate generator emits width/height attributes only,
         // so when the SVG is scaled responsively (height: auto), browsers crop
         // the bottom-right instead of scaling the content. Adding a viewBox
@@ -304,34 +332,62 @@ export class MollierHxCard extends LitElement {
             const key = DIAGRAM_CAPTIONS[this.textContent];
             if (key) {
                 this.textContent = t(key);
-                captions.push(this);
+                captions.push({ el: this, key });
             }
         });
-        this._fitCaptions(host, captions);
+        this._layoutRightCaptions(captions);
+        this._placeXAxisCaption(captions);
         this._drawHash = hash;
         this._drawn = true;
     }
 
-    // The vendored grid sizes its rotated axis captions for Tahoma; with other
-    // fonts or longer translations they can run past the SVG edge and get
-    // clipped. Shrink such a caption until it fits (needs layout, so it is
-    // skipped while the card is hidden).
-    _fitCaptions(host, captions) {
-        const svgEl = host.querySelector('#hx_mollier_diagram');
-        if (!svgEl) return;
-        const box = svgEl.getBoundingClientRect();
-        if (!box.width || !box.height) return;
-        for (const el of captions) {
-            let size = parseFloat(getComputedStyle(el).fontSize) || 12;
-            for (let i = 0; i < 12; i++) {
-                const r = el.getBoundingClientRect();
-                const inside = r.top >= box.top - 0.5 && r.bottom <= box.bottom + 0.5
-                    && r.left >= box.left - 0.5 && r.right <= box.right + 0.5;
-                if (inside) break;
-                size *= 0.92;
-                el.style.fontSize = `${size.toFixed(2)}px`;
+    // The vendored grid places the rotated right-edge captions (relative
+    // humidity, density, enthalpy) at fixed offsets made for a ~700 px tall
+    // chart; in the card's 420 px they run off the top. Stack the visible ones
+    // from the top of the axis down and size the font from the text length.
+    // Uses an estimated glyph width, so it works without layout (hidden
+    // cards, editor preview) and gives the same result every time.
+    _layoutRightCaptions(captions) {
+        const RIGHT = RIGHT_CAPTION_KEYS;
+        const right = captions
+            .filter((c) => RIGHT.includes(c.key))
+            .sort((a, b) => RIGHT.indexOf(a.key) - RIGHT.indexOf(b.key));
+        if (!right.length) return;
+        const axis = HEIGHT - MARGIN.top - MARGIN.bottom;
+        const seg = axis / right.length;
+        right.forEach(({ el }, i) => {
+            // Rotated frame: x runs along the axis, 0 = middle, positive = up.
+            // Each caption ends at the top of its segment, so the first one is
+            // flush with the top of the diagram.
+            const top = axis / 2 - seg * i;
+            let text = el.textContent || '';
+            const fit = (n) => (seg - 12) / (Math.max(n, 1) * 0.56);
+            // Below 8 px the text is unreadable: shorten it instead (long translations).
+            if (fit(text.length) < 8) {
+                const max = Math.max(4, Math.floor((seg - 12) / (8 * 0.56)) - 1);
+                text = `${text.slice(0, max).trimEnd()}…`;
+                el.textContent = text;
             }
-        }
+            el.setAttribute('x', top.toFixed(1));
+            el.setAttribute('text-anchor', 'end');
+            el.setAttribute('font-size', Math.max(8, Math.min(12, fit(text.length))).toFixed(2));
+        });
+    }
+
+    // The vendored grid writes "x [g/kg]" at the right end of the x axis, on
+    // top of the last tick numbers. Move it into the right margin, beside the
+    // end of the axis, and drop the white box behind it.
+    _placeXAxisCaption(captions) {
+        const cap = captions.find((c) => c.key === 'diagram.x_axis');
+        if (!cap) return;
+        const innerW = WIDTH - MARGIN.left - MARGIN.right;
+        const box = cap.el.previousElementSibling;
+        if (box && box.tagName.toLowerCase() === 'rect') box.remove();
+        const len = (cap.el.textContent || '').length;
+        const room = MARGIN.right - 14;
+        cap.el.setAttribute('x', (innerW + 12).toFixed(1));
+        cap.el.setAttribute('text-anchor', 'start');
+        cap.el.setAttribute('font-size', Math.min(11, room / (Math.max(len, 1) * 0.56)).toFixed(2));
     }
 
     _drawComfort() {
@@ -577,20 +633,20 @@ export class MollierHxCard extends LitElement {
         };
     }
 
+    // Masonry: 1 unit = 50 px. With title and legend the card is about
+    // 400–600 px tall depending on the column width.
     getCardSize() {
-        return 3;
+        return 10;
     }
 
-    // Omit `rows` so HA defaults to Auto-height — the chart's natural 600:420
-    // aspect ratio (via the CSS fallback) decides the card height. The user
-    // can still toggle Auto-height off and pick row count in the layout tab.
-    // Numeric column bounds keep HA's width slider functional; HA's own "Full
-    // Width" toggle (when present) overrides these for cross-section span.
+    // Sections: full width by default, auto height (no default rows) like the
+    // built-in statistics graph; at least 6 columns so the axes stay readable.
     getGridOptions() {
         return {
             columns: 12,
-            min_columns: 4,
-            max_columns: 12,
+            min_columns: 6,
+            // Title, legend and a readable diagram need about 440 px.
+            min_rows: 7,
         };
     }
 }

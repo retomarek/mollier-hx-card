@@ -21,10 +21,12 @@ The build produces a single JS bundle `dist/mollier-hx-card.js` that Home Assist
 
 Two custom elements are registered in `src/mollier-hx-card.js`:
 
-- `mollier-hx-card` (`src/card.js`) — the card itself. Extends `LitElement`. Config options are documented in README.md. On first `hass` it fetches daily means via `recorder/statistics_during_period` into `_dailyData`; `set hass()` also tracks the live sensor values as `_currentPoint`. `updated()` draws (in z-order) the grid via `drawHXCoordinates()` (only when domain/pressure/convention change), the comfort zone + warning bands (`#comfort-zone`), the daily points (`#data-points`) and the live point (`#current-point`), using D3 scales built from `MARGIN`/`WIDTH`/`HEIGHT` and the configured domains. The band legend and the optional compass are rendered by Lit below the diagram.
+- `mollier-hx-card` (`src/card.js`) — the card itself. Extends `LitElement`. Config options are documented in README.md. On first `hass` it fetches daily means via `recorder/statistics_during_period` into `_dailyData`; `set hass()` also tracks the live sensor values as `_currentPoint`. `updated()` draws (in z-order) the grid via `drawHXCoordinates()` (only when domain/pressure/convention change), the comfort zone + warning bands (`#comfort-zone`), the daily points (`#data-points`) and the live point (`#current-point`), using D3 scales built from `MARGIN`/`WIDTH`/`HEIGHT` and the configured domains. The band legend is rendered by Lit below the diagram. Iso-line visibility (`lines`, `parseLines`/`LINE_DEFAULTS`, exported for the editor) is passed to `drawHXCoordinates` as its `opts`; the right-edge captions are re-laid out by `_layoutRightCaptions()` (even spacing, font from text length, no layout needed).
+
+Sizing: `layout` (set by HA: `grid`/`panel`/unset) and `grid_options.rows` decide the mode, reflected as the `fixed-height` attribute. Fixed: fill the tile. Auto: 600:420 aspect ratio, max 480 px tall, centred. `getGridOptions()` = `{columns: 12, min_columns: 6, min_rows: 7}` without default rows, like HA's statistics graph.
 - `mollier-hx-card-editor` (`src/editor.js`) — visual editor (HA `<ha-form>`), translating between the flat form data and the nested YAML config. On each input change it clones `_config` and dispatches a bubbling+composed `config-changed` CustomEvent. **Never mutate `_config` in place** — Home Assistant treats it as read-only and relies on the cloned object in the event detail.
 
-`src/compass.js` — warning bands and comfort compass, ported from pyedautils' Python (`comfort.comfort_compass_distribution`, `plots.comfort.plot_comfort_compass`): band parsing (± offsets around the comfort zone), the day classification, and the area-true glyph rendered as a Lit `svg` template plus an HTML legend. The bands are the compass severity stages, so diagram and compass stay consistent.
+`src/bands.js` — warning bands (± offsets around the comfort zone), same schema and defaults as the separate comfort-compass-card, where the bands are the severity stages.
 
 The D3 rendering module under `src/d3_mollierhx/`:
 - `mollierFunctions.js` — pure thermodynamic math (`p_sat`, `enthalpy`, `get_x_y`, …). No D3 dependency.
@@ -34,7 +36,7 @@ The D3 rendering module under `src/d3_mollierhx/`:
 
 Lit + D3 coexistence: Lit owns the `<div class="mollier-host">` container; D3 mutates inside it imperatively. Keep `render()` deterministic so Lit doesn't tear down the SVG. The `_drawn` flag prevents re-drawing axes on every reactive update.
 
-Translations live in `src/localize/` (`languages/en.json` is the base and per-key fallback; `localize(hass, key, vars)`, language from `hass.locale.language`). Every user-visible string in the card, compass and editor goes through it; add new keys to `en.json` and `de.json` together. The vendored `coordinateGenerator.js` draws English captions; `card.js` swaps them after drawing via `DIAGRAM_CAPTIONS` (exact text match), so after re-vendoring check that those caption strings are unchanged upstream. The language is part of the grid redraw hash.
+Translations live in `src/localize/` (`languages/en.json` is the base and per-key fallback; `localize(hass, key, vars)`, language from `hass.locale.language`). Every user-visible string in the card and editor goes through it; add new keys to `en.json` and `de.json` together. The vendored `coordinateGenerator.js` draws English captions; `card.js` swaps them after drawing via `DIAGRAM_CAPTIONS` (exact text match), so after re-vendoring check that those caption strings are unchanged upstream. The language is part of the grid redraw hash.
 
 Styles live in `src/card.styles.js` as a tagged `css\`\`` template imported into `card.js`. The editor's styles are inlined.
 
@@ -62,3 +64,9 @@ Versioning is SemVer (`MAJOR.MINOR.PATCH`, e.g. `1.0.0`). Don't use Home Assista
 - `ha-card` is a Home Assistant-provided element; it is available at runtime in HA but not in this repo. Don't try to import or polyfill it.
 - Service calls go through `this._hass.callService(domain, service, data)`.
 - The card receives a fresh `hass` object on every state change in HA — the `set hass()` setter must stay cheap and idempotent.
+
+## Claude Code setup
+
+- `.claude/agents/card-reviewer.md`: read-only reviewer with the HA card, Lit, D3, translation and packaging checklist. Run it on a change before committing or releasing.
+- `.claude/skills/visual-check/`: `npm run visual-check` renders the bundle in ~10 dashboard situations (`scripts/visual-check.mjs`, output in `tmp/visual/`); look at the images after any rendering, style or sizing change.
+- `.claude/skills/release/`: release checklist (versions, changelog, workflows, HACS catalog).

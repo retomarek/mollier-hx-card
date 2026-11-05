@@ -23,7 +23,7 @@ The screenshots are also re-rendered automatically on every push to `main`.
 ## Translations
 
 1. Copy `src/localize/languages/en.json` to `src/localize/languages/<code>.json`, using the language code Home Assistant uses (`fr`, `nl`, `pt-BR`, ...).
-2. Translate the values and keep the keys. Keep `\n` in the compass labels: they mark the line break.
+2. Translate the values and keep the keys.
 3. Import and register the file in `src/localize/localize.js`.
 4. Run `npm run build` and open a pull request.
 
