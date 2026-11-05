@@ -4,6 +4,10 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Added
+
+- Q&A discussions for questions and ideas (one short template); issues stay for bugs and features. README: "Questions and feedback".
+
 ## [1.0.0-beta.7] - 2026-11-06
 
 ### Added

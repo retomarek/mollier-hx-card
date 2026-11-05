@@ -1,0 +1,19 @@
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question or idea
+      description: Setup, reading the diagram, an idea for the card. For bugs, please open an issue instead.
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Card YAML (optional)
+      description: Dashboard edit mode → card → Show code editor.
+      render: yaml
+  - type: input
+    id: versions
+    attributes:
+      label: Card and Home Assistant version (optional)
+      placeholder: "v1.0.0 on Home Assistant 2026.11.0"

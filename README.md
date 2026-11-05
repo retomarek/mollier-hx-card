@@ -210,6 +210,12 @@ To add a new language, copy [`en.json`](src/localize/languages/en.json) to `<lan
 
 The diagram math and D3 drawing code come from [pyedautils](https://github.com/retomarek/pyedautils) (`data/d3_mollierhx`), so the card draws the same diagram as `pyedautils.plots.plot_mollier_hx()`. Daily means come from Home Assistant's `recorder/statistics_during_period` WebSocket API.
 
+## Questions and feedback
+
+- **Questions or ideas?** Ask in [Q&A](https://github.com/retomarek/mollier-hx-card/discussions/categories/q-a).
+- **Found a bug or want a feature?** Open an [issue](https://github.com/retomarek/mollier-hx-card/issues/new/choose).
+- **Translation wrong?** See [Translations](#translations): a small pull request is the quickest fix.
+
 ## Credits
 
 - [pyedautils](https://github.com/retomarek/pyedautils), Python Energy Data Analysis Utilities: diagram math, D3 drawing code and warning bands.
