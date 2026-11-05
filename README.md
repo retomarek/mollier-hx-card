@@ -15,14 +15,14 @@
   <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=retomarek&repository=mollier-hx-card&category=plugin"><img alt="Open in your Home Assistant" src="https://my.home-assistant.io/badges/hacs_repository.svg"></a>
 </p>
 
+> **Sister card: [Comfort Compass Card](https://github.com/retomarek/comfort-compass-card).** Uses the same comfort zone and warning bands and sums up how many days were in range, too warm, too humid, too dry or too cold. The diagram shows *where* each day was, the compass *how often*.
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/retomarek/mollier-hx-card/main/docs/screenshot.png" alt="Mollier hx Card in a dark dashboard: h,x diagram with comfort zone, warning bands and 120 daily points" width="49%">
   <img src="https://raw.githubusercontent.com/retomarek/mollier-hx-card/main/docs/screenshot-light-de.png" alt="The same card in the light theme with German labels" width="49%">
 </p>
 
 Plot your room climate where it belongs: on a Mollier h,x diagram. The card reads the daily means of a temperature and a humidity sensor from Home Assistant's long-term statistics and plots one point per day. Draw your comfort zone and add orange and red warning bands around it.
-
-> **Want the summary at a glance?** The [Comfort Compass Card](https://github.com/retomarek/comfort-compass-card) counts how many days were in range, too warm, too humid, too dry or too cold, using the same comfort zone and warning bands.
 
 > **Built on [pyedautils](https://github.com/retomarek/pyedautils)**, the *Python Energy Data Analysis Utilities*: a pip-installable library (`pip install pyedautils`) for analysing and visualising energy and comfort time series. The card draws the same diagram as its `plot_mollier_hx()`, so you can take the same sensor data into Python or Jupyter for deeper analysis.
 
