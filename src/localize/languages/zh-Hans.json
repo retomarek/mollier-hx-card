@@ -1,0 +1,70 @@
+{
+  "card": {
+    "no_statistics": "没有可用的每日统计数据。请检查两个传感器是否都设置了 state_class: measurement。",
+    "fetch_failed": "无法加载历史记录：{error}",
+    "now": "当前",
+    "comfort_zone": "舒适区",
+    "warning_band": "警告带",
+    "alarm_band": "报警带"
+  },
+  "diagram": {
+    "x_axis": "x [g/kg]",
+    "temperature": "温度 ϑ [°C]",
+    "rel_humidity": "相对湿度 φ [%]",
+    "density": "密度 ρ [kg/m³]",
+    "enthalpy": "焓 [kJ/kg]"
+  },
+  "editor": {
+    "fields": {
+      "header": "标题",
+      "temperature_entity": "温度传感器",
+      "humidity_entity": "湿度传感器",
+      "days": "历史天数",
+      "coloring": "点颜色",
+      "air_mode": "气压来源",
+      "pressure": "气压",
+      "altitude": "海拔",
+      "convention": "图表规范",
+      "x_min": "x 最小值",
+      "x_max": "x 最大值",
+      "y_min": "温度最小值",
+      "y_max": "温度最大值",
+      "comfort_enabled": "显示舒适区",
+      "comfort_t_min": "温度最小值",
+      "comfort_t_max": "温度最大值",
+      "comfort_phi_min": "湿度最小值",
+      "comfort_phi_max": "湿度最大值",
+      "comfort_x_min": "绝对湿度最小值",
+      "comfort_x_max": "绝对湿度最大值",
+      "bands_enabled": "显示警告带",
+      "orange_dt": "橙色 ± 温度",
+      "orange_dphi": "橙色 ± 湿度",
+      "orange_dx": "橙色 ± 绝对湿度",
+      "red_dt": "红色 ± 温度",
+      "red_dphi": "红色 ± 湿度",
+      "red_dx": "红色 ± 绝对湿度",
+      "line_temperature": "温度",
+      "line_relative_humidity": "相对湿度",
+      "line_absolute_humidity": "绝对湿度",
+      "line_density": "密度",
+      "line_enthalpy": "焓",
+      "orange_label": "橙色带名称（留空：“警告带”）",
+      "red_label": "红色带名称（留空：“报警带”）"
+    },
+    "options": {
+      "season": "按季节",
+      "age": "按时间远近",
+      "chronological": "按时间顺序",
+      "pressure": "气压 (Pa)",
+      "altitude": "海拔 (m)",
+      "classical": "经典 (Recknagel)",
+      "glueck": "Glück"
+    },
+    "sections": {
+      "axes": "坐标轴",
+      "comfort": "舒适区",
+      "bands": "警告带",
+      "lines": "线条"
+    }
+  }
+}

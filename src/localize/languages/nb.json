@@ -1,0 +1,70 @@
+{
+  "card": {
+    "no_statistics": "Ingen daglig statistikk tilgjengelig. Kontroller at begge sensorene har state_class: measurement.",
+    "fetch_failed": "Kunne ikke laste inn historikken: {error}",
+    "now": "Nå",
+    "comfort_zone": "Komfortsone",
+    "warning_band": "Varselbånd",
+    "alarm_band": "Alarmbånd"
+  },
+  "diagram": {
+    "x_axis": "x [g/kg]",
+    "temperature": "Temperatur ϑ [°C]",
+    "rel_humidity": "rel. luftfuktighet φ [%]",
+    "density": "Tetthet ρ [kg/m³]",
+    "enthalpy": "Entalpi [kJ/kg]"
+  },
+  "editor": {
+    "fields": {
+      "header": "Tittel",
+      "temperature_entity": "Temperatursensor",
+      "humidity_entity": "Luftfuktighetssensor",
+      "days": "Dager historikk",
+      "coloring": "Punktfarger",
+      "air_mode": "Lufttrykk fra",
+      "pressure": "Lufttrykk",
+      "altitude": "Høyde",
+      "convention": "Diagramkonvensjon",
+      "x_min": "x min",
+      "x_max": "x maks",
+      "y_min": "Temperatur min",
+      "y_max": "Temperatur maks",
+      "comfort_enabled": "Vis komfortsone",
+      "comfort_t_min": "Temperatur min",
+      "comfort_t_max": "Temperatur maks",
+      "comfort_phi_min": "Luftfuktighet min",
+      "comfort_phi_max": "Luftfuktighet maks",
+      "comfort_x_min": "Absolutt luftfuktighet min",
+      "comfort_x_max": "Absolutt luftfuktighet maks",
+      "bands_enabled": "Vis varselbånd",
+      "orange_dt": "Oransje ± temperatur",
+      "orange_dphi": "Oransje ± luftfuktighet",
+      "orange_dx": "Oransje ± abs. luftfuktighet",
+      "red_dt": "Rød ± temperatur",
+      "red_dphi": "Rød ± luftfuktighet",
+      "red_dx": "Rød ± abs. luftfuktighet",
+      "line_temperature": "Temperatur",
+      "line_relative_humidity": "Relativ luftfuktighet",
+      "line_absolute_humidity": "Absolutt luftfuktighet",
+      "line_density": "Tetthet",
+      "line_enthalpy": "Entalpi",
+      "orange_label": "Navn på oransje bånd (tomt: «Varselbånd»)",
+      "red_label": "Navn på rødt bånd (tomt: «Alarmbånd»)"
+    },
+    "options": {
+      "season": "Etter årstid",
+      "age": "Etter alder",
+      "chronological": "Kronologisk",
+      "pressure": "Trykk (Pa)",
+      "altitude": "Høyde (m)",
+      "classical": "Klassisk (Recknagel)",
+      "glueck": "Glück"
+    },
+    "sections": {
+      "axes": "Akser",
+      "comfort": "Komfortsone",
+      "bands": "Varselbånd",
+      "lines": "Linjer"
+    }
+  }
+}

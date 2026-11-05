@@ -1,0 +1,70 @@
+{
+  "card": {
+    "no_statistics": "Brak dziennych statystyk. Sprawdź, czy oba czujniki mają state_class: measurement.",
+    "fetch_failed": "Nie udało się wczytać historii: {error}",
+    "now": "Teraz",
+    "comfort_zone": "Strefa komfortu",
+    "warning_band": "Pasmo ostrzegawcze",
+    "alarm_band": "Pasmo alarmowe"
+  },
+  "diagram": {
+    "x_axis": "x [g/kg]",
+    "temperature": "Temperatura ϑ [°C]",
+    "rel_humidity": "wilg. względna φ [%]",
+    "density": "Gęstość ρ [kg/m³]",
+    "enthalpy": "Entalpia [kJ/kg]"
+  },
+  "editor": {
+    "fields": {
+      "header": "Tytuł",
+      "temperature_entity": "Czujnik temperatury",
+      "humidity_entity": "Czujnik wilgotności",
+      "days": "Dni historii",
+      "coloring": "Kolory punktów",
+      "air_mode": "Ciśnienie atmosferyczne z",
+      "pressure": "Ciśnienie atmosferyczne",
+      "altitude": "Wysokość",
+      "convention": "Konwencja wykresu",
+      "x_min": "x min",
+      "x_max": "x max",
+      "y_min": "Temperatura min",
+      "y_max": "Temperatura maks",
+      "comfort_enabled": "Pokaż strefę komfortu",
+      "comfort_t_min": "Temperatura min",
+      "comfort_t_max": "Temperatura maks",
+      "comfort_phi_min": "Wilgotność min",
+      "comfort_phi_max": "Wilgotność maks",
+      "comfort_x_min": "Wilgotność bezwzględna min",
+      "comfort_x_max": "Wilgotność bezwzględna maks",
+      "bands_enabled": "Pokaż pasma ostrzegawcze",
+      "orange_dt": "Pomarańczowe ± temperatura",
+      "orange_dphi": "Pomarańczowe ± wilgotność",
+      "orange_dx": "Pomarańczowe ± wilg. bezwzględna",
+      "red_dt": "Czerwone ± temperatura",
+      "red_dphi": "Czerwone ± wilgotność",
+      "red_dx": "Czerwone ± wilg. bezwzględna",
+      "line_temperature": "Temperatura",
+      "line_relative_humidity": "Wilgotność względna",
+      "line_absolute_humidity": "Wilgotność bezwzględna",
+      "line_density": "Gęstość",
+      "line_enthalpy": "Entalpia",
+      "orange_label": "Nazwa pasma pomarańczowego (puste: „Pasmo ostrzegawcze”)",
+      "red_label": "Nazwa pasma czerwonego (puste: „Pasmo alarmowe”)"
+    },
+    "options": {
+      "season": "Według pory roku",
+      "age": "Według wieku",
+      "chronological": "Chronologicznie",
+      "pressure": "Ciśnienie (Pa)",
+      "altitude": "Wysokość (m)",
+      "classical": "Klasyczna (Recknagel)",
+      "glueck": "Glück"
+    },
+    "sections": {
+      "axes": "Osie",
+      "comfort": "Strefa komfortu",
+      "bands": "Pasma ostrzegawcze",
+      "lines": "Linie"
+    }
+  }
+}

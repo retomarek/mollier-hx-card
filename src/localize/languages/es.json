@@ -1,0 +1,70 @@
+{
+  "card": {
+    "no_statistics": "No hay estadísticas diarias disponibles. Comprueba que ambos sensores tengan state_class: measurement.",
+    "fetch_failed": "No se pudo cargar el historial: {error}",
+    "now": "Ahora",
+    "comfort_zone": "Zona de confort",
+    "warning_band": "Banda de advertencia",
+    "alarm_band": "Banda de alarma"
+  },
+  "diagram": {
+    "x_axis": "x [g/kg]",
+    "temperature": "Temperatura ϑ [°C]",
+    "rel_humidity": "humedad rel. φ [%]",
+    "density": "Densidad ρ [kg/m³]",
+    "enthalpy": "Entalpía [kJ/kg]"
+  },
+  "editor": {
+    "fields": {
+      "header": "Título",
+      "temperature_entity": "Sensor de temperatura",
+      "humidity_entity": "Sensor de humedad",
+      "days": "Días de historial",
+      "coloring": "Colores de puntos",
+      "air_mode": "Presión atmosférica según",
+      "pressure": "Presión atmosférica",
+      "altitude": "Altitud",
+      "convention": "Convención del diagrama",
+      "x_min": "x min",
+      "x_max": "x max",
+      "y_min": "Temperatura mín.",
+      "y_max": "Temperatura máx.",
+      "comfort_enabled": "Mostrar zona de confort",
+      "comfort_t_min": "Temperatura mín.",
+      "comfort_t_max": "Temperatura máx.",
+      "comfort_phi_min": "Humedad mín.",
+      "comfort_phi_max": "Humedad máx.",
+      "comfort_x_min": "Humedad absoluta mín.",
+      "comfort_x_max": "Humedad absoluta máx.",
+      "bands_enabled": "Mostrar bandas de advertencia",
+      "orange_dt": "Naranja ± temperatura",
+      "orange_dphi": "Naranja ± humedad",
+      "orange_dx": "Naranja ± humedad abs.",
+      "red_dt": "Rojo ± temperatura",
+      "red_dphi": "Rojo ± humedad",
+      "red_dx": "Rojo ± humedad abs.",
+      "line_temperature": "Temperatura",
+      "line_relative_humidity": "Humedad relativa",
+      "line_absolute_humidity": "Humedad absoluta",
+      "line_density": "Densidad",
+      "line_enthalpy": "Entalpía",
+      "orange_label": "Nombre banda naranja (vacío: «Banda de advertencia»)",
+      "red_label": "Nombre banda roja (vacío: «Banda de alarma»)"
+    },
+    "options": {
+      "season": "Por estación",
+      "age": "Por antigüedad",
+      "chronological": "Cronológico",
+      "pressure": "Presión (Pa)",
+      "altitude": "Altitud (m)",
+      "classical": "Clásico (Recknagel)",
+      "glueck": "Glück"
+    },
+    "sections": {
+      "axes": "Ejes",
+      "comfort": "Zona de confort",
+      "bands": "Bandas de advertencia",
+      "lines": "Líneas"
+    }
+  }
+}

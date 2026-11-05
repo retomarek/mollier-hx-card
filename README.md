@@ -50,7 +50,7 @@ The h,x diagram shows both in one point: its position gives temperature, relativ
 - **Warning bands**: orange and red dashed bands as ± offsets around the comfort zone.
 - **Fits any dashboard**: fills a sections tile with a fixed height, keeps its aspect ratio (capped and centred) everywhere else, so it also looks right at full width.
 - **Visual editor** with entity pickers limited to sensors that have long-term statistics.
-- **Translated**: English and German, following your Home Assistant language. More languages are welcome, see [Translations](#translations).
+- **Translated** into 14 languages, following your Home Assistant language. Corrections welcome, see [Translations](#translations).
 - **Self-contained**: one JavaScript file, no external requests at runtime.
 
 ## Requirements
@@ -138,9 +138,16 @@ In a sections dashboard the card takes the full width and sets its own height. S
 
 ## Translations
 
-The card uses the language of your Home Assistant profile and falls back to English for anything not translated. Available: English, German.
+The card follows the language of your Home Assistant profile. Anything not translated falls back to English.
 
-To add a language, copy [`src/localize/languages/en.json`](src/localize/languages/en.json) to `<language code>.json`, translate the values, register it in [`src/localize/localize.js`](src/localize/localize.js) and open a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md).
+| Language | Status |
+| --- | --- |
+| English, German | written by the author |
+| French, Italian, Spanish, Portuguese, Dutch, Polish, Swedish, Danish, Norwegian, Czech, Russian, Chinese (Simplified) | machine-translated, not yet checked by a native speaker |
+
+**Something reads wrong in your language? Please open a pull request.** Edit the file for your language in [`src/localize/languages/`](src/localize/languages/) directly on GitHub (pencil icon → *Propose changes*); a short note on what you changed is enough. If you'd rather not touch the file, open a [translation issue](https://github.com/retomarek/mollier-hx-card/issues/new?template=translation.yml) instead.
+
+To add a new language, copy [`en.json`](src/localize/languages/en.json) to `<language code>.json`, translate the values and register the file in [`src/localize/localize.js`](src/localize/localize.js). See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## How it works
 

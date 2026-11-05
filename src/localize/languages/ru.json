@@ -1,0 +1,70 @@
+{
+  "card": {
+    "no_statistics": "Нет суточной статистики. Убедитесь, что у обоих датчиков задан state_class: measurement.",
+    "fetch_failed": "Не удалось загрузить историю: {error}",
+    "now": "Сейчас",
+    "comfort_zone": "Зона комфорта",
+    "warning_band": "Полоса предупреждения",
+    "alarm_band": "Полоса тревоги"
+  },
+  "diagram": {
+    "x_axis": "x [g/kg]",
+    "temperature": "Температура ϑ [°C]",
+    "rel_humidity": "отн. влажность φ [%]",
+    "density": "Плотность ρ [kg/m³]",
+    "enthalpy": "Энтальпия [kJ/kg]"
+  },
+  "editor": {
+    "fields": {
+      "header": "Заголовок",
+      "temperature_entity": "Датчик температуры",
+      "humidity_entity": "Датчик влажности",
+      "days": "История (дней)",
+      "coloring": "Цвета точек",
+      "air_mode": "Источник давления",
+      "pressure": "Атмосферное давление",
+      "altitude": "Высота",
+      "convention": "Вид диаграммы",
+      "x_min": "x мин.",
+      "x_max": "x макс.",
+      "y_min": "Температура мин.",
+      "y_max": "Температура макс.",
+      "comfort_enabled": "Показать зону комфорта",
+      "comfort_t_min": "Температура мин.",
+      "comfort_t_max": "Температура макс.",
+      "comfort_phi_min": "Влажность мин.",
+      "comfort_phi_max": "Влажность макс.",
+      "comfort_x_min": "Абсолютная влажность мин.",
+      "comfort_x_max": "Абсолютная влажность макс.",
+      "bands_enabled": "Показать полосы предупреждения",
+      "orange_dt": "Оранжевая ± температура",
+      "orange_dphi": "Оранжевая ± влажность",
+      "orange_dx": "Оранжевая ± абс. влажность",
+      "red_dt": "Красная ± температура",
+      "red_dphi": "Красная ± влажность",
+      "red_dx": "Красная ± абс. влажность",
+      "line_temperature": "Температура",
+      "line_relative_humidity": "Относительная влажность",
+      "line_absolute_humidity": "Абсолютная влажность",
+      "line_density": "Плотность",
+      "line_enthalpy": "Энтальпия",
+      "orange_label": "Название оранжевой полосы (пусто: «Полоса предупреждения»)",
+      "red_label": "Название красной полосы (пусто: «Полоса тревоги»)"
+    },
+    "options": {
+      "season": "По сезону",
+      "age": "По давности",
+      "chronological": "Хронологически",
+      "pressure": "Давление (Pa)",
+      "altitude": "Высота (m)",
+      "classical": "Классическая (Recknagel)",
+      "glueck": "Glück"
+    },
+    "sections": {
+      "axes": "Оси",
+      "comfort": "Зона комфорта",
+      "bands": "Полосы предупреждения",
+      "lines": "Линии"
+    }
+  }
+}

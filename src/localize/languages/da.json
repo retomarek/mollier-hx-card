@@ -1,0 +1,70 @@
+{
+  "card": {
+    "no_statistics": "Ingen daglige statistikker tilgængelige. Kontrollér, at begge sensorer har state_class: measurement.",
+    "fetch_failed": "Historikken kunne ikke indlæses: {error}",
+    "now": "Nu",
+    "comfort_zone": "Komfortzone",
+    "warning_band": "Advarselsbånd",
+    "alarm_band": "Alarmbånd"
+  },
+  "diagram": {
+    "x_axis": "x [g/kg]",
+    "temperature": "Temperatur ϑ [°C]",
+    "rel_humidity": "rel. luftfugtighed φ [%]",
+    "density": "Densitet ρ [kg/m³]",
+    "enthalpy": "Entalpi [kJ/kg]"
+  },
+  "editor": {
+    "fields": {
+      "header": "Titel",
+      "temperature_entity": "Temperatursensor",
+      "humidity_entity": "Luftfugtighedssensor",
+      "days": "Dages historik",
+      "coloring": "Punktfarver",
+      "air_mode": "Lufttryk fra",
+      "pressure": "Lufttryk",
+      "altitude": "Højde",
+      "convention": "Diagramkonvention",
+      "x_min": "x min",
+      "x_max": "x maks",
+      "y_min": "Temperatur min",
+      "y_max": "Temperatur maks",
+      "comfort_enabled": "Vis komfortzone",
+      "comfort_t_min": "Temperatur min",
+      "comfort_t_max": "Temperatur maks",
+      "comfort_phi_min": "Luftfugtighed min",
+      "comfort_phi_max": "Luftfugtighed maks",
+      "comfort_x_min": "Absolut luftfugtighed min",
+      "comfort_x_max": "Absolut luftfugtighed maks",
+      "bands_enabled": "Vis advarselsbånd",
+      "orange_dt": "Orange ± temperatur",
+      "orange_dphi": "Orange ± luftfugtighed",
+      "orange_dx": "Orange ± abs. luftfugtighed",
+      "red_dt": "Rød ± temperatur",
+      "red_dphi": "Rød ± luftfugtighed",
+      "red_dx": "Rød ± abs. luftfugtighed",
+      "line_temperature": "Temperatur",
+      "line_relative_humidity": "Relativ luftfugtighed",
+      "line_absolute_humidity": "Absolut luftfugtighed",
+      "line_density": "Densitet",
+      "line_enthalpy": "Entalpi",
+      "orange_label": "Navn på orange bånd (tom: »Advarselsbånd«)",
+      "red_label": "Navn på rødt bånd (tom: »Alarmbånd«)"
+    },
+    "options": {
+      "season": "Efter årstid",
+      "age": "Efter alder",
+      "chronological": "Kronologisk",
+      "pressure": "Tryk (Pa)",
+      "altitude": "Højde (m)",
+      "classical": "Klassisk (Recknagel)",
+      "glueck": "Glück"
+    },
+    "sections": {
+      "axes": "Akser",
+      "comfort": "Komfortzone",
+      "bands": "Advarselsbånd",
+      "lines": "Linjer"
+    }
+  }
+}

@@ -22,6 +22,10 @@ The screenshots are also re-rendered automatically on every push to `main`.
 
 ## Translations
 
+English and German are written by the author; the other languages were machine-translated. Corrections by native speakers are very welcome: edit `src/localize/languages/<code>.json` and open a pull request. Keep the keys, placeholders like `{error}` and units (°C, g/kg, …) unchanged.
+
+To add a language:
+
 1. Copy `src/localize/languages/en.json` to `src/localize/languages/<code>.json`, using the language code Home Assistant uses (`fr`, `nl`, `pt-BR`, ...).
 2. Translate the values and keep the keys.
 3. Import and register the file in `src/localize/localize.js`.

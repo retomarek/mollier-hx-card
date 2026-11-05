@@ -1,0 +1,70 @@
+{
+  "card": {
+    "no_statistics": "Geen dagelijkse statistieken beschikbaar. Controleer of beide sensoren state_class: measurement hebben.",
+    "fetch_failed": "Kan de geschiedenis niet laden: {error}",
+    "now": "Nu",
+    "comfort_zone": "Comfortzone",
+    "warning_band": "Waarschuwingsband",
+    "alarm_band": "Alarmband"
+  },
+  "diagram": {
+    "x_axis": "x [g/kg]",
+    "temperature": "Temperatuur ϑ [°C]",
+    "rel_humidity": "rel. luchtvochtigheid φ [%]",
+    "density": "Dichtheid ρ [kg/m³]",
+    "enthalpy": "Enthalpie [kJ/kg]"
+  },
+  "editor": {
+    "fields": {
+      "header": "Titel",
+      "temperature_entity": "Temperatuursensor",
+      "humidity_entity": "Luchtvochtigheidssensor",
+      "days": "Dagen geschiedenis",
+      "coloring": "Puntkleuren",
+      "air_mode": "Luchtdruk uit",
+      "pressure": "Luchtdruk",
+      "altitude": "Hoogte",
+      "convention": "Diagramconventie",
+      "x_min": "x min",
+      "x_max": "x max",
+      "y_min": "Temperatuur min",
+      "y_max": "Temperatuur max",
+      "comfort_enabled": "Comfortzone tonen",
+      "comfort_t_min": "Temperatuur min",
+      "comfort_t_max": "Temperatuur max",
+      "comfort_phi_min": "Luchtvochtigheid min",
+      "comfort_phi_max": "Luchtvochtigheid max",
+      "comfort_x_min": "Absolute vochtigheid min",
+      "comfort_x_max": "Absolute vochtigheid max",
+      "bands_enabled": "Waarschuwingsbanden tonen",
+      "orange_dt": "Oranje ± temperatuur",
+      "orange_dphi": "Oranje ± luchtvochtigheid",
+      "orange_dx": "Oranje ± abs. vochtigheid",
+      "red_dt": "Rood ± temperatuur",
+      "red_dphi": "Rood ± luchtvochtigheid",
+      "red_dx": "Rood ± abs. vochtigheid",
+      "line_temperature": "Temperatuur",
+      "line_relative_humidity": "Relatieve luchtvochtigheid",
+      "line_absolute_humidity": "Absolute vochtigheid",
+      "line_density": "Dichtheid",
+      "line_enthalpy": "Enthalpie",
+      "orange_label": "Naam oranje band (leeg: ‘Waarschuwingsband’)",
+      "red_label": "Naam rode band (leeg: ‘Alarmband’)"
+    },
+    "options": {
+      "season": "Per seizoen",
+      "age": "Op leeftijd",
+      "chronological": "Chronologisch",
+      "pressure": "Druk (Pa)",
+      "altitude": "Hoogte (m)",
+      "classical": "Klassiek (Recknagel)",
+      "glueck": "Glück"
+    },
+    "sections": {
+      "axes": "Assen",
+      "comfort": "Comfortzone",
+      "bands": "Waarschuwingsbanden",
+      "lines": "Lijnen"
+    }
+  }
+}

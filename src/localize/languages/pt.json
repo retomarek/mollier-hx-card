@@ -1,0 +1,70 @@
+{
+  "card": {
+    "no_statistics": "Nenhuma estatística diária disponível. Verifique se ambos os sensores têm state_class: measurement.",
+    "fetch_failed": "Não foi possível carregar o histórico: {error}",
+    "now": "Agora",
+    "comfort_zone": "Zona de conforto",
+    "warning_band": "Faixa de aviso",
+    "alarm_band": "Faixa de alarme"
+  },
+  "diagram": {
+    "x_axis": "x [g/kg]",
+    "temperature": "Temperatura ϑ [°C]",
+    "rel_humidity": "umidade rel. φ [%]",
+    "density": "Densidade ρ [kg/m³]",
+    "enthalpy": "Entalpia [kJ/kg]"
+  },
+  "editor": {
+    "fields": {
+      "header": "Título",
+      "temperature_entity": "Sensor de temperatura",
+      "humidity_entity": "Sensor de umidade",
+      "days": "Dias de histórico",
+      "coloring": "Cores dos pontos",
+      "air_mode": "Pressão atmosférica a partir de",
+      "pressure": "Pressão atmosférica",
+      "altitude": "Altitude",
+      "convention": "Convenção do diagrama",
+      "x_min": "x min",
+      "x_max": "x max",
+      "y_min": "Temperatura mín.",
+      "y_max": "Temperatura máx.",
+      "comfort_enabled": "Mostrar zona de conforto",
+      "comfort_t_min": "Temperatura mín.",
+      "comfort_t_max": "Temperatura máx.",
+      "comfort_phi_min": "Umidade mín.",
+      "comfort_phi_max": "Umidade máx.",
+      "comfort_x_min": "Umidade absoluta mín.",
+      "comfort_x_max": "Umidade absoluta máx.",
+      "bands_enabled": "Mostrar faixas de aviso",
+      "orange_dt": "Laranja ± temperatura",
+      "orange_dphi": "Laranja ± umidade",
+      "orange_dx": "Laranja ± umidade abs.",
+      "red_dt": "Vermelho ± temperatura",
+      "red_dphi": "Vermelho ± umidade",
+      "red_dx": "Vermelho ± umidade abs.",
+      "line_temperature": "Temperatura",
+      "line_relative_humidity": "Umidade relativa",
+      "line_absolute_humidity": "Umidade absoluta",
+      "line_density": "Densidade",
+      "line_enthalpy": "Entalpia",
+      "orange_label": "Nome da faixa laranja (vazio: “Faixa de aviso”)",
+      "red_label": "Nome da faixa vermelha (vazio: “Faixa de alarme”)"
+    },
+    "options": {
+      "season": "Por estação",
+      "age": "Por idade",
+      "chronological": "Cronológico",
+      "pressure": "Pressão (Pa)",
+      "altitude": "Altitude (m)",
+      "classical": "Clássico (Recknagel)",
+      "glueck": "Glück"
+    },
+    "sections": {
+      "axes": "Eixos",
+      "comfort": "Zona de conforto",
+      "bands": "Faixas de aviso",
+      "lines": "Linhas"
+    }
+  }
+}

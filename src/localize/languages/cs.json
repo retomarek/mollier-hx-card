@@ -1,0 +1,70 @@
+{
+  "card": {
+    "no_statistics": "Nejsou k dispozici žádné denní statistiky. Zkontrolujte, zda oba senzory mají state_class: measurement.",
+    "fetch_failed": "Historii se nepodařilo načíst: {error}",
+    "now": "Nyní",
+    "comfort_zone": "Komfortní zóna",
+    "warning_band": "Varovné pásmo",
+    "alarm_band": "Alarmové pásmo"
+  },
+  "diagram": {
+    "x_axis": "x [g/kg]",
+    "temperature": "Teplota ϑ [°C]",
+    "rel_humidity": "rel. vlhkost φ [%]",
+    "density": "Hustota ρ [kg/m³]",
+    "enthalpy": "Entalpie [kJ/kg]"
+  },
+  "editor": {
+    "fields": {
+      "header": "Název",
+      "temperature_entity": "Senzor teploty",
+      "humidity_entity": "Senzor vlhkosti",
+      "days": "Dny historie",
+      "coloring": "Barvy bodů",
+      "air_mode": "Zdroj tlaku vzduchu",
+      "pressure": "Tlak vzduchu",
+      "altitude": "Nadmořská výška",
+      "convention": "Konvence diagramu",
+      "x_min": "x min",
+      "x_max": "x max",
+      "y_min": "Teplota min",
+      "y_max": "Teplota max",
+      "comfort_enabled": "Zobrazit komfortní zónu",
+      "comfort_t_min": "Teplota min",
+      "comfort_t_max": "Teplota max",
+      "comfort_phi_min": "Vlhkost min",
+      "comfort_phi_max": "Vlhkost max",
+      "comfort_x_min": "Absolutní vlhkost min",
+      "comfort_x_max": "Absolutní vlhkost max",
+      "bands_enabled": "Zobrazit varovná pásma",
+      "orange_dt": "Oranžová ± teplota",
+      "orange_dphi": "Oranžová ± vlhkost",
+      "orange_dx": "Oranžová ± abs. vlhkost",
+      "red_dt": "Červená ± teplota",
+      "red_dphi": "Červená ± vlhkost",
+      "red_dx": "Červená ± abs. vlhkost",
+      "line_temperature": "Teplota",
+      "line_relative_humidity": "Relativní vlhkost",
+      "line_absolute_humidity": "Absolutní vlhkost",
+      "line_density": "Hustota",
+      "line_enthalpy": "Entalpie",
+      "orange_label": "Název oranžového pásma (prázdné: „Varovné pásmo“)",
+      "red_label": "Název červeného pásma (prázdné: „Alarmové pásmo“)"
+    },
+    "options": {
+      "season": "Podle ročního období",
+      "age": "Podle stáří",
+      "chronological": "Chronologicky",
+      "pressure": "Tlak (Pa)",
+      "altitude": "Nadmořská výška (m)",
+      "classical": "Klasická (Recknagel)",
+      "glueck": "Glück"
+    },
+    "sections": {
+      "axes": "Osy",
+      "comfort": "Komfortní zóna",
+      "bands": "Varovná pásma",
+      "lines": "Čáry"
+    }
+  }
+}

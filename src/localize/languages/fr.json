@@ -1,0 +1,70 @@
+{
+  "card": {
+    "no_statistics": "Aucune statistique journalière disponible. Vérifiez que les deux capteurs ont state_class: measurement.",
+    "fetch_failed": "Impossible de charger l'historique : {error}",
+    "now": "Maintenant",
+    "comfort_zone": "Zone de confort",
+    "warning_band": "Bande d'avertissement",
+    "alarm_band": "Bande d'alarme"
+  },
+  "diagram": {
+    "x_axis": "x [g/kg]",
+    "temperature": "Température ϑ [°C]",
+    "rel_humidity": "humidité rel. φ [%]",
+    "density": "Masse volumique ρ [kg/m³]",
+    "enthalpy": "Enthalpie [kJ/kg]"
+  },
+  "editor": {
+    "fields": {
+      "header": "Titre",
+      "temperature_entity": "Capteur de température",
+      "humidity_entity": "Capteur d'humidité",
+      "days": "Jours d'historique",
+      "coloring": "Couleur des points",
+      "air_mode": "Pression atmosphérique selon",
+      "pressure": "Pression atmosphérique",
+      "altitude": "Altitude",
+      "convention": "Convention du diagramme",
+      "x_min": "x min",
+      "x_max": "x max",
+      "y_min": "Température min",
+      "y_max": "Température max",
+      "comfort_enabled": "Afficher la zone de confort",
+      "comfort_t_min": "Température min",
+      "comfort_t_max": "Température max",
+      "comfort_phi_min": "Humidité min",
+      "comfort_phi_max": "Humidité max",
+      "comfort_x_min": "Humidité absolue min",
+      "comfort_x_max": "Humidité absolue max",
+      "bands_enabled": "Afficher les bandes d'avertissement",
+      "orange_dt": "Orange ± température",
+      "orange_dphi": "Orange ± humidité",
+      "orange_dx": "Orange ± humidité abs.",
+      "red_dt": "Rouge ± température",
+      "red_dphi": "Rouge ± humidité",
+      "red_dx": "Rouge ± humidité abs.",
+      "line_temperature": "Température",
+      "line_relative_humidity": "Humidité relative",
+      "line_absolute_humidity": "Humidité absolue",
+      "line_density": "Masse volumique",
+      "line_enthalpy": "Enthalpie",
+      "orange_label": "Nom de la bande orange (vide : « Bande d'avertissement »)",
+      "red_label": "Nom de la bande rouge (vide : « Bande d'alarme »)"
+    },
+    "options": {
+      "season": "Par saison",
+      "age": "Par âge",
+      "chronological": "Chronologique",
+      "pressure": "Pression (Pa)",
+      "altitude": "Altitude (m)",
+      "classical": "Classique (Recknagel)",
+      "glueck": "Glück"
+    },
+    "sections": {
+      "axes": "Axes",
+      "comfort": "Zone de confort",
+      "bands": "Bandes d'avertissement",
+      "lines": "Lignes"
+    }
+  }
+}
