@@ -99,8 +99,8 @@ lines:
 | `altitude` | number | | Altitude in m above sea level. Sets the air pressure from the standard atmosphere and overrides `pressure`. |
 | `pressure` | number | `101325` | Air pressure in Pa. |
 | `convention` | string | `classical` | `classical` (per kg dry air, Recknagel) or `glueck` (per kg moist air). Same physics, slightly different tilt of the isotherms. |
-| `domain_x` | `[min, max]` | `[0, 20]` | Absolute-humidity axis in g/kg. |
-| `domain_y` | `[min, max]` | `[-20, 50]` | Temperature axis in °C. |
+| `domain_x` | `[min, max]` | `[0, 18]` | Absolute-humidity axis in g/kg. |
+| `domain_y` | `[min, max]` | `[-10, 40]` | Temperature axis in °C. |
 | `comfort_zone` | object | | Comfort zone, see below. |
 | `warning_bands` | `true` or object | | Needs `comfort_zone`. `true` uses the defaults, see below. |
 | `lines` | object | | Which iso-lines to draw: `temperature`, `relative_humidity`, `absolute_humidity` (on by default), `density`, `enthalpy` (off by default). |

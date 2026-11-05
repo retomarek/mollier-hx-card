@@ -4,6 +4,12 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-beta.4] - 2026-11-05
+
+### Changed
+
+- Default axis ranges fit indoor climate: −10 to 40 °C and 0 to 18 g/kg (was −20 to 50 °C and 0 to 20 g/kg). The editor only writes the ranges when they differ from the defaults.
+
 ## [1.0.0-beta.3] - 2026-11-05
 
 ### Added
@@ -65,7 +71,8 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.3...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.4...HEAD
+[1.0.0-beta.4]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.4
 [1.0.0-beta.3]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.3
 [1.0.0-beta.2]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.1

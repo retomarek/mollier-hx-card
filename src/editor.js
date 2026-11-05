@@ -16,9 +16,9 @@ const DEFAULTS = {
     air_mode: 'pressure',
     convention: 'classical',
     x_min: 0,    // g/kg
-    x_max: 20,   // g/kg
-    y_min: -20,  // °C
-    y_max: 50,   // °C
+    x_max: 18,   // g/kg
+    y_min: -10,  // °C
+    y_max: 40,   // °C
     comfort_t_min: 20,
     comfort_t_max: 26,
     comfort_phi_min: 30,
@@ -82,9 +82,11 @@ function dataToConfig(data, previous = {}) {
         days: data.days,
         coloring: data.coloring,
         convention: data.convention,
-        domain_x: [data.x_min, data.x_max],
-        domain_y: [data.y_min, data.y_max],
     });
+    // Write the axis ranges only when they differ from the card defaults, so
+    // the card follows future default changes.
+    if (data.x_min !== DEFAULTS.x_min || data.x_max !== DEFAULTS.x_max) config.domain_x = [data.x_min, data.x_max];
+    if (data.y_min !== DEFAULTS.y_min || data.y_max !== DEFAULTS.y_max) config.domain_y = [data.y_min, data.y_max];
     if (data.header) config.header = data.header;
     // Store only the lines that differ from the defaults, to keep YAML short.
     const lines = {};

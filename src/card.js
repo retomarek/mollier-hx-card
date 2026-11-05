@@ -15,8 +15,9 @@ const DEFAULT_CONVENTION = 'classical';
 const VALID_CONVENTIONS = ['classical', 'glueck'];
 // Internal units are kg/kg for x and °C for y; user config is expressed in
 // g/kg (x) and °C (y) — see _parseDomainX below.
-const DEFAULT_DOMAIN_X = [0.0, 0.020];
-const DEFAULT_DOMAIN_Y = [-20.0, 50.0];
+// Indoor climate range: -10..40 °C, 0..18 g/kg.
+const DEFAULT_DOMAIN_X = [0.0, 0.018];
+const DEFAULT_DOMAIN_Y = [-10.0, 40.0];
 // Iso-line families the user can switch on and off (config key → option of
 // the vendored drawHXCoordinates). Density and enthalpy are off by default.
 export const LINE_DEFAULTS = {
