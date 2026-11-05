@@ -4,6 +4,8 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-beta.2] - 2026-11-05
+
 ### Added
 
 - Logo, social preview image and screenshots that are re-rendered automatically on every change.
@@ -35,6 +37,7 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.1...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.2...HEAD
+[1.0.0-beta.2]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.1
 [0.1.0]: https://github.com/retomarek/mollier-hx-card/releases/tag/v0.1.0
