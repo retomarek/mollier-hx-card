@@ -4,11 +4,13 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-beta.5] - 2026-11-05
+
+Replaces 1.0.0-beta.4, which was published by mistake from the wrong commit and has no card file. Do not use beta.4.
+
 ### Added
 
 - Names of the warning and alarm band can be set in the visual editor (empty = translated default).
-
-## [1.0.0-beta.4] - 2026-11-05
 
 ### Changed
 
@@ -76,8 +78,8 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.4...HEAD
-[1.0.0-beta.4]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.4
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.5...HEAD
+[1.0.0-beta.5]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.5
 [1.0.0-beta.3]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.3
 [1.0.0-beta.2]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.1
