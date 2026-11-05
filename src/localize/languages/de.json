@@ -47,7 +47,9 @@
       "line_relative_humidity": "Relative Feuchte",
       "line_absolute_humidity": "Absolute Feuchte",
       "line_density": "Dichte",
-      "line_enthalpy": "Enthalpie"
+      "line_enthalpy": "Enthalpie",
+      "orange_label": "Name orange Band (leer: „Warnband“)",
+      "red_label": "Name rotes Band (leer: „Alarmband“)"
     },
     "options": {
       "season": "Nach Jahreszeit",

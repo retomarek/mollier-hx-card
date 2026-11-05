@@ -62,6 +62,8 @@ function configToData(config) {
         red_dt: c.warning_bands?.red?.temperature ?? DEFAULTS.red_dt,
         red_dphi: c.warning_bands?.red?.humidity ?? DEFAULTS.red_dphi,
         red_dx: c.warning_bands?.red?.absolute_humidity ?? DEFAULTS.red_dx,
+        orange_label: c.warning_bands?.orange?.label ?? '',
+        red_label: c.warning_bands?.red?.label ?? '',
     };
 }
 
@@ -110,10 +112,16 @@ function dataToConfig(data, previous = {}) {
         if (data.bands_enabled) {
             // Keep YAML-only keys (label, color) the form doesn't edit.
             const prev = typeof previous.warning_bands === 'object' && previous.warning_bands ? previous.warning_bands : {};
-            config.warning_bands = {
-                orange: { ...prev.orange, temperature: data.orange_dt, humidity: data.orange_dphi, absolute_humidity: data.orange_dx },
-                red: { ...prev.red, temperature: data.red_dt, humidity: data.red_dphi, absolute_humidity: data.red_dx },
+            // Keep YAML-only keys (color); an empty name falls back to the
+            // translated default ("Warning band" / "Alarm band").
+            const band = (k) => {
+                const b = { ...prev[k], temperature: data[`${k}_dt`], humidity: data[`${k}_dphi`], absolute_humidity: data[`${k}_dx`] };
+                const name = (data[`${k}_label`] || '').trim();
+                if (name) b.label = name;
+                else delete b.label;
+                return b;
             };
+            config.warning_bands = { orange: band('orange'), red: band('red') };
         }
     }
     return config;
@@ -268,7 +276,12 @@ function buildSchema(data, t) {
             expanded: !!data.bands_enabled,
             schema: [
                 { name: 'bands_enabled', selector: { boolean: {} } },
-                ...(data.bands_enabled ? [bandRow('orange'), bandRow('red')] : []),
+                ...(data.bands_enabled ? [
+                    { name: 'orange_label', selector: { text: {} } },
+                    bandRow('orange'),
+                    { name: 'red_label', selector: { text: {} } },
+                    bandRow('red'),
+                ] : []),
             ],
         }] : []),
     ];

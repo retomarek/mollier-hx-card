@@ -4,6 +4,10 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Added
+
+- Names of the warning and alarm band can be set in the visual editor (empty = translated default).
+
 ## [1.0.0-beta.4] - 2026-11-05
 
 ### Changed

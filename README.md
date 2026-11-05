@@ -130,7 +130,7 @@ warning_bands:
 | `orange` | 1 | 5 | 1 | `#E67E22` |
 | `red` | 2.5 | 10 | 2.5 | `#C0392B` |
 
-These are the defaults. `label` and `color` are optional per band.
+These are the defaults. `label` (the name in the legend, also editable in the visual editor) and `color` are optional per band.
 
 ### Size in the dashboard
 
