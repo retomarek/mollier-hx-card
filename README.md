@@ -37,7 +37,7 @@ The h,x diagram shows both in one point: its position gives temperature, relativ
 
 ## The h,x diagram in five minutes
 
-The Mollier h,x diagram is the map engineers use for moist air ([Wikipedia, German](https://de.wikipedia.org/wiki/Mollier-h-x-Diagramm); in English-speaking countries the same physics is drawn as the [psychrometric chart](https://en.wikipedia.org/wiki/Psychrometrics), rotated and mirrored). Every state of the air is one point:
+The [Mollier h,x diagram](https://en.wikipedia.org/wiki/Psychrometrics#Mollier_diagram) is the map engineers use for moist air; in English-speaking countries the same physics is usually drawn as the psychrometric chart, rotated and mirrored. Every state of the air is one point:
 
 - **Up and down** is the temperature (°C).
 - **Left and right** is the absolute humidity *x*, the grams of water in one kilogram of dry air. Left is dry, right is humid.
@@ -215,7 +215,7 @@ The diagram math and D3 drawing code come from [pyedautils](https://github.com/r
 
 - [pyedautils](https://github.com/retomarek/pyedautils), Python Energy Data Analysis Utilities: diagram math, D3 drawing code and warning bands.
 - Thermodynamic relations from chapters 2.1 and 2.2 of *Glück: Zustands- und Stoffwerte – Wasser – Dampf – Luft*.
-- Background: [Mollier-h-x-Diagramm](https://de.wikipedia.org/wiki/Mollier-h-x-Diagramm) and [Psychrometrics](https://en.wikipedia.org/wiki/Psychrometrics) on Wikipedia.
+- Background: [Mollier diagram](https://en.wikipedia.org/wiki/Psychrometrics#Mollier_diagram) on Wikipedia.
 
 ## License
 
