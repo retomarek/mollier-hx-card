@@ -9,7 +9,7 @@ npm ci
 npm run watch        # rebuilds dist/mollier-hx-card.js on every change
 ```
 
-To try a build in Home Assistant, copy `dist/mollier-hx-card.js` to `<config>/www/` and add it as a dashboard resource (see the manual installation in the README). Remove the Marketplace / HACS copy first so the card is not loaded twice.
+To try a build in Home Assistant, copy `dist/mollier-hx-card.js` to `<config>/www/` and add it as a dashboard resource (*Settings → Dashboards → Resources*, URL `/local/<file>.js`, type JavaScript module). Remove the Marketplace / HACS copy first so the card is not loaded twice.
 
 Before a pull request:
 
