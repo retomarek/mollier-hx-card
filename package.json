@@ -19,8 +19,8 @@
     }
   },
   "devDependencies": {
-    "parcel": "^2.8.3",
-    "puppeteer-core": "^23.11.1"
+    "parcel": "^2.16.4",
+    "puppeteer-core": "^25.16.0"
   },
   "dependencies": {
     "d3-array": "^3.2.4",
@@ -28,6 +28,6 @@
     "d3-scale": "^4.0.2",
     "d3-selection": "^3.0.0",
     "d3-shape": "^3.2.0",
-    "lit": "^3.3.0"
+    "lit": "^3.3.3"
   }
 }

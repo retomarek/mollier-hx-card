@@ -245,6 +245,8 @@ export class MollierHxCard extends LitElement {
     static styles = styles;
 
     render() {
+        // Rendered before setConfig (e.g. element attached first): nothing to draw yet.
+        if (!this._config) return nothing;
         return html`
             <ha-card header="${this._header}">
                 <div class="card-content">
@@ -290,13 +292,11 @@ export class MollierHxCard extends LitElement {
     }
 
     firstUpdated() {
-        this._tryDraw();
-        this._drawComfort();
-        this._drawPoints();
-        this._drawCurrentPoint();
+        this.updated();
     }
 
     updated() {
+        if (!this._config) return;
         this._tryDraw();
         this._drawComfort();
         this._drawPoints();

@@ -4,6 +4,14 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Fixed
+
+- The card no longer throws an error when it is drawn before it receives its configuration.
+
+### Changed
+
+- Build tools updated (Parcel 2.16, Puppeteer 25, Lit 3.3.3, GitHub actions checkout/setup-node v7).
+
 ## [1.0.0-beta.5] - 2026-11-05
 
 Replaces 1.0.0-beta.4, which was published by mistake from the wrong commit and has no card file. Do not use beta.4.
