@@ -89,6 +89,7 @@ export class MollierHxCard extends LitElement {
             _comfortZone: { state: true },
             _warningBands: { state: true },
             _showCompass: { state: true },
+            _compassFixed: { state: true },
             _domainX: { state: true },
             _domainY: { state: true },
             _convention: { state: true },
@@ -118,6 +119,7 @@ export class MollierHxCard extends LitElement {
         this._comfortZone = parseComfortZone(config.comfort_zone);
         this._warningBands = parseWarningBands(config.warning_bands);
         this._showCompass = !!config.show_compass;
+        this._compassFixed = config.compass_scale === 'fixed';
         this._domainX = parseDomain(config.domain_x, DEFAULT_DOMAIN_X, 1 / 1000);
         this._domainY = parseDomain(config.domain_y, DEFAULT_DOMAIN_Y, 1);
         this._convention = VALID_CONVENTIONS.includes(config.convention)
@@ -216,12 +218,14 @@ export class MollierHxCard extends LitElement {
                     ${this._error
                         ? html`<p class="error">${this._t(this._error.key, this._error.vars)}</p>`
                         : html`
-                            <div class="diagram-wrap">
-                                <div class="mollier-host"></div>
-                                <div class="tooltip"></div>
+                            <div class="sheet">
+                                <div class="diagram-wrap">
+                                    <div class="mollier-host"></div>
+                                    <div class="tooltip"></div>
+                                </div>
+                                ${this._renderZoneLegend()}
+                                ${this._renderCompass()}
                             </div>
-                            ${this._renderZoneLegend()}
-                            ${this._renderCompass()}
                           `}
                 </div>
             </ha-card>
@@ -255,7 +259,7 @@ export class MollierHxCard extends LitElement {
         if (this._dailyData.length === 0) return nothing;
         const dist = compassDistribution(
             this._dailyData, this._comfortZone, this._warningBands, this._pressure, this._mollier);
-        return renderCompass(dist, (key, vars) => this._t(key, vars));
+        return renderCompass(dist, (key, vars) => this._t(key, vars), { fixedScale: this._compassFixed });
     }
 
     firstUpdated() {
@@ -295,12 +299,39 @@ export class MollierHxCard extends LitElement {
             .attr('preserveAspectRatio', 'xMidYMid meet');
         // Translate the English captions the vendored generator draws.
         const t = (key) => this._t(key);
+        const captions = [];
         d3.select(host).selectAll('#hx_mollier_diagram text').each(function () {
             const key = DIAGRAM_CAPTIONS[this.textContent];
-            if (key) this.textContent = t(key);
+            if (key) {
+                this.textContent = t(key);
+                captions.push(this);
+            }
         });
+        this._fitCaptions(host, captions);
         this._drawHash = hash;
         this._drawn = true;
+    }
+
+    // The vendored grid sizes its rotated axis captions for Tahoma; with other
+    // fonts or longer translations they can run past the SVG edge and get
+    // clipped. Shrink such a caption until it fits (needs layout, so it is
+    // skipped while the card is hidden).
+    _fitCaptions(host, captions) {
+        const svgEl = host.querySelector('#hx_mollier_diagram');
+        if (!svgEl) return;
+        const box = svgEl.getBoundingClientRect();
+        if (!box.width || !box.height) return;
+        for (const el of captions) {
+            let size = parseFloat(getComputedStyle(el).fontSize) || 12;
+            for (let i = 0; i < 12; i++) {
+                const r = el.getBoundingClientRect();
+                const inside = r.top >= box.top - 0.5 && r.bottom <= box.bottom + 0.5
+                    && r.left >= box.left - 0.5 && r.right <= box.right + 0.5;
+                if (inside) break;
+                size *= 0.92;
+                el.style.fontSize = `${size.toFixed(2)}px`;
+            }
+        }
     }
 
     _drawComfort() {

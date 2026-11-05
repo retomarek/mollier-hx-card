@@ -1,73 +1,84 @@
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/retomarek/mollier-hx-card/main/docs/logo.svg" alt="Mollier hx Card logo" width="112" height="112">
+</p>
 
-# Mollier hx Card
+<h1 align="center">Mollier hx Card</h1>
 
-A custom [Home Assistant](https://www.home-assistant.io/) Lovelace card that draws a Mollier h-x (psychrometric) diagram from a temperature and humidity sensor pair. One dot per day is plotted from the recorder's daily-mean statistics, optionally coloured by season, age, or chronological order.
+<p align="center">
+  A psychrometric h,x diagram for your Home Assistant dashboard,<br>
+  with comfort zone, warning bands and a comfort compass.
+</p>
 
-[![Open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=retomarek&repository=mollier-hx-card&category=Dashboard)
+<p align="center">
+  <a href="https://github.com/retomarek/mollier-hx-card/releases"><img alt="Release" src="https://img.shields.io/github/v/release/retomarek/mollier-hx-card?include_prereleases&style=flat-square&color=41BDF5"></a>
+  <a href="https://github.com/hacs/integration"><img alt="HACS Custom" src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square"></a>
+  <img alt="Home Assistant 2024.8+" src="https://img.shields.io/badge/Home%20Assistant-2024.8%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white">
+  <a href="https://github.com/retomarek/mollier-hx-card/actions/workflows/validate.yaml"><img alt="Validate" src="https://img.shields.io/github/actions/workflow/status/retomarek/mollier-hx-card/validate.yaml?branch=main&style=flat-square&label=HACS%20validation"></a>
+  <a href="https://github.com/retomarek/mollier-hx-card/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/retomarek/mollier-hx-card/total?style=flat-square&color=9acd32"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/retomarek/mollier-hx-card?style=flat-square"></a>
+</p>
+
+<p align="center">
+  <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=retomarek&repository=mollier-hx-card&category=plugin"><img alt="Open in your Home Assistant" src="https://my.home-assistant.io/badges/hacs_repository.svg"></a>
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/retomarek/mollier-hx-card/main/docs/screenshot.png" alt="Mollier hx Card in a dark dashboard: h,x diagram with comfort zone, warning bands and 120 daily points, comfort compass below" width="49%">
+  <img src="https://raw.githubusercontent.com/retomarek/mollier-hx-card/main/docs/screenshot-light-de.png" alt="The same card in the light theme with German labels" width="49%">
+</p>
+
+Plot your room climate where it belongs: on a Mollier h,x diagram. The card reads the daily means of a temperature and a humidity sensor from Home Assistant's long-term statistics and plots one point per day. Draw your comfort zone, add orange and red warning bands around it, and the comfort compass sums up how many days were in range, too warm, too humid, too dry or too cold, and how far off they were.
 
 ## Features
 
-- Renders axes, iso-temperature, iso-density, iso-enthalpy and iso-relative-humidity lines.
-- One point per day from `recorder/statistics_during_period` (long-term statistics).
-- Three colouring modes — by season (northern-hemisphere calendar seasons), by age (opacity fade), or chronological (line connecting days in time order).
-- Optional configurable indoor-comfort zone polygon.
-- Optional orange/red **warning bands** around the comfort zone (dashed outlines, as in pyedautils).
-- Optional **comfort compass**: an area-true glyph showing how the days split into *in range* and eight deviation directions (warm, humid, dry, cold and their mixes), graded mild / moderate / severe by the warning bands.
-- Translated card, diagram captions and editor (English, German), following your Home Assistant language. English is the fallback.
-- Configurable x and y axis ranges.
-- Native-looking editor using HA's `<ha-form>` — entity pickers filtered to entities that have long-term statistics, expandable sections, dark-mode aware.
-- Fully bundled; no CDN at runtime.
+- **Full h,x diagram** with iso-lines for temperature, relative humidity, density and enthalpy, for your altitude or air pressure.
+- **One point per day** from the recorder's long-term statistics, coloured by season, by age or connected in time order, plus a live point for the current reading.
+- **Comfort zone** as a polygon from temperature, relative and absolute humidity limits.
+- **Warning bands**: orange and red dashed bands as ± offsets around the comfort zone.
+- **Comfort compass**: an area-true glyph that splits the days into *in range* and eight directions (warm, humid, dry, cold and their mixes), graded mild / moderate / severe by the warning bands. Hover or tap a segment for the details.
+- **Visual editor** with entity pickers limited to sensors that have long-term statistics.
+- **Translated**: English and German, following your Home Assistant language. More languages are welcome, see [Translations](#translations).
+- **Self-contained**: one JavaScript file, no external requests at runtime.
 
 ## Requirements
 
-- The configured temperature and humidity sensors must have `state_class: measurement` so Home Assistant's recorder produces long-term statistics for them. Most native sensors (Zigbee, ESPHome, integrations like AirGradient or Netatmo) already do.
+Both sensors need long-term statistics, which means `state_class: measurement`. Most temperature and humidity sensors already have it (Zigbee, Z-Wave, ESPHome, Netatmo, AirGradient and many more). The visual editor only lists sensors that qualify.
 
 ## Installation
 
-### Marketplace / HACS (recommended)
+### Marketplace or HACS (recommended)
 
-From Home Assistant 2026.11 on, community cards are installed with the built-in **Marketplace** (Settings → Marketplace), which replaces HACS. On older versions use HACS. Both use the same catalog.
+From Home Assistant 2026.11 on, community cards come from the built-in **Marketplace** (*Settings → Marketplace*). On older versions use **HACS**. Both use the same catalog.
 
-1. Search for **Mollier hx Card**.
+1. Open the link above, or search for **Mollier hx Card**.
    - Not listed yet? Marketplace: *Add from link* with `https://github.com/retomarek/mollier-hx-card`. HACS: three-dot menu → *Custom repositories*, type *Dashboard*.
-2. Install it. The dashboard resource is added automatically.
-3. Reload your browser.
+2. Install it. The dashboard resource is added for you.
+3. Reload the browser.
 
-Or use the badge above to open the repository directly inside your Home Assistant.
-
-**Switching from a manual install:** remove your old resource (e.g. `/local/mollier-hx-card.js`) under *Settings → Dashboards → Resources* and delete the old file. If both are loaded, the browser refuses the second copy and the card may show an error.
+> **Switching from a manual install?** Remove the old resource (for example `/local/mollier-hx-card.js`) under *Settings → Dashboards → Resources* and delete the old file first. If both copies load, the browser rejects the second one and the card shows an error.
 
 ### Manual
 
-1. Download `mollier-hx-card.js` from the [latest release](https://github.com/retomarek/mollier-hx-card/releases) and copy it into `<config>/www/`
-2. Add the resource: *Settings &rarr; Dashboards &rarr; three-dot menu &rarr; Resources &rarr; Add resource*
-   - URL: `/local/mollier-hx-card.js`
-   - Resource type: **JavaScript Module**
-3. Hard-reload your browser (Ctrl+F5)
+1. Download `mollier-hx-card.js` from the [latest release](https://github.com/retomarek/mollier-hx-card/releases) into `<config>/www/`.
+2. Add it under *Settings → Dashboards → three-dot menu → Resources*: URL `/local/mollier-hx-card.js`, type **JavaScript module**.
+3. Reload the browser.
 
 ## Configuration
 
-### Visual editor
-
-Add a card to your dashboard, search for **Mollier hx card** in the custom card picker, and fill in the form.
-
-### YAML
+Add a card, pick **Mollier hx card** and fill in the form. Or use YAML:
 
 ```yaml
 type: custom:mollier-hx-card
 temperature_entity: sensor.living_room_temperature
 humidity_entity: sensor.living_room_humidity
 header: Living room
-days: 14
-coloring: season
+days: 120
+altitude: 450
 comfort_zone:
   temperature: [20, 26]
   humidity: [30, 60]
   absolute_humidity: [0, 12]
-warning_bands:
-  orange: { temperature: 1, humidity: 5, absolute_humidity: 1 }
-  red: { temperature: 2.5, humidity: 10, absolute_humidity: 2.5 }
+warning_bands: true
 show_compass: true
 ```
 
@@ -75,69 +86,70 @@ show_compass: true
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `temperature_entity` | string | — | **Required.** Entity ID of the temperature sensor. |
-| `humidity_entity` | string | — | **Required.** Entity ID of the relative-humidity sensor. Values in either 0..1 or 0..100 are auto-detected. |
-| `header` | string | — | Optional card header. |
-| `days` | number | `7` | How many days of history to display. The recorder keeps long-term statistics for one year by default. |
-| `coloring` | string | `season` | One of `season`, `age`, `chronological`. |
-| `pressure` | number | `101325` | Ambient air pressure in Pa. Mutually exclusive with `altitude`. |
-| `altitude` | number | — | Altitude in m above sea level. When set, the pressure is computed from the International Standard Atmosphere (valid up to ~5000 m) and overrides `pressure`. |
-| `convention` | string | `classical` | Mollier coordinate convention. `classical` (per kg of dry air, Recknagel/Sprenger — isotherms tilt slightly *up* with x) or `glueck` (per kg of moist air — isotherms tilt slightly *down*). Physical quantities are identical; only the (x, y) parametrisation differs. |
-| `domain_x` | `[min, max]` | `[0, 20]` | Visible range of the absolute-humidity axis, in **g/kg**. |
-| `domain_y` | `[min, max]` | `[-20, 50]` | Visible range of the temperature axis, in **°C**. |
-| `comfort_zone` | object | — | Optional. Draws a translucent yellow-green polygon for an indoor-comfort range. See below. |
-| `warning_bands` | `true` \| object | — | Optional, needs `comfort_zone`. Dashed orange/red bands around the comfort zone. `true` uses the defaults. See below. |
-| `show_compass` | boolean | `false` | Optional, needs `comfort_zone`. Shows the comfort compass below the diagram. |
+| `temperature_entity` | string | | **Required.** Temperature sensor. |
+| `humidity_entity` | string | | **Required.** Relative-humidity sensor. Values in 0..1 or 0..100 are detected. |
+| `header` | string | | Card title. |
+| `days` | number | `7` | Days of history. The recorder keeps long-term statistics for a year by default. |
+| `coloring` | string | `season` | `season`, `age` (older days fade) or `chronological` (days joined by a line). |
+| `altitude` | number | | Altitude in m above sea level. Sets the air pressure from the standard atmosphere and overrides `pressure`. |
+| `pressure` | number | `101325` | Air pressure in Pa. |
+| `convention` | string | `classical` | `classical` (per kg dry air, Recknagel) or `glueck` (per kg moist air). Same physics, slightly different tilt of the isotherms. |
+| `domain_x` | `[min, max]` | `[0, 20]` | Absolute-humidity axis in g/kg. |
+| `domain_y` | `[min, max]` | `[-20, 50]` | Temperature axis in °C. |
+| `comfort_zone` | object | | Comfort zone, see below. |
+| `warning_bands` | `true` or object | | Needs `comfort_zone`. `true` uses the defaults, see below. |
+| `show_compass` | boolean | `false` | Needs `comfort_zone`. Shows the comfort compass below the diagram. |
+| `compass_scale` | string | `fit` | `fit` zooms the compass to its glyph. `fixed` keeps the dashed 100 % circle the same size in every card, so you can compare rooms side by side. |
 
 #### `comfort_zone`
 
 ```yaml
 comfort_zone:
-  temperature: [20, 26]        # min, max in °C
-  humidity: [30, 60]           # min, max in % RH
-  absolute_humidity: [0, 12]   # min, max in g/kg
+  temperature: [20, 26]        # °C
+  humidity: [30, 60]           # % relative humidity
+  absolute_humidity: [0, 12]   # g/kg
 ```
 
-All three sub-ranges are required when the object is present. The polygon is the intersection of the three constraints; set `absolute_humidity: [0, 1000]` to make it effectively unbounded.
+All three ranges are required. The zone is where all three hold; use `absolute_humidity: [0, 1000]` to leave that limit open.
 
 #### `warning_bands`
 
-Each band is given as a **± offset around the comfort zone**: temperature in K, relative humidity in %-points, absolute humidity in g/kg. Missing values use the defaults (the stage limits of `pyedautils.comfort.comfort_compass_distribution`):
+Each band is a **± offset around the comfort zone**: temperature in K, relative humidity in %-points, absolute humidity in g/kg.
 
-| Band | `temperature` | `humidity` | `absolute_humidity` | default `color` |
+```yaml
+warning_bands:
+  orange: { temperature: 1, humidity: 5, absolute_humidity: 1 }
+  red: { temperature: 2.5, humidity: 10, absolute_humidity: 2.5, label: Alarm }
+```
+
+| Band | `temperature` | `humidity` | `absolute_humidity` | `color` |
 | --- | --- | --- | --- | --- |
 | `orange` | 1 | 5 | 1 | `#E67E22` |
 | `red` | 2.5 | 10 | 2.5 | `#C0392B` |
 
-Optional `label` and `color` per band override the legend text and line colour.
+These are the defaults. `label` and `color` are optional per band.
 
-#### Comfort compass
+### Comfort compass
 
-One count per day (the same daily means as the diagram). Each day is classified against the comfort zone; humidity counts as too high or too low if **either** the relative or the absolute limit is exceeded. The severity follows the warning bands: *mild* = inside the orange band, *moderate* = inside the red band, *severe* = outside. Without `warning_bands` the compass uses the default offsets above. The worse axis decides the stage.
+The compass counts days, using the same daily means as the diagram. Each day is compared with the comfort zone. Humidity counts as too high or too low when **either** the relative or the absolute limit is exceeded. The warning bands set the severity: *mild* is inside the orange band, *moderate* inside the red band, *severe* beyond it. The worse of temperature and humidity decides.
 
-The glyph is area-true: the green centre disc's area is the share of days in range, and each wedge's area is the share of days in that direction. Warm is at the top, cold at the bottom, humid on the right and dry on the left, the same orientation as the h,x diagram. Hover any segment for its count.
-
-## How it works
-
-The thermodynamic math and D3 rendering code under `src/d3_mollierhx/` is vendored from [retomarek/pyedautils](https://github.com/retomarek/pyedautils), so the output of this card is visually identical to `pyedautils.plots.plot_mollier_hx()`.
-
-Daily means are fetched once per card via Home Assistant's `recorder/statistics_during_period` WebSocket API and rendered with D3 inside a Lit `LitElement` custom component.
+The glyph is area-true. The green disc's area is the share of days in range, and each wedge's area is the share of days off in that direction. Warm is at the top, cold at the bottom, humid on the right and dry on the left, the same as in the h,x diagram.
 
 ## Translations
 
-The card follows the language set in your Home Assistant profile. Available: English, German. Missing languages and missing keys fall back to English.
+The card uses the language of your Home Assistant profile and falls back to English for anything not translated. Available: English, German.
 
-To add a language, copy `src/localize/languages/en.json` to `<language code>.json`, translate the values (keep the keys), register the file in `src/localize/localize.js` and open a pull request.
+To add a language, copy [`src/localize/languages/en.json`](src/localize/languages/en.json) to `<language code>.json`, translate the values, register it in [`src/localize/localize.js`](src/localize/localize.js) and open a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## How it works
+
+The diagram math and D3 drawing code come from [pyedautils](https://github.com/retomarek/pyedautils) (`data/d3_mollierhx`), so the card draws the same diagram as `pyedautils.plots.plot_mollier_hx()`. The comfort compass is a port of `pyedautils.comfort.comfort_compass_distribution` and `plot_comfort_compass`. Daily means come from Home Assistant's `recorder/statistics_during_period` WebSocket API.
+
+## Credits
+
+- [pyedautils](https://github.com/retomarek/pyedautils): diagram math, D3 drawing code, warning bands and comfort compass.
+- Thermodynamic relations from chapters 2.1 and 2.2 of *Glück: Zustands- und Stoffwerte – Wasser – Dampf – Luft*.
 
 ## License
 
 [MIT](LICENSE)
-
-## Credits
-
-- [retomarek/pyedautils](https://github.com/retomarek/pyedautils) — diagram math, D3 rendering code, warning bands and comfort compass.
-- Thermodynamic relations from chapter 2.1 / 2.2 of *Glück: Zustands- und Stoffwerte — Wasser — Dampf — Luft*.
-
-## Contributing
-
-PRs and feedback welcome. Open an issue for bugs or feature requests.

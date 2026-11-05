@@ -127,25 +127,12 @@ const AREA = Math.PI * R0 * R0;
 const WID_DEG = 40;
 const WID_RAD = (WID_DEG * Math.PI) / 180;
 const RMAX = Math.sqrt((2 * AREA) / WID_RAD) * 1.04;
-const R_RANGE = RMAX * 1.15;         // fixed_scale: same reference-circle size in every card
-const PX = 100;                      // screen radius of R_RANGE
-const K = PX / R_RANGE;
+const GLYPH_PX = 90;                 // screen radius of the longest arm (fit) or of RMAX (fixed)
+const FONT = 12, LH = 13;            // label font size / line height in viewBox units
+const CHAR_W = FONT * 0.58;          // rough average glyph width, for the label bounding boxes
 
 const rad = (deg) => (deg * Math.PI) / 180;
-// Polar (r in glyph units, deg CCW from east) → SVG coordinates (y down).
-const pt = (r, deg) => [r * K * Math.cos(rad(deg)), -r * K * Math.sin(rad(deg))];
 const f2 = (v) => v.toFixed(2);
-
-function sectorPath(r1, r2, deg) {
-    const a0 = deg - WID_DEG / 2, a1 = deg + WID_DEG / 2;
-    const [ox0, oy0] = pt(r2, a0), [ox1, oy1] = pt(r2, a1);
-    const R2 = r2 * K;
-    let d = `M${f2(ox0)},${f2(oy0)}A${f2(R2)},${f2(R2)} 0 0 0 ${f2(ox1)},${f2(oy1)}`;
-    if (r1 < 1e-9) return `${d}L0,0Z`;
-    const [ix1, iy1] = pt(r1, a1), [ix0, iy0] = pt(r1, a0);
-    const R1 = r1 * K;
-    return `${d}L${f2(ix1)},${f2(iy1)}A${f2(R1)},${f2(R1)} 0 0 1 ${f2(ix0)},${f2(iy0)}Z`;
-}
 
 // Outward text placement per direction (plotly textposition in pyedautils).
 const LABEL_POS = [
@@ -154,8 +141,39 @@ const LABEL_POS = [
     { anchor: 'middle', v: 'bottom' }, { anchor: 'start', v: 'bottom' },
 ];
 
+// Hover/tap tooltip, positioned inside .compass-body (like the diagram's tooltip).
+function showTip(ev, tip) {
+    const el = ev.currentTarget;
+    const body = el.closest('.compass-body');
+    const box = body && body.querySelector('.compass-tip');
+    if (!box) return;
+    const b = body.getBoundingClientRect(), r = el.getBoundingClientRect();
+    box.replaceChildren();
+    tip.lines.forEach((line, i) => {
+        const div = document.createElement('div');
+        div.textContent = line;
+        if (i === 0) div.className = 'tip-head';
+        box.appendChild(div);
+    });
+    box.style.background = tip.bg;
+    box.style.color = tip.fg;
+    box.style.left = `${r.left + r.width / 2 - b.left}px`;
+    box.style.top = `${r.top - b.top}px`;
+    box.style.display = 'block';
+}
+function hideTip(ev) {
+    const box = ev.currentTarget.closest('.compass-body')?.querySelector('.compass-tip');
+    if (box) box.style.display = 'none';
+}
+
+// Readable text on a segment colour: dark ink on the light "mild" plane.
+const inkOn = (stageKey) => (stageKey === 'l' ? '#1f2733' : '#ffffff');
+
 // t(key, vars) is the card's localize() bound to hass.
-export function renderCompass(dist, t) {
+// opts.fixedScale: frame to the worst case (pyedautils fixed_scale=True), so the
+// dashed 100 % circle has the same size in every card and rooms are comparable.
+// Default: zoom to this glyph so it fills the space.
+export function renderCompass(dist, t, opts = {}) {
     const g = (k) => Number(dist[k] || 0);
     const total = Object.values(dist).reduce((a, v) => a + Number(v || 0), 0);
     const frac = (k) => (total ? g(k) / total : 0);
@@ -163,13 +181,15 @@ export function renderCompass(dist, t) {
     const name = (k) => t(`compass.names.${k}`);
     const stage = (st) => t(`compass.stages.${st}`);
     const pct = (cnt) => (total ? ((cnt / total) * 100).toFixed(0) : '0');
-    const tip = (name, cnt) => `${name}\n${Math.round(cnt)} ${unit(cnt)} (${pct(cnt)}%)`;
+    const days = (cnt) => `${Math.round(cnt)} ${unit(cnt)} · ${pct(cnt)}%`;
+    const dirTotal = (k) => STAGES.reduce((a, st) => a + g(`${k}_${st}`), 0);
 
     const ok = frac('ok');
     const rGreen = R0 * Math.sqrt(Math.max(ok, 0));
 
     // Area-true stacked wedges: cumulative area (WID/2)(r²−rg²) = share·AREA.
-    const wedges = [];
+    const rings = [];
+    const armR = [];                  // outer radius per direction (at least the dashed circle)
     let rMax = Math.max(rGreen, R0);
     DIRS.forEach((k, i) => {
         let cum = 0, rPrev = rGreen;
@@ -178,57 +198,105 @@ export function renderCompass(dist, t) {
             cum += frac(`${k}_${st}`);
             const rNext = Math.sqrt(rGreen * rGreen + (2 * AREA * cum) / WID_RAD);
             if (rNext > rPrev + 1e-9) {
-                wedges.push({ d: sectorPath(rPrev, rNext, THETA[i]), color: STAGE_COLORS[k][st], tip: tip(`${name(k)} · ${stage(st)}`, cnt) });
+                const tot = dirTotal(k);
+                rings.push({
+                    r1: rPrev, r2: rNext, deg: THETA[i], color: STAGE_COLORS[k][st],
+                    tip: {
+                        bg: STAGE_COLORS[k][st], fg: inkOn(st),
+                        lines: [
+                            `${name(k)} · ${stage(st)}`,
+                            days(cnt),
+                            `${name(k)}: ${days(tot)}`,
+                            STAGES.map((s2) => `${stage(s2)} ${pct(g(`${k}_${s2}`))}%`).join(' / '),
+                        ],
+                    },
+                });
             }
             rPrev = rNext;
         }
         rMax = Math.max(rMax, rPrev);
+        armR.push(Math.max(rPrev, R0));
     });
-    const rLab = Math.min(rMax + 0.25, RMAX * 1.07);
+    const K = GLYPH_PX / (opts.fixedScale ? RMAX : rMax);   // px per glyph unit
+    const pt = (r, deg) => [r * K * Math.cos(rad(deg)), -r * K * Math.sin(rad(deg))];
 
+    const sectorPath = (r1, r2, deg) => {
+        const a0 = deg - WID_DEG / 2, a1 = deg + WID_DEG / 2;
+        const [ox0, oy0] = pt(r2, a0), [ox1, oy1] = pt(r2, a1);
+        const R2 = r2 * K;
+        const d = `M${f2(ox0)},${f2(oy0)}A${f2(R2)},${f2(R2)} 0 0 0 ${f2(ox1)},${f2(oy1)}`;
+        if (r1 < 1e-9) return `${d}L0,0Z`;
+        const [ix1, iy1] = pt(r1, a1), [ix0, iy0] = pt(r1, a0);
+        const R1 = r1 * K;
+        return `${d}L${f2(ix1)},${f2(iy1)}A${f2(R1)},${f2(R1)} 0 0 1 ${f2(ix0)},${f2(iy0)}Z`;
+    };
+
+    // Each label sits just beyond its own arm, anchored outward so it never
+    // reaches back into the glyph. Track a bounding box for the viewBox.
+    const box = { x0: -rMax * K, x1: rMax * K, y0: -rMax * K, y1: rMax * K };
+    if (opts.fixedScale) Object.assign(box, { x0: -RMAX * K, x1: RMAX * K, y0: -RMAX * K, y1: RMAX * K });
     const labels = THETA.map((deg, i) => {
-        const [x, y] = pt(rLab, deg);
+        const [x, y] = pt(armR[i], deg);
+        const [ux, uy] = [Math.cos(rad(deg)), -Math.sin(rad(deg))];
+        const gap = 7;
+        const ax = x + ux * gap, ay = y + uy * gap;
         const lines = t(`compass.labels.${DIRS[i]}`).split('\n');
         const pos = LABEL_POS[i];
-        const lh = 12;
-        const first = pos.v === 'top' ? -(lines.length - 1) * lh - 2 : pos.v === 'bottom' ? lh : -((lines.length - 1) * lh) / 2 + 4;
-        const dx = pos.anchor === 'start' ? 3 : pos.anchor === 'end' ? -3 : 0;
-        return svg`<text x=${f2(x + dx)} y=${f2(y + first)} text-anchor=${pos.anchor} fill=${STAGE_COLORS[DIRS[i]].s} font-size="11">
-            ${lines.map((l, j) => svg`<tspan x=${f2(x + dx)} dy=${j === 0 ? 0 : lh}>${l}</tspan>`)}</text>`;
+        const w = Math.max(...lines.map((l) => l.length)) * CHAR_W;
+        const h = lines.length * LH;
+        // top edge of the text block
+        const top = pos.v === 'top' ? ay - h : pos.v === 'bottom' ? ay : ay - h / 2;
+        const left = pos.anchor === 'start' ? ax : pos.anchor === 'end' ? ax - w : ax - w / 2;
+        box.x0 = Math.min(box.x0, left); box.x1 = Math.max(box.x1, left + w);
+        box.y0 = Math.min(box.y0, top); box.y1 = Math.max(box.y1, top + h);
+        const baseline = top + FONT - 1.5;
+        return svg`<text x=${f2(ax)} y=${f2(baseline)} text-anchor=${pos.anchor} fill=${STAGE_COLORS[DIRS[i]].s} font-size=${FONT} font-weight="500">
+            ${lines.map((l, j) => svg`<tspan x=${f2(ax)} dy=${j === 0 ? 0 : LH}>${l}</tspan>`)}</text>`;
     });
-
-    const refCircle = svg`<circle r=${f2(R0 * K)} fill="none" stroke="#cccccc" stroke-width="0.8" stroke-dasharray="2,2"></circle>`;
+    const pad = 4;
+    const vb = [box.x0 - pad, box.y0 - pad, box.x1 - box.x0 + 2 * pad, box.y1 - box.y0 + 2 * pad].map(f2).join(' ');
 
     // Legend rows: in range first, then deviations by count (largest first).
-    const rows = [{ k: 'ok', cnt: g('ok'), color: OK_COLOR, split: null }];
+    // The severity split lives in the hover tooltip.
+    const rows = [{ k: 'ok', cnt: g('ok'), color: OK_COLOR }];
     const devs = [];
     for (const k of DIRS) {
-        const cnt = STAGES.reduce((a, st) => a + g(`${k}_${st}`), 0);
-        if (cnt > 0) devs.push({ k, cnt, color: STAGE_COLORS[k].d, split: STAGES.map((st) => pct(g(`${k}_${st}`))).join('/') });
+        const cnt = dirTotal(k);
+        if (cnt > 0) devs.push({ k, cnt, color: STAGE_COLORS[k].d });
     }
     devs.sort((a, b) => b.cnt - a.cnt);
     rows.push(...devs);
+
+    const okPct = (ok * 100).toFixed(0);
+    const okFont = Math.max(12, Math.min(22, rGreen * K * 0.45));
+    const okTip = { bg: OK_COLOR, fg: '#ffffff', lines: [name('ok'), days(g('ok'))] };
+    const on = (tipData) => (ev) => showTip(ev, tipData);
 
     return html`
         <div class="compass">
             <div class="compass-title">${t('compass.title')} <span class="muted">· ${Math.round(total)} ${unit(total)}</span></div>
             <div class="compass-body">
-                <svg class="compass-glyph" viewBox="-175 -135 350 270" role="img" aria-label=${t('compass.title')}>
-                    ${refCircle}
-                    ${rGreen > 0 ? svg`<circle r=${f2(rGreen * K)} fill=${OK_COLOR} stroke="white" stroke-width="1.5"><title>${tip(name('ok'), g('ok'))}</title></circle>` : nothing}
-                    ${wedges.map((w) => svg`<path d=${w.d} fill=${w.color} stroke="white" stroke-width="1.5"><title>${w.tip}</title></path>`)}
-                    ${ok * 100 >= 15 ? svg`<text y="5" text-anchor="middle" fill="white" font-size="14" pointer-events="none">${(ok * 100).toFixed(0)}%</text>` : nothing}
+                <svg class="compass-glyph" viewBox=${vb} role="img" aria-label=${t('compass.title')}>
+                    <circle r=${f2(R0 * K)} fill="none" stroke="#b9c0ca" stroke-width="1" stroke-dasharray="3,3"></circle>
+                    ${rGreen > 0 ? svg`<circle class="seg" r=${f2(rGreen * K)} fill=${OK_COLOR} stroke="white" stroke-width="2"
+                        @mouseenter=${on(okTip)} @click=${on(okTip)} @mouseleave=${hideTip}></circle>` : nothing}
+                    ${rings.map((w) => svg`<path class="seg" d=${sectorPath(w.r1, w.r2, w.deg)} fill=${w.color} stroke="white" stroke-width="1.5"
+                        @mouseenter=${on(w.tip)} @click=${on(w.tip)} @mouseleave=${hideTip}></path>`)}
+                    ${ok * 100 >= 15 ? svg`<text y=${f2(okFont * 0.36)} text-anchor="middle" fill="white" font-size=${f2(okFont)} font-weight="600" pointer-events="none">${okPct}%</text>` : nothing}
                     ${labels}
                 </svg>
                 <div class="compass-legend">
                     ${rows.map((r) => html`
-                        <div><span class="dot" style="color:${r.color}">●</span> ${name(r.k)} — <b>${Math.round(r.cnt)}</b> ${unit(r.cnt)}
-                            <span class="muted">(${pct(r.cnt)}%${r.split ? html` → ${r.split}%` : nothing})</span></div>`)}
+                        <div class="row"><span class="dot" style="background:${r.color}"></span>
+                            <span class="name">${name(r.k)}</span>
+                            <span class="count">${Math.round(r.cnt)}</span>
+                            <span class="share">${pct(r.cnt)}%</span></div>`)}
                     ${devs.length ? html`
                         <div class="stage-key">
-                            ${STAGES.map((st, i) => html`${i ? html`<span class="muted"> / </span>` : nothing}<span class="dot" style="color:${STAGE_GREYS[st]}">●</span> <span class="muted">${stage(st)}</span>`)}
+                            ${STAGES.map((st) => html`<span><span class="dot" style="background:${STAGE_GREYS[st]}"></span>${stage(st)}</span>`)}
                         </div>` : nothing}
                 </div>
+                <div class="compass-tip" role="tooltip"></div>
             </div>
         </div>
     `;

@@ -1,0 +1,18 @@
+name: Translation
+description: Report a wrong translation or offer a new language.
+labels: [translation]
+body:
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: fr, it, nl, ...
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Which text is wrong and what should it say? For a new language, a pull request with the JSON file is the fastest way (see CONTRIBUTING.md).
+    validations:
+      required: true

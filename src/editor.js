@@ -59,6 +59,7 @@ function configToData(config) {
         red_dphi: c.warning_bands?.red?.humidity ?? DEFAULTS.red_dphi,
         red_dx: c.warning_bands?.red?.absolute_humidity ?? DEFAULTS.red_dx,
         show_compass: !!c.show_compass,
+        compass_fixed: c.compass_scale === 'fixed',
     };
 }
 
@@ -95,7 +96,10 @@ function dataToConfig(data, previous) {
                 red: { ...prev.red, temperature: data.red_dt, humidity: data.red_dphi, absolute_humidity: data.red_dx },
             };
         }
-        if (data.show_compass) config.show_compass = true;
+        if (data.show_compass) {
+            config.show_compass = true;
+            if (data.compass_fixed) config.compass_scale = 'fixed';
+        }
     }
     return config;
 }
@@ -241,6 +245,7 @@ function buildSchema(data, t) {
                 { name: 'bands_enabled', selector: { boolean: {} } },
                 ...(data.bands_enabled ? [bandRow('orange'), bandRow('red')] : []),
                 { name: 'show_compass', selector: { boolean: {} } },
+                ...(data.show_compass ? [{ name: 'compass_fixed', selector: { boolean: {} } }] : []),
             ],
         }] : []),
     ];

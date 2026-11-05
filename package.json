@@ -6,7 +6,8 @@
   "source": "src/mollier-hx-card.js",
   "scripts": {
     "build": "parcel build --no-source-maps --no-cache",
-    "watch": "parcel watch"
+    "watch": "parcel watch",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "targets": {
     "default": {
@@ -16,7 +17,8 @@
     }
   },
   "devDependencies": {
-    "parcel": "^2.8.3"
+    "parcel": "^2.8.3",
+    "puppeteer-core": "^23.11.1"
   },
   "dependencies": {
     "d3-array": "^3.2.4",

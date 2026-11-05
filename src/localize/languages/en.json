@@ -20,14 +20,31 @@
     "day": "day",
     "days": "days",
     "names": {
-      "ok": "in range", "w": "too warm", "wf": "warm + humid", "f": "too humid", "kf": "cold + humid",
-      "c": "too cold", "ct": "cold + dry", "t": "too dry", "wt": "warm + dry"
+      "ok": "in range",
+      "w": "too warm",
+      "wf": "warm + humid",
+      "f": "too humid",
+      "kf": "cold + humid",
+      "c": "too cold",
+      "ct": "cold + dry",
+      "t": "too dry",
+      "wt": "warm + dry"
     },
     "labels": {
-      "f": "too humid", "wf": "warm +\nhumid", "w": "too warm", "wt": "warm +\ndry",
-      "t": "too dry", "ct": "cold +\ndry", "c": "too cold", "kf": "cold +\nhumid"
+      "f": "too humid",
+      "wf": "warm +\nhumid",
+      "w": "too warm",
+      "wt": "warm +\ndry",
+      "t": "too dry",
+      "ct": "cold +\ndry",
+      "c": "too cold",
+      "kf": "cold +\nhumid"
     },
-    "stages": { "l": "mild", "d": "moderate", "s": "severe" }
+    "stages": {
+      "l": "mild",
+      "d": "moderate",
+      "s": "severe"
+    }
   },
   "editor": {
     "fields": {
@@ -58,7 +75,8 @@
       "red_dt": "Red ± temperature",
       "red_dphi": "Red ± humidity",
       "red_dx": "Red ± abs. humidity",
-      "show_compass": "Show comfort compass"
+      "show_compass": "Show comfort compass",
+      "compass_fixed": "Fixed scale (compare rooms)"
     },
     "options": {
       "season": "By season",

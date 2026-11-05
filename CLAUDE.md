@@ -49,6 +49,14 @@ Versioning is SemVer (`MAJOR.MINOR.PATCH`, e.g. `1.0.0`). Don't use Home Assista
 3. `.github/workflows/validate.yaml` runs the HACS validation action (`hacs/action`, category `plugin`); it must pass without `ignore` for inclusion in the catalog (`hacs/default`, file `plugin`). The catalog serves both HACS (< 2026.11) and the built-in Home Assistant Marketplace (>= 2026.11). The catalog review also requires an image in the README.
 4. Marketplace installs to `www/community/mollier-hx-card/` and registers `/local/community/mollier-hx-card/mollier-hx-card.js?v=...` as a resource. `hacs.json` keys used: `name`, `filename`, `content_in_root`, `homeassistant`; `render_readme` is ignored by the Marketplace but kept for HACS.
 
+## Screenshots and repo assets
+
+- `npm run screenshots` (`scripts/screenshots.mjs`) renders the built bundle with deterministic sample data in headless Chrome (`puppeteer-core`, browser from `$CHROME_PATH` or PATH) and writes `docs/screenshot.png` (dark, English) and `docs/screenshot-light-de.png`. `.github/workflows/screenshots.yaml` runs it on every push to `main` that touches `src/` and commits changed images.
+- The README references images by absolute `raw.githubusercontent.com` URLs, because the Marketplace / HACS render the README outside GitHub.
+- `docs/logo.svg` is generated from real psychrometric curves; `docs/social-preview.png` is the GitHub social preview (upload it manually under *Settings → General → Social preview*; there is no API for it).
+- Dashboard cards cannot have their own icon in the Marketplace / HACS lists: the Marketplace frontend only loads brand icons for integrations (`repository-icon.ts`). The logo is for the README and GitHub.
+- Keep `CHANGELOG.md` up to date; release notes are taken from it.
+
 ## Home Assistant integration notes
 
 - `ha-card` is a Home Assistant-provided element; it is available at runtime in HA but not in this repo. Don't try to import or polyfill it.

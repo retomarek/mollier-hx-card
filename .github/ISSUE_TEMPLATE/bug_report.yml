@@ -1,0 +1,48 @@
+name: Bug report
+description: The card shows something wrong, an error, or nothing at all.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting. The details below help to reproduce the problem.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did you see instead? Screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Card configuration
+      description: The card's YAML (dashboard edit mode → card → Show code editor).
+      render: yaml
+    validations:
+      required: true
+  - type: input
+    id: card-version
+    attributes:
+      label: Card version
+      description: Shown in the browser console as "MOLLIER-HX-CARD vX.Y.Z", or in the Marketplace / HACS.
+      placeholder: v1.0.0
+    validations:
+      required: true
+  - type: input
+    id: ha-version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.11.0"
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser or app
+      placeholder: Chrome 140 on Windows, Home Assistant app on iOS, ...
+  - type: textarea
+    id: console
+    attributes:
+      label: Browser console errors
+      description: Press F12 → Console and copy any red lines that mention the card.
+      render: text
