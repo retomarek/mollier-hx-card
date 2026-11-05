@@ -55,7 +55,7 @@ Versioning is SemVer (`MAJOR.MINOR.PATCH`, e.g. `1.0.0`). Don't use Home Assista
 
 - `npm run screenshots` (`scripts/screenshots.mjs`) renders the built bundle with deterministic sample data in headless Chrome (`puppeteer-core`, browser from `$CHROME_PATH` or PATH) and writes `docs/screenshot.png` (dark, English) and `docs/screenshot-light-de.png`. `.github/workflows/screenshots.yaml` runs it on every push to `main` that touches `src/` and commits changed images.
 - The README references images by absolute `raw.githubusercontent.com` URLs, because the Marketplace / HACS render the README outside GitHub.
-- `docs/logo.svg` is generated from real psychrometric curves; `docs/social-preview.png` is the GitHub social preview (upload it manually under *Settings → General → Social preview*; there is no API for it).
+- `docs/logo.svg` is generated from real psychrometric curves; `docs/banner.png` (README header, from `scripts/banner.html`) and `docs/social-preview.png` (GitHub social preview, from `scripts/social-preview.html`) are rendered by `npm run social-preview`; the social preview (upload it manually under *Settings → General → Social preview*; there is no API for it).
 - Dashboard cards cannot have their own icon in the Marketplace / HACS lists: the Marketplace frontend only loads brand icons for integrations (`repository-icon.ts`). The logo is for the README and GitHub.
 - Keep `CHANGELOG.md` up to date; release notes are taken from it.
 

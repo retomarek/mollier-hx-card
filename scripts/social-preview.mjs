@@ -1,6 +1,8 @@
-// Renders docs/social-preview.png (1280×640) from scripts/social-preview.html,
-// which shows the logo and docs/screenshot.png. Upload the PNG manually under
-// the repository's Settings → General → Social preview (no API for it).
+// Renders the brand images from HTML templates:
+// - docs/social-preview.png (1280×640) from scripts/social-preview.html, with the
+//   logo and docs/screenshot.png. Upload it manually under the repository's
+//   Settings → General → Social preview (no API for it).
+// - docs/banner.png (1280×320) from scripts/banner.html, the README header.
 //
 //   npm run screenshots && npm run social-preview
 
@@ -25,12 +27,15 @@ function findChrome() {
 
 const browser = await puppeteer.launch({ executablePath: findChrome(), headless: true, args: ['--no-sandbox', '--hide-scrollbars'] });
 try {
-    const tab = await browser.newPage();
-    await tab.setViewport({ width: 1280, height: 640, deviceScaleFactor: 1 });
-    await tab.goto(pathToFileURL(resolve(root, 'scripts/social-preview.html')).href, { waitUntil: 'networkidle0' });
-    await tab.evaluate(() => document.fonts.ready);
-    await tab.screenshot({ path: resolve(root, 'docs/social-preview.png') });
-    console.log('docs/social-preview.png');
+    for (const [tpl, out, height] of [['social-preview.html', 'social-preview.png', 640], ['banner.html', 'banner.png', 320]]) {
+        const tab = await browser.newPage();
+        await tab.setViewport({ width: 1280, height, deviceScaleFactor: 1 });
+        await tab.goto(pathToFileURL(resolve(root, 'scripts', tpl)).href, { waitUntil: 'networkidle0' });
+        await tab.evaluate(() => document.fonts.ready);
+        await tab.screenshot({ path: resolve(root, 'docs', out) });
+        console.log(`docs/${out}`);
+        await tab.close();
+    }
 } finally {
     await browser.close();
 }

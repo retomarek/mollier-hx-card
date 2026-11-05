@@ -1,12 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/retomarek/mollier-hx-card/main/docs/logo.svg" alt="Mollier hx Card logo" width="112" height="112">
-</p>
-
-<h1 align="center">Mollier hx Card</h1>
-
-<p align="center">
-  A psychrometric h,x diagram for your Home Assistant dashboard,<br>
-  with comfort zone and warning bands.
+  <img src="https://raw.githubusercontent.com/retomarek/mollier-hx-card/main/docs/banner.png" alt="Mollier hx Card: psychrometric h,x diagram for Home Assistant, with comfort zone and warning bands" width="100%">
 </p>
 
 <p align="center">
