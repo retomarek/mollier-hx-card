@@ -126,7 +126,6 @@ lines:
 outdoor_temperature_entity: sensor.outside_temperature
 outdoor_humidity_entity: sensor.outside_humidity
 outdoor_weather_entity: weather.home   # fallback for the current outside point
-outdoor_history: true
 ```
 
 ### Options

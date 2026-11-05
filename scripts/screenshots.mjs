@@ -50,7 +50,6 @@ const CONFIG = {
     warning_bands: true,
     outdoor_temperature_entity: 'sensor.outside_temperature',
     outdoor_humidity_entity: 'sensor.outside_humidity',
-    outdoor_history: true,
 };
 
 function page(shot) {
