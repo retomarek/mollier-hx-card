@@ -11,7 +11,8 @@
     "outdoor": "Aussen",
     "ventilation_dries": "Lüften trocknet",
     "ventilation_humidifies": "Lüften befeuchtet",
-    "ventilation_neutral": "Lüften: keine Änderung"
+    "ventilation_neutral": "Lüften: keine Änderung",
+    "zoom_reset": "Zoom zurücksetzen"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

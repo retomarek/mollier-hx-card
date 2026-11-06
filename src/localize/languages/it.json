@@ -11,7 +11,8 @@
     "outdoor": "Esterno",
     "ventilation_dries": "arieggiare asciuga",
     "ventilation_humidifies": "arieggiare umidifica",
-    "ventilation_neutral": "arieggiare: nessun effetto"
+    "ventilation_neutral": "arieggiare: nessun effetto",
+    "zoom_reset": "Reimposta zoom"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

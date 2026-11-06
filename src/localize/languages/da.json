@@ -11,7 +11,8 @@
     "outdoor": "Ude",
     "ventilation_dries": "udluftning tørrer",
     "ventilation_humidifies": "udluftning fugter",
-    "ventilation_neutral": "udluftning: ingen ændring"
+    "ventilation_neutral": "udluftning: ingen ændring",
+    "zoom_reset": "Nulstil zoom"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

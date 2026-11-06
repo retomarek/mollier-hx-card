@@ -11,7 +11,8 @@
     "outdoor": "Na zewnątrz",
     "ventilation_dries": "wietrzenie osusza",
     "ventilation_humidifies": "wietrzenie nawilża",
-    "ventilation_neutral": "wietrzenie: bez zmian"
+    "ventilation_neutral": "wietrzenie: bez zmian",
+    "zoom_reset": "Resetuj powiększenie"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

@@ -11,7 +11,8 @@
     "outdoor": "Buiten",
     "ventilation_dries": "luchten droogt",
     "ventilation_humidifies": "luchten bevochtigt",
-    "ventilation_neutral": "luchten: geen verschil"
+    "ventilation_neutral": "luchten: geen verschil",
+    "zoom_reset": "Zoom herstellen"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

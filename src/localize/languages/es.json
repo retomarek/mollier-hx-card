@@ -11,7 +11,8 @@
     "outdoor": "Exterior",
     "ventilation_dries": "ventilar seca",
     "ventilation_humidifies": "ventilar humedece",
-    "ventilation_neutral": "ventilar: sin cambio"
+    "ventilation_neutral": "ventilar: sin cambio",
+    "zoom_reset": "Restablecer zoom"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

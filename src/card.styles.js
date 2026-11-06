@@ -79,9 +79,37 @@ export default css`
         aspect-ratio: auto;
         max-height: none;
     }
-    .mollier-host {
+    /* The viewport keeps the diagram's aspect ratio inside the wrap and clips
+       the zoomed diagram; the legend and title are outside and never zoom. */
+    .zoom-viewport {
+        position: relative;
         width: min(100cqw, calc(100cqh * 600 / 420));
         height: min(100cqh, calc(100cqw * 420 / 600));
+        overflow: hidden;
+        touch-action: pan-x pan-y;
+    }
+    .mollier-host {
+        width: 100%;
+        height: 100%;
+        transform-origin: 0 0;
+    }
+    .zoom-reset {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        z-index: 5;
+        font: 600 12px/1 var(--ha-font-family-body, Roboto, sans-serif);
+        padding: 7px 9px;
+        border-radius: 14px;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.92);
+        color: #1f2733;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    .zoom-reset:focus-visible {
+        outline: 2px solid #2563eb;
+        outline-offset: 2px;
     }
     .mollier-host svg {
         width: 100%;

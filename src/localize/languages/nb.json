@@ -11,7 +11,8 @@
     "outdoor": "Ute",
     "ventilation_dries": "lufting tørker",
     "ventilation_humidifies": "lufting fukter",
-    "ventilation_neutral": "lufting: ingen endring"
+    "ventilation_neutral": "lufting: ingen endring",
+    "zoom_reset": "Tilbakestill zoom"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

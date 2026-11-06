@@ -11,7 +11,8 @@
     "outdoor": "Снаружи",
     "ventilation_dries": "проветривание сушит",
     "ventilation_humidifies": "проветривание увлажняет",
-    "ventilation_neutral": "проветривание: без изменений"
+    "ventilation_neutral": "проветривание: без изменений",
+    "zoom_reset": "Сбросить масштаб"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

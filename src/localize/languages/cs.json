@@ -11,7 +11,8 @@
     "outdoor": "Venku",
     "ventilation_dries": "větrání vysušuje",
     "ventilation_humidifies": "větrání zvlhčuje",
-    "ventilation_neutral": "větrání: beze změny"
+    "ventilation_neutral": "větrání: beze změny",
+    "zoom_reset": "Obnovit přiblížení"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

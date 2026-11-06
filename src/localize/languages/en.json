@@ -11,7 +11,8 @@
     "outdoor": "Outside",
     "ventilation_dries": "ventilating dries",
     "ventilation_humidifies": "ventilating adds moisture",
-    "ventilation_neutral": "ventilating: no change"
+    "ventilation_neutral": "ventilating: no change",
+    "zoom_reset": "Reset zoom"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

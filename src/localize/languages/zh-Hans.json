@@ -11,7 +11,8 @@
     "outdoor": "室外",
     "ventilation_dries": "通风使空气变干",
     "ventilation_humidifies": "通风使空气变湿",
-    "ventilation_neutral": "通风：无变化"
+    "ventilation_neutral": "通风：无变化",
+    "zoom_reset": "重置缩放"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

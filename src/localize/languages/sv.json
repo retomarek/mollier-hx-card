@@ -11,7 +11,8 @@
     "outdoor": "Ute",
     "ventilation_dries": "vädring torkar",
     "ventilation_humidifies": "vädring fuktar",
-    "ventilation_neutral": "vädring: ingen skillnad"
+    "ventilation_neutral": "vädring: ingen skillnad",
+    "zoom_reset": "Återställ zoom"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

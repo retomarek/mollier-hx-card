@@ -64,6 +64,11 @@ function enumOption(config, name, allowed, fallback) {
 }
 
 const OUTDOOR_COLOR = '#2563eb';
+// Touch targets on screen (diameter in px): 44 px for the live room and outside
+// points (Apple / Google guideline), 24 px for the daily points, which can be
+// hundreds and would otherwise cover each other.
+const POINT_TARGET_PX = 44;
+const DAY_TARGET_PX = 24;
 const ROOM_COLOR = 'black';
 
 const MARGIN = { top: 30, right: 60, bottom: 40, left: 50 };
@@ -161,6 +166,7 @@ export class MollierHxCard extends LitElement {
             _outdoorPoint: { state: true },
             _outdoorDays: { state: true },
             _error: { state: true },
+            _zoomed: { state: true },
             _missing: { state: true },
         };
     }
@@ -398,8 +404,13 @@ export class MollierHxCard extends LitElement {
                     ${this._renderMessages()}
                     <div class="sheet">
                         <div class="diagram-wrap">
-                            <div class="mollier-host"></div>
+                            <div class="zoom-viewport">
+                                <div class="mollier-host"></div>
+                            </div>
                             <div class="tooltip"></div>
+                            ${this._zoomed ? html`<button class="zoom-reset" type="button"
+                                title=${this._t('card.zoom_reset')} aria-label=${this._t('card.zoom_reset')}
+                                @click=${(ev) => { ev.stopPropagation(); this._resetZoom(); }}>1:1</button>` : nothing}
                         </div>
                         ${this._renderZoneLegend()}
                     </div>
@@ -460,7 +471,113 @@ export class MollierHxCard extends LitElement {
         this.updated();
     }
 
+    // --- Zoom (diagram only) -------------------------------------------------
+    // Two fingers pinch (1–4×, around the midpoint), one finger pans while
+    // zoomed, a double tap zooms in / back to 1:1, ctrl + wheel (trackpad
+    // pinch) on desktop. Unzoomed, one finger scrolls the page as usual.
+    // The diagram itself is only scaled with a CSS transform, so tooltips and
+    // touch targets keep working (they measure the rendered size).
+    _setupZoom() {
+        const vp = this.renderRoot.querySelector('.zoom-viewport');
+        const host = this.renderRoot.querySelector('.mollier-host');
+        if (!vp || !host || vp === this._zoomVp) return;
+        this._zoomVp = vp;
+        const z = { s: 1, x: 0, y: 0, pts: new Map(), g: null, lastTap: null };
+        this._zoomState = z;
+        const MAX = 4;
+        const clamp = () => {
+            const w = host.offsetWidth, h = host.offsetHeight;
+            z.s = Math.min(MAX, Math.max(1, z.s));
+            z.x = Math.min(0, Math.max(w * (1 - z.s), z.x));
+            z.y = Math.min(0, Math.max(h * (1 - z.s), z.y));
+        };
+        const apply = () => {
+            clamp();
+            const zoomed = z.s > 1.001;
+            if (!zoomed) { z.s = 1; z.x = 0; z.y = 0; }
+            host.style.transform = zoomed ? `translate(${z.x}px, ${z.y}px) scale(${z.s})` : '';
+            vp.style.touchAction = zoomed ? 'none' : 'pan-x pan-y';
+            if (this._zoomed !== zoomed) this._zoomed = zoomed;
+        };
+        // Zoom to scale `s` keeping the client point (cx, cy) fixed.
+        const zoomAt = (s, cx, cy) => {
+            const r = vp.getBoundingClientRect();
+            const lx = (cx - r.left - z.x) / z.s, ly = (cy - r.top - z.y) / z.s;
+            z.s = Math.min(MAX, Math.max(1, s));
+            z.x = cx - r.left - lx * z.s;
+            z.y = cy - r.top - ly * z.s;
+            apply();
+        };
+        this._resetZoom = () => { z.s = 1; apply(); };
+        const pts = () => [...z.pts.values()];
+        vp.addEventListener('pointerdown', (ev) => {
+            z.pts.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+            const p = pts();
+            if (p.length === 2) {
+                const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1;
+                z.g = { kind: 'pinch', d, s: z.s, mx: (p[0].x + p[1].x) / 2, my: (p[0].y + p[1].y) / 2 };
+                this._hideTip();
+            } else if (p.length === 1 && z.s > 1) {
+                z.g = { kind: 'pan', px: ev.clientX, py: ev.clientY, x: z.x, y: z.y, moved: false };
+            }
+        });
+        vp.addEventListener('pointermove', (ev) => {
+            if (!z.pts.has(ev.pointerId)) return;
+            z.pts.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+            const p = pts();
+            if (z.g?.kind === 'pinch' && p.length >= 2) {
+                const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1;
+                const mx = (p[0].x + p[1].x) / 2, my = (p[0].y + p[1].y) / 2;
+                // scale around the start midpoint, then follow the fingers
+                const before = { s: z.s, x: z.x, y: z.y };
+                zoomAt(z.g.s * d / z.g.d, z.g.mx, z.g.my);
+                z.x += mx - z.g.mx; z.y += my - z.g.my;
+                z.g.mx = mx; z.g.my = my; z.g.s = z.s; z.g.d = d;
+                apply();
+                if (before.s !== z.s || before.x !== z.x) ev.preventDefault();
+            } else if (z.g?.kind === 'pan' && p.length === 1) {
+                const dx = ev.clientX - z.g.px, dy = ev.clientY - z.g.py;
+                if (Math.abs(dx) + Math.abs(dy) > 4) { z.g.moved = true; this._hideTip(); }
+                z.x = z.g.x + dx; z.y = z.g.y + dy;
+                apply();
+                ev.preventDefault();
+            }
+        });
+        const end = (ev) => {
+            const wasPan = z.g?.kind === 'pan' && z.g.moved;
+            const wasPinch = z.g?.kind === 'pinch';
+            if (wasPan || wasPinch) z.suppressClick = true;   // the click that follows is not a tap
+            z.pts.delete(ev.pointerId);
+            if (z.pts.size < 2 && z.g?.kind === 'pinch') z.g = null;
+            if (z.pts.size === 0) z.g = null;
+            // Double tap: zoom in 2.5× at the tap, or back to 1:1 when zoomed.
+            if (ev.type === 'pointerup' && ev.pointerType !== 'mouse' && !wasPan && z.pts.size === 0) {
+                const now = Date.now(), t = z.lastTap;
+                if (t && now - t.time < 320 && Math.hypot(ev.clientX - t.x, ev.clientY - t.y) < 30) {
+                    z.lastTap = null;
+                    if (z.s > 1) this._resetZoom(); else zoomAt(2.5, ev.clientX, ev.clientY);
+                    this._hideTip();
+                } else {
+                    z.lastTap = { time: now, x: ev.clientX, y: ev.clientY };
+                }
+            }
+        };
+        vp.addEventListener('pointerup', end);
+        vp.addEventListener('pointercancel', end);
+        // A pan must not end in a click on a point (tooltip).
+        vp.addEventListener('click', (ev) => { if (z.suppressClick) { ev.stopPropagation(); z.suppressClick = false; } }, true);
+        vp.addEventListener('pointerdown', () => { z.suppressClick = false; }, true);
+        vp.addEventListener('wheel', (ev) => {
+            if (!ev.ctrlKey) return;                       // plain wheel scrolls the page
+            ev.preventDefault();
+            zoomAt(z.s * Math.exp(-ev.deltaY / 200), ev.clientX, ev.clientY);
+            this._hideTip();
+        }, { passive: false });
+        apply();
+    }
+
     updated() {
+        this._setupZoom();
         if (!this._config) return;
         this._tryDraw();
         this._drawComfort();
@@ -629,7 +746,7 @@ export class MollierHxCard extends LitElement {
     // Tooltips: hover shows, mouse-out hides. A click / tap pins the tooltip
     // (touch has no hover); a second tap on the same marker, a click elsewhere
     // on the card or 5 s close it. `onShow` / `onHide` enlarge the marker.
-    _bindTooltip(P, node, content, { onShow, onHide } = {}) {
+    _bindTooltip(P, node, content, { onShow, onHide, anchor } = {}) {
         const tooltipEl = P.tooltip;
         if (!tooltipEl || !node) return;
         node.style.cursor = 'pointer';
@@ -637,7 +754,8 @@ export class MollierHxCard extends LitElement {
             if (this._tip && this._tip.node !== node) this._hideTip();
             const { html: inner, background, color } = content();
             const wrapRect = P.wrap.getBoundingClientRect();
-            const r = node.getBoundingClientRect();
+            // Position at the visible marker, not at the (larger) hit area.
+            const r = (anchor || node).getBoundingClientRect();
             tooltipEl.innerHTML = inner;
             tooltipEl.style.background = background;
             tooltipEl.style.color = color;
@@ -658,6 +776,21 @@ export class MollierHxCard extends LitElement {
             if (this._tip?.node === node && this._tip.pinned) this._hideTip();
             else show(true);
         });
+    }
+
+    // Invisible, larger touch target around a marker: `px` is the diameter on
+    // screen. The diagram is scaled to the card width, so the radius in SVG
+    // units is px / 2 divided by the current scale (at least `minR`).
+    _hitArea(layer, P, cx, cy, px, minR = 0) {
+        const w = P.svg.node().getBoundingClientRect().width;
+        const scale = w > 0 ? w / WIDTH : 1;
+        return layer.append('circle')
+            .attr('class', 'hit')
+            .attr('cx', cx).attr('cy', cy)
+            .attr('r', Math.max(minR, px / 2 / scale))
+            .attr('fill', 'transparent')
+            .style('pointer-events', 'all')
+            .node();
     }
 
     _hideTip() {
@@ -779,13 +912,16 @@ export class MollierHxCard extends LitElement {
             const node = this;
             const season = seasonForMonth(p.date.getMonth());
             const darkText = season !== 'winter' && season !== 'autumn';
-            card._bindTooltip(P, node, () => ({
+            // 24 px touch target; neighbouring days may overlap, the later one wins.
+            const hit = card._hitArea(layer, P, p.cx, p.cy, DAY_TARGET_PX, 5);
+            card._bindTooltip(P, hit, () => ({
                 html: `${dateFmt.format(p.date)}<br>x: ${(p.x * 1000).toFixed(2)} g/kg`
                     + `<br>T: ${p.t.toFixed(2)} °C`
                     + `<br>φ: ${(p.phi * 100).toFixed(2)} %`,
                 background: SEASON_COLORS[season],
                 color: darkText ? 'black' : 'white',
             }), {
+                anchor: node,
                 onShow: () => { node.setAttribute('r', 10); node.setAttribute('opacity', 0.9); },
                 onHide: () => { node.setAttribute('r', 5); node.setAttribute('opacity', p.opacity); },
             });
@@ -854,7 +990,8 @@ export class MollierHxCard extends LitElement {
                 .attr('fill', 'white').attr('fill-opacity', 0.85)
                 .attr('stroke', OUTDOOR_COLOR).attr('stroke-width', 2.5);
 
-        this._bindTooltip(P, marker.node(), () => {
+        const outHit = this._hitArea(layer, P, pos.cx, pos.cy, POINT_TARGET_PX);
+        this._bindTooltip(P, outHit, () => {
             const eff = this._ventilationEffect();
             return {
                 html: `${this._t('card.outdoor')}<br>x: ${(o.x * 1000).toFixed(2)} g/kg`
@@ -864,7 +1001,7 @@ export class MollierHxCard extends LitElement {
                 background: OUTDOOR_COLOR,
                 color: 'white',
             };
-        });
+        }, { anchor: marker.node() });
     }
 
     // Live room point (black). Outside the axes it is drawn as an arrow on
@@ -889,13 +1026,15 @@ export class MollierHxCard extends LitElement {
                 .attr('stroke', 'white')
                 .attr('stroke-width', 1.5);
         const node = marker.node();
-        this._bindTooltip(P, node, () => ({
+        const hit = this._hitArea(layer, P, pos.cx, pos.cy, POINT_TARGET_PX);
+        this._bindTooltip(P, hit, () => ({
             html: `${this._t('card.now')}<br>x: ${(c.x * 1000).toFixed(2)} g/kg`
                 + `<br>T: ${c.t.toFixed(2)} °C`
                 + `<br>φ: ${(c.phi * 100).toFixed(2)} %`,
             background: 'black',
             color: 'white',
-        }), pos.outside ? {} : {
+        }), pos.outside ? { anchor: node } : {
+            anchor: node,
             onShow: () => node.setAttribute('r', 10),
             onHide: () => node.setAttribute('r', 6),
         });
