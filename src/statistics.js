@@ -103,9 +103,9 @@ export function pressureFromConfig(config, fallback = 101325) {
     return p;
 }
 
-// days_to_show (with the pre-1.0 name `days` as alias), 1..MAX_DAYS.
+// days_to_show, 1..MAX_DAYS.
 export function daysFromConfig(config, fallback) {
-    const raw = config.days_to_show ?? config.days;
+    const raw = config.days_to_show;
     if (raw === undefined || raw === null || raw === '') return fallback;
     const d = Math.round(Number(raw));
     if (!Number.isFinite(d) || d < 1) throw new Error(`days_to_show must be a whole number ≥ 1 (got ${raw})`);

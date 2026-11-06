@@ -44,30 +44,14 @@ const LINE_OPTS = {
     density: 'showDensity',
     enthalpy: 'showEnthalpy',
 };
-// Pre-1.0 names of line keys (new name wins when both are set).
-const LINE_ALIASES = { humidity: 'relative_humidity' };
-
 export function parseLines(cfg) {
     const out = { ...LINE_DEFAULTS };
     if (cfg && typeof cfg === 'object') {
         for (const k of Object.keys(LINE_DEFAULTS)) {
-            const v = typeof cfg[k] === 'boolean' ? cfg[k] : cfg[LINE_ALIASES[k]];
-            if (typeof v === 'boolean') out[k] = v;
+            if (typeof cfg[k] === 'boolean') out[k] = cfg[k];
         }
     }
     return out;
-}
-
-// Options renamed for 1.0: the old name still works, the new one wins.
-export const OPTION_ALIASES = {
-    title: 'header',
-    days_to_show: 'days',
-    x_range: 'domain_x',
-    temperature_range: 'domain_y',
-};
-export function option(config, name) {
-    const v = config?.[name];
-    return v !== undefined && v !== null ? v : config?.[OPTION_ALIASES[name]];
 }
 
 function enumOption(config, name, allowed, fallback) {
@@ -208,7 +192,7 @@ export class MollierHxCard extends LitElement {
 
         this._config = config;
         this._updateSizingMode();
-        const title = option(config, 'title');
+        const title = config.title;
         this._header = title === '' || title === undefined || title === null ? nothing : title;
         this._tempEntity = config.temperature_entity;
         this._humEntity = config.humidity_entity;
@@ -220,8 +204,8 @@ export class MollierHxCard extends LitElement {
         // certainly a Fahrenheit value.
         this._fahrenheitHint = !!comfortZone && Math.max(...comfortZone.range_t) > FAHRENHEIT_HINT_ABOVE;
         this._warningBands = parseWarningBands(config.warning_bands);
-        this._domainX = parseDomain(option(config, 'x_range'), DEFAULT_DOMAIN_X, 1 / 1000);
-        this._domainY = parseDomain(option(config, 'temperature_range'), DEFAULT_DOMAIN_Y, 1);
+        this._domainX = parseDomain(config.x_range, DEFAULT_DOMAIN_X, 1 / 1000);
+        this._domainY = parseDomain(config.temperature_range, DEFAULT_DOMAIN_Y, 1);
         this._lines = parseLines(config.lines);
         this._convention = convention;
         this._mollier = createMollier(this._convention);

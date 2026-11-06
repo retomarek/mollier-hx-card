@@ -1,15 +1,13 @@
 import { html, LitElement } from 'lit';
 import { localize } from './localize/localize.js';
-import { LINE_DEFAULTS, parseLines, option } from './card.js';
+import { LINE_DEFAULTS, parseLines } from './card.js';
 import { MAX_DAYS } from './statistics.js';
 
 const LINE_KEYS = Object.keys(LINE_DEFAULTS);
 
 // The editor uses HA's <ha-form> (loaded by HA's frontend at runtime — not on
 // npm). The form's data model is flat; the YAML config is nested. The pair of
-// configToData / dataToConfig translates between them. Old option names
-// (header, days, domain_x, domain_y, lines.relative_humidity) are read and
-// replaced by the 1.0 names on the first edit.
+// configToData / dataToConfig translates between them.
 
 const DEFAULTS = {
     days: 7,
@@ -36,14 +34,14 @@ const DEFAULTS = {
 function configToData(config) {
     const c = config || {};
     const hasAltitude = c.altitude !== undefined && c.altitude !== null && c.altitude !== '';
-    const xr = option(c, 'x_range');
-    const yr = option(c, 'temperature_range');
+    const xr = c.x_range;
+    const yr = c.temperature_range;
     const cz = c.comfort_zone && typeof c.comfort_zone === 'object' ? c.comfort_zone : null;
     return {
-        header: option(c, 'title') ?? '',
+        header: c.title ?? '',
         temperature_entity: c.temperature_entity ?? '',
         humidity_entity: c.humidity_entity ?? '',
-        days: option(c, 'days_to_show') ?? DEFAULTS.days,
+        days: c.days_to_show ?? DEFAULTS.days,
         coloring: c.coloring ?? DEFAULTS.coloring,
         air_mode: hasAltitude ? 'altitude' : 'pressure',
         pressure: c.pressure ?? DEFAULTS.pressure,
@@ -82,12 +80,10 @@ function configToData(config) {
 
 // Keys this form owns. Everything else in the existing config (grid_options,
 // visibility, view_layout, card_mod, YAML-only options) is kept as it is.
-// The pre-1.0 aliases are owned too, so they are dropped when the new name is written.
 const OWNED_KEYS = [
     'type', 'temperature_entity', 'humidity_entity', 'title', 'days_to_show', 'coloring', 'convention',
     'x_range', 'temperature_range', 'lines', 'altitude', 'pressure', 'comfort_zone', 'warning_bands',
     'outdoor_temperature_entity', 'outdoor_humidity_entity', 'outdoor_weather_entity', 'outdoor_history', 'ventilation_line',
-    'header', 'days', 'domain_x', 'domain_y',
 ];
 
 // A cleared number field (undefined / null / '') falls back to the previous
@@ -101,8 +97,8 @@ const pickNum = (...candidates) => {
 function dataToConfig(data, previous = {}) {
     const config = { ...previous };
     for (const k of OWNED_KEYS) delete config[k];
-    const prevX = option(previous, 'x_range');
-    const prevY = option(previous, 'temperature_range');
+    const prevX = previous.x_range;
+    const prevY = previous.temperature_range;
     const prevCz = previous.comfort_zone && typeof previous.comfort_zone === 'object' ? previous.comfort_zone : {};
     const prevBands = typeof previous.warning_bands === 'object' && previous.warning_bands ? previous.warning_bands : {};
     const n = (field, prev) => pickNum(data[field], prev, DEFAULTS[field]);
@@ -111,7 +107,7 @@ function dataToConfig(data, previous = {}) {
         type: 'custom:mollier-hx-card',
         temperature_entity: data.temperature_entity,
         humidity_entity: data.humidity_entity,
-        days_to_show: Math.min(MAX_DAYS, Math.max(1, Math.round(n('days', option(previous, 'days_to_show'))))),
+        days_to_show: Math.min(MAX_DAYS, Math.max(1, Math.round(n('days', previous.days_to_show)))),
         coloring: data.coloring || DEFAULTS.coloring,
         convention: data.convention || DEFAULTS.convention,
     });

@@ -132,8 +132,6 @@ outdoor_weather_entity: weather.home   # fallback for the current outside point
 
 Units: all temperatures in the card config (comfort zone, `temperature_range`) are **°C**, also when your sensors report °F; warning-band offsets are in **K**. Humidity sensors report relative humidity in **%**. An invalid value (unknown `coloring`, a comfort zone without `temperature` or `humidity`, a pressure in the wrong unit, ...) shows a clear error message instead of a wrong diagram.
 
-> **Renamed in 1.0 (old names still work):** `header` → `title`, `days` → `days_to_show`, `domain_x` → `x_range`, `domain_y` → `temperature_range`, `lines.relative_humidity` → `lines.humidity`. If both are set, the new name wins; the visual editor writes the new names.
-
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `temperature_entity` | string | | **Required.** Temperature sensor. |
