@@ -4,6 +4,11 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Changed
+
+- Diagram code updated to pyedautils f9ba0da (= d3-mollierhx v0.2.0). The diagram looks the same: the caption layout (captions fitted to the height, x caption beside the end of the axis) and the room and outside points with their edge arrows, which the card used to adjust itself, are now part of the diagram code. With density and enthalpy lines switched on, the three right-edge captions share one font size.
+- A value next to an edge arrow near a corner of the diagram stays inside the axes.
+
 ## [1.0.0-rc.4] - 2026-11-06
 
 ### Added
