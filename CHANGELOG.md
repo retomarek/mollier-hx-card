@@ -4,6 +4,10 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Changed
+
+- Editor suggestion for a new comfort zone: relative humidity 30–65 % (was 30–60 %), as in pyedautils.
+
 ### Removed
 
 - Aliases for the pre-1.0 option names. Use the names from the README (`title`, `days_to_show`, `x_range`, `temperature_range`, `lines.humidity`).

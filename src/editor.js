@@ -23,7 +23,7 @@ const DEFAULTS = {
     comfort_t_min: 20,
     comfort_t_max: 26,
     comfort_phi_min: 30,
-    comfort_phi_max: 60,
+    comfort_phi_max: 65,
     comfort_x_min: 0,
     comfort_x_max: 12,
     // Warning-band offsets around the comfort zone (pyedautils defaults).

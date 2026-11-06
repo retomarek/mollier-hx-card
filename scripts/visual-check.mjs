@@ -24,7 +24,7 @@ const BASE_CONFIG = {
     title: 'Living room',
     days_to_show: 120,
     altitude: 450,
-    comfort_zone: { temperature: [20, 26], humidity: [30, 60], absolute_humidity: [0, 12] },
+    comfort_zone: { temperature: [20, 26], humidity: [30, 65], absolute_humidity: [0, 12] },
     warning_bands: true,
 };
 // Selector inside the card's shadow root that exists once it has drawn.
@@ -54,7 +54,7 @@ const CASES = [
     { name: 'outdoor-off-axis', theme: 'dark', lang: 'en', width: 500, layout: 'grid', config: { ...OUTDOOR, temperature_range: [15, 30], x_range: [0, 15] } },
     { name: 'entity-missing', theme: 'dark', lang: 'en', width: 500, layout: 'grid', states: { 'sensor.t': null } },
     { name: 'room-off-axis', theme: 'light', lang: 'en', width: 500, layout: 'grid', states: { 'sensor.h': '75' }, config: { x_range: [0, 10], temperature_range: [15, 30] } },
-    { name: 'fahrenheit-hint', theme: 'light', lang: 'de', width: 500, layout: 'grid', config: { comfort_zone: { temperature: [68, 79], humidity: [30, 60] } } },
+    { name: 'fahrenheit-hint', theme: 'light', lang: 'de', width: 500, layout: 'grid', config: { comfort_zone: { temperature: [68, 79], humidity: [30, 65] } } },
     { name: 'outdoor-weather-only', theme: 'dark', lang: 'en', width: 390, layout: null, config: { outdoor_weather_entity: 'weather.home' } },
 ];
 

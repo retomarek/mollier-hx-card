@@ -46,7 +46,7 @@ const CONFIG = {
     days_to_show: 120,
     coloring: 'season',
     altitude: 450,
-    comfort_zone: { temperature: [20, 26], humidity: [30, 60], absolute_humidity: [0, 12] },
+    comfort_zone: { temperature: [20, 26], humidity: [30, 65], absolute_humidity: [0, 12] },
     warning_bands: true,
     outdoor_temperature_entity: 'sensor.outside_temperature',
     outdoor_humidity_entity: 'sensor.outside_humidity',

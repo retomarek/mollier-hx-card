@@ -118,7 +118,7 @@ days_to_show: 120
 altitude: 450
 comfort_zone:
   temperature: [20, 26]
-  humidity: [30, 60]
+  humidity: [30, 65]
   absolute_humidity: [0, 12]   # optional
 warning_bands: true
 lines:
@@ -158,7 +158,7 @@ Units: all temperatures in the card config (comfort zone, `temperature_range`) a
 ```yaml
 comfort_zone:
   temperature: [20, 26]        # °C (always °C, also with °F sensors)
-  humidity: [30, 60]           # % relative humidity
+  humidity: [30, 65]           # % relative humidity
   absolute_humidity: [0, 12]   # g/kg, optional
 ```
 
