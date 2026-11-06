@@ -4,6 +4,12 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-rc.3] - 2026-11-06
+
+### Fixed
+
+- Dates in tooltips follow the Home Assistant profile's date format (language, system, day-month-year …), like the rest of Home Assistant, e.g. 14.9.2026 instead of 9/14/2026 with a German language or the "System" format on a German or Swiss device.
+
 ## [1.0.0-rc.2] - 2026-11-06
 
 Second release candidate for 1.0.0, from the mobile test.
@@ -156,7 +162,8 @@ Replaces 1.0.0-beta.4, which was published by mistake from the wrong commit and 
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.2...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.3...HEAD
+[1.0.0-rc.3]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.3
 [1.0.0-rc.2]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.1
 [1.0.0-beta.8]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.7...v1.0.0-beta.8

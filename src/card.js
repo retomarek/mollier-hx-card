@@ -802,17 +802,39 @@ export class MollierHxCard extends LitElement {
         tip.onHide?.();
     }
 
-    // Day of a daily mean in Home Assistant's time zone (the statistics day
-    // buckets are server days), e.g. "2026-11-05" / "05.11.2026".
+    // Date of a daily mean, formatted like Home Assistant's own frontend
+    // (src/common/datetime/format_date.ts, formatDateNumeric): the profile's
+    // date format decides — "language" (default) uses the HA language,
+    // "system" the browser/device locale, DMY / MDY / YMD a fixed order with
+    // the language's separator. The day is the statistics bucket's day, i.e.
+    // in the Home Assistant server's time zone.
     _dateFormatter() {
-        const lang = this._hass?.locale?.language || this._hass?.language || 'en';
-        const opts = { year: 'numeric', month: '2-digit', day: '2-digit' };
+        const locale = this._hass?.locale || {};
+        const lang = locale.language || this._hass?.language || 'en';
+        const dateFormat = locale.date_format || 'language';
         const tz = this._hass?.config?.time_zone;
-        try {
-            return new Intl.DateTimeFormat(lang, tz ? { ...opts, timeZone: tz } : opts);
-        } catch {
-            try { return new Intl.DateTimeFormat(lang, opts); } catch { return new Intl.DateTimeFormat('en', opts); }
+        const opts = { year: 'numeric', month: 'numeric', day: 'numeric' };
+        const make = (l) => {
+            try { return new Intl.DateTimeFormat(l, tz ? { ...opts, timeZone: tz } : opts); } catch { /* bad tz or locale */ }
+            try { return new Intl.DateTimeFormat(l, opts); } catch { return new Intl.DateTimeFormat('en', opts); }
+        };
+        const fmt = make(dateFormat === 'system' ? undefined : lang);
+        if (dateFormat === 'language' || dateFormat === 'system' || !['DMY', 'MDY', 'YMD'].includes(dateFormat)) {
+            return { format: (d) => fmt.format(d) };
         }
+        return {
+            format: (d) => {
+                const parts = fmt.formatToParts(d);
+                const get = (type) => parts.find((p) => p.type === type)?.value ?? '';
+                const sep = parts.find((p) => p.type === 'literal')?.value ?? '/';
+                const last = parts[parts.length - 1];
+                const tail = last?.type === 'literal' ? last.value : '';   // e.g. the trailing "." in some languages
+                const [day, month, year] = [get('day'), get('month'), get('year')];
+                if (dateFormat === 'DMY') return `${day}${sep}${month}${sep}${year}${tail}`;
+                if (dateFormat === 'MDY') return `${month}${sep}${day}${sep}${year}${tail}`;
+                return `${year}${sep}${month}${sep}${day}${tail}`;
+            },
+        };
     }
 
     _drawComfort() {
