@@ -4,6 +4,10 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Changed
+
+- Diagram code updated to pyedautils 0.0.34 (= d3-mollierhx v0.2.1). Nothing changes in the card: the update only adds the label placement for frequency contour lines, which the card does not draw.
+
 ## [1.0.0-rc.5] - 2026-11-06
 
 ### Changed

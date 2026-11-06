@@ -1,5 +1,5 @@
-// Vendored from retomarek/pyedautils (pyedautils/data/d3_mollierhx/coordinateGenerator.js) @ f9ba0da
-// (byte-identical to hslu-ige-laes/d3-mollierhx v0.2.0, src/coordinateGenerator.js).
+// Vendored from retomarek/pyedautils (pyedautils/data/d3_mollierhx/coordinateGenerator.js) @ 42672ff (v0.0.34)
+// (byte-identical to hslu-ige-laes/d3-mollierhx v0.2.1, src/coordinateGenerator.js).
 // Keep in sync with upstream by re-copying. Only ES6 imports/exports were added.
 
 import * as d3 from './d3.js';
