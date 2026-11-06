@@ -4,6 +4,10 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-rc.1] - 2026-11-06
+
+Release candidate for 1.0.0: this code becomes 1.0.0 if no problems turn up.
+
 ### Changed
 
 - Editor suggestion for a new comfort zone: relative humidity 30–65 % (was 30–60 %), as in pyedautils.
@@ -140,7 +144,8 @@ Replaces 1.0.0-beta.4, which was published by mistake from the wrong commit and 
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.8...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.1...HEAD
+[1.0.0-rc.1]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.1
 [1.0.0-beta.8]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.7...v1.0.0-beta.8
 [1.0.0-beta.7]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.7
 [1.0.0-beta.6]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.6
