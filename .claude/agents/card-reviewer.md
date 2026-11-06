@@ -29,7 +29,7 @@ Lit
 - Derived values live in `render()` or `willUpdate()`; nothing in `render()` mutates state.
 
 D3 / SVG
-- Files under `src/d3_mollierhx/` are vendored verbatim from pyedautils; only the documented ES export lines and the `let i, dt` declaration may differ. Any other change there is a finding.
+- Files under `src/d3_mollierhx/` are vendored verbatim from pyedautils; only the 3-line header, the ES imports and the `export { ... }` block may differ. Any other change there is a finding.
 - The grid is only redrawn when the redraw hash changes; overlays (comfort zone, bands, points) are removed and re-added in a fixed z-order.
 - Every drawn shape has an explicit fill; text stays inside the viewBox; nothing relies on a font being present.
 
