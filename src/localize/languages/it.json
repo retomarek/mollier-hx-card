@@ -12,7 +12,9 @@
     "ventilation_dries": "arieggiare asciuga",
     "ventilation_humidifies": "arieggiare umidifica",
     "ventilation_neutral": "arieggiare: nessun effetto",
-    "zoom_reset": "Reimposta zoom"
+    "zoom_reset": "Reimposta zoom",
+    "zoom_in": "Ingrandisci",
+    "zoom_out": "Riduci"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

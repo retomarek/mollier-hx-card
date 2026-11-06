@@ -93,23 +93,59 @@ export default css`
         height: 100%;
         transform-origin: 0 0;
     }
-    .zoom-reset {
+    /* Zoom controls: + / − for mouse users (hidden on touch-only devices,
+       which pinch), and 1:1 whenever the diagram is zoomed. Faint until the
+       pointer is over the diagram. */
+    .zoom-controls {
         position: absolute;
         top: 6px;
         right: 6px;
         z-index: 5;
-        font: 600 12px/1 var(--ha-font-family-body, Roboto, sans-serif);
-        padding: 7px 9px;
-        border-radius: 14px;
+        display: flex;
+        gap: 4px;
+        opacity: 0.35;
+        transition: opacity 0.15s;
+    }
+    .diagram-wrap:hover .zoom-controls,
+    .zoom-controls.zoomed,
+    .zoom-controls:focus-within {
+        opacity: 1;
+    }
+    .zoom-btn {
+        min-width: 30px;
+        height: 30px;
+        padding: 0 8px;
+        font: 600 15px/1 var(--ha-font-family-body, Roboto, sans-serif);
+        border-radius: 15px;
         border: 1px solid rgba(0, 0, 0, 0.15);
         background: rgba(255, 255, 255, 0.92);
         color: #1f2733;
         cursor: pointer;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
-    .zoom-reset:focus-visible {
+    .zoom-btn.zoom-reset {
+        font-size: 12px;
+    }
+    .zoom-btn:disabled {
+        opacity: 0.45;
+        cursor: default;
+    }
+    .zoom-btn:focus-visible {
         outline: 2px solid #2563eb;
         outline-offset: 2px;
+    }
+    @media (any-hover: none) {
+        .zoom-btn.mouse-only {
+            display: none;
+        }
+        .zoom-controls {
+            opacity: 1;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .zoom-controls {
+            transition: none;
+        }
     }
     .mollier-host svg {
         width: 100%;

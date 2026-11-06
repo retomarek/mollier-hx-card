@@ -12,7 +12,9 @@
     "ventilation_dries": "luchten droogt",
     "ventilation_humidifies": "luchten bevochtigt",
     "ventilation_neutral": "luchten: geen verschil",
-    "zoom_reset": "Zoom herstellen"
+    "zoom_reset": "Zoom herstellen",
+    "zoom_in": "Inzoomen",
+    "zoom_out": "Uitzoomen"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

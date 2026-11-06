@@ -12,7 +12,9 @@
     "ventilation_dries": "Lüften trocknet",
     "ventilation_humidifies": "Lüften befeuchtet",
     "ventilation_neutral": "Lüften: keine Änderung",
-    "zoom_reset": "Zoom zurücksetzen"
+    "zoom_reset": "Zoom zurücksetzen",
+    "zoom_in": "Vergrössern",
+    "zoom_out": "Verkleinern"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

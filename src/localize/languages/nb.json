@@ -12,7 +12,9 @@
     "ventilation_dries": "lufting tørker",
     "ventilation_humidifies": "lufting fukter",
     "ventilation_neutral": "lufting: ingen endring",
-    "zoom_reset": "Tilbakestill zoom"
+    "zoom_reset": "Tilbakestill zoom",
+    "zoom_in": "Zoom inn",
+    "zoom_out": "Zoom ut"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

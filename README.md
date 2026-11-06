@@ -87,7 +87,7 @@ Warm summer air carries a lot of water: at 25 °C and 70 % about 14.7 g/kg. Let 
 - **Comfort zone** as a polygon from temperature, relative and absolute humidity limits.
 - **Warning bands**: orange and red dashed bands as ± offsets around the comfort zone.
 - **Outside air** (optional): the current outside point, the outside daily means and a ventilation line to the room point. The legend tells you whether airing dries the room or adds moisture.
-- **Zoom on phones**: pinch the diagram with two fingers (up to 4×), drag to move, double-tap to zoom in or back; on a computer use ctrl + mouse wheel or a trackpad pinch. Only the diagram zooms, the legend stays. Points have large touch targets, so they are easy to tap.
+- **Zoom** into the diagram (up to 4×): on phones pinch with two fingers and drag to move; with a mouse use the **+ / −** buttons that appear over the diagram, double-click, or ctrl + mouse wheel (trackpad pinch works too), and drag to move. Double-tap / double-click or **1:1** go back. Only the diagram zooms, the legend stays. Points have large touch targets, so they are easy to tap.
 - **Fits any dashboard**: fills a sections tile with a fixed height, keeps its aspect ratio (capped and centred) everywhere else, so it also looks right at full width.
 - **Visual editor** with entity pickers limited to sensors that have long-term statistics.
 - **Translated** into 14 languages, following your Home Assistant language. Corrections welcome, see [Translations](#translations).

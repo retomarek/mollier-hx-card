@@ -12,7 +12,9 @@
     "ventilation_dries": "проветривание сушит",
     "ventilation_humidifies": "проветривание увлажняет",
     "ventilation_neutral": "проветривание: без изменений",
-    "zoom_reset": "Сбросить масштаб"
+    "zoom_reset": "Сбросить масштаб",
+    "zoom_in": "Увеличить",
+    "zoom_out": "Уменьшить"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

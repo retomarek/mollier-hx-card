@@ -12,7 +12,9 @@
     "ventilation_dries": "ventilar seca",
     "ventilation_humidifies": "ventilar umedece",
     "ventilation_neutral": "ventilar: sem mudança",
-    "zoom_reset": "Redefinir zoom"
+    "zoom_reset": "Redefinir zoom",
+    "zoom_in": "Aumentar zoom",
+    "zoom_out": "Diminuir zoom"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

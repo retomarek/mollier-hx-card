@@ -4,6 +4,12 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-rc.4] - 2026-11-06
+
+### Added
+
+- Zoom with a mouse: + / − buttons over the diagram (shown on devices with a mouse), double-click to zoom in at the pointer or back to 1:1, ctrl + wheel. The 1:1 button appears to the left, so + and − never move under the pointer.
+
 ## [1.0.0-rc.3] - 2026-11-06
 
 ### Fixed
@@ -162,7 +168,8 @@ Replaces 1.0.0-beta.4, which was published by mistake from the wrong commit and 
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.3...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.4...HEAD
+[1.0.0-rc.4]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.4
 [1.0.0-rc.3]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.3
 [1.0.0-rc.2]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.1

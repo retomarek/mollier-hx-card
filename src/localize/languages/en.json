@@ -12,7 +12,9 @@
     "ventilation_dries": "ventilating dries",
     "ventilation_humidifies": "ventilating adds moisture",
     "ventilation_neutral": "ventilating: no change",
-    "zoom_reset": "Reset zoom"
+    "zoom_reset": "Reset zoom",
+    "zoom_in": "Zoom in",
+    "zoom_out": "Zoom out"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

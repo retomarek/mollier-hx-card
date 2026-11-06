@@ -12,7 +12,9 @@
     "ventilation_dries": "vädring torkar",
     "ventilation_humidifies": "vädring fuktar",
     "ventilation_neutral": "vädring: ingen skillnad",
-    "zoom_reset": "Återställ zoom"
+    "zoom_reset": "Återställ zoom",
+    "zoom_in": "Zooma in",
+    "zoom_out": "Zooma ut"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

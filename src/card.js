@@ -408,9 +408,16 @@ export class MollierHxCard extends LitElement {
                                 <div class="mollier-host"></div>
                             </div>
                             <div class="tooltip"></div>
-                            ${this._zoomed ? html`<button class="zoom-reset" type="button"
-                                title=${this._t('card.zoom_reset')} aria-label=${this._t('card.zoom_reset')}
-                                @click=${(ev) => { ev.stopPropagation(); this._resetZoom(); }}>1:1</button>` : nothing}
+                            <div class="zoom-controls ${this._zoomed ? 'zoomed' : ''}" @click=${(ev) => ev.stopPropagation()}>
+                                ${this._zoomed ? html`<button class="zoom-btn zoom-reset" type="button"
+                                    title=${this._t('card.zoom_reset')} aria-label=${this._t('card.zoom_reset')}
+                                    @click=${() => this._resetZoom()}>1:1</button>` : nothing}
+                                <!-- + and − stay at the same place; 1:1 appears to their left. -->
+                                <button class="zoom-btn zoom-in mouse-only" type="button" title=${this._t('card.zoom_in')}
+                                    aria-label=${this._t('card.zoom_in')} @click=${() => this._zoomBy?.(1.6)}>+</button>
+                                <button class="zoom-btn zoom-out mouse-only" type="button" title=${this._t('card.zoom_out')}
+                                    aria-label=${this._t('card.zoom_out')} ?disabled=${!this._zoomed} @click=${() => this._zoomBy?.(1 / 1.6)}>−</button>
+                            </div>
                         </div>
                         ${this._renderZoneLegend()}
                     </div>
@@ -509,6 +516,12 @@ export class MollierHxCard extends LitElement {
             apply();
         };
         this._resetZoom = () => { z.s = 1; apply(); };
+        // Buttons zoom around the centre of the diagram.
+        this._zoomBy = (f) => {
+            const r = vp.getBoundingClientRect();
+            zoomAt(z.s * f, r.left + r.width / 2, r.top + r.height / 2);
+            this._hideTip();
+        };
         const pts = () => [...z.pts.values()];
         vp.addEventListener('pointerdown', (ev) => {
             z.pts.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
@@ -567,6 +580,12 @@ export class MollierHxCard extends LitElement {
         // A pan must not end in a click on a point (tooltip).
         vp.addEventListener('click', (ev) => { if (z.suppressClick) { ev.stopPropagation(); z.suppressClick = false; } }, true);
         vp.addEventListener('pointerdown', () => { z.suppressClick = false; }, true);
+        // Mouse: double-click zooms in at the pointer, or back to 1:1.
+        vp.addEventListener('dblclick', (ev) => {
+            ev.preventDefault();
+            if (z.s > 1) this._resetZoom(); else zoomAt(2.5, ev.clientX, ev.clientY);
+            this._hideTip();
+        });
         vp.addEventListener('wheel', (ev) => {
             if (!ev.ctrlKey) return;                       // plain wheel scrolls the page
             ev.preventDefault();

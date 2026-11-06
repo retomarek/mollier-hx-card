@@ -12,7 +12,9 @@
     "ventilation_dries": "větrání vysušuje",
     "ventilation_humidifies": "větrání zvlhčuje",
     "ventilation_neutral": "větrání: beze změny",
-    "zoom_reset": "Obnovit přiblížení"
+    "zoom_reset": "Obnovit přiblížení",
+    "zoom_in": "Přiblížit",
+    "zoom_out": "Oddálit"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
