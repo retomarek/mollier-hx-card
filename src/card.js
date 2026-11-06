@@ -5,51 +5,88 @@ import { createComfort } from './d3_mollierhx/drawComfort.js';
 import { createMollier } from './d3_mollierhx/mollierFunctions.js';
 import { parseWarningBands, bandRanges } from './bands.js';
 import { localize, getLanguage, DIAGRAM_CAPTIONS, RIGHT_CAPTION_KEYS } from './localize/localize.js';
-import { fetchDailyMeans, stateCelsius, REFRESH_MS } from './statistics.js';
+import {
+    fetchDailyMeans, stateCelsius, stateHumidity, missingEntities, pressureFromConfig, daysFromConfig,
+    REFRESH_MS, RETRY_MS,
+} from './statistics.js';
 import styles from './card.styles';
 
 const DEFAULT_PRESSURE = 101325;
 const DEFAULT_DAYS = 7;
 const DEFAULT_COLORING = 'season';
 const DEFAULT_CONVENTION = 'classical';
+const VALID_COLORINGS = ['season', 'age', 'chronological'];
 const VALID_CONVENTIONS = ['classical', 'glueck'];
 // Internal units are kg/kg for x and °C for y; user config is expressed in
-// g/kg (x) and °C (y) — see _parseDomainX below.
+// g/kg (x) and °C (y) — see parseDomain below.
 // Indoor climate range: -10..40 °C, 0..18 g/kg.
 const DEFAULT_DOMAIN_X = [0.0, 0.018];
 const DEFAULT_DOMAIN_Y = [-10.0, 40.0];
+// A comfort zone without absolute_humidity has no upper limit on x.
+const OPEN_RANGE_X = [0, 1];
+// Comfort-zone temperatures above this look like °F (they must be °C).
+const FAHRENHEIT_HINT_ABOVE = 45;
+// A tooltip opened by a click / tap closes by itself after this time.
+const TOOLTIP_PIN_MS = 5000;
 // Iso-line families the user can switch on and off (config key → option of
 // the vendored drawHXCoordinates). Density and enthalpy are off by default.
 export const LINE_DEFAULTS = {
     temperature: true,
-    relative_humidity: true,
+    humidity: true,
     absolute_humidity: true,
     density: false,
     enthalpy: false,
 };
 const LINE_OPTS = {
     temperature: 'showTemperature',
-    relative_humidity: 'showRelHumidity',
+    humidity: 'showRelHumidity',
     absolute_humidity: 'showAbsHumidity',
     density: 'showDensity',
     enthalpy: 'showEnthalpy',
 };
+// Pre-1.0 names of line keys (new name wins when both are set).
+const LINE_ALIASES = { humidity: 'relative_humidity' };
 
 export function parseLines(cfg) {
     const out = { ...LINE_DEFAULTS };
     if (cfg && typeof cfg === 'object') {
         for (const k of Object.keys(LINE_DEFAULTS)) {
-            if (typeof cfg[k] === 'boolean') out[k] = cfg[k];
+            const v = typeof cfg[k] === 'boolean' ? cfg[k] : cfg[LINE_ALIASES[k]];
+            if (typeof v === 'boolean') out[k] = v;
         }
     }
     return out;
 }
 
+// Options renamed for 1.0: the old name still works, the new one wins.
+export const OPTION_ALIASES = {
+    title: 'header',
+    days_to_show: 'days',
+    x_range: 'domain_x',
+    temperature_range: 'domain_y',
+};
+export function option(config, name) {
+    const v = config?.[name];
+    return v !== undefined && v !== null ? v : config?.[OPTION_ALIASES[name]];
+}
+
+function enumOption(config, name, allowed, fallback) {
+    const v = config[name];
+    if (v === undefined || v === null || v === '') return fallback;
+    if (!allowed.includes(v)) {
+        throw new Error(`${name} must be one of ${allowed.join(', ')} (got ${JSON.stringify(v)})`);
+    }
+    return v;
+}
+
 const OUTDOOR_COLOR = '#2563eb';
+const ROOM_COLOR = 'black';
 
 const MARGIN = { top: 30, right: 60, bottom: 40, left: 50 };
 const WIDTH = 600;
 const HEIGHT = 420;
+
+let clipCounter = 0;
 
 // Match pyedautils' DEFAULT_SEASON_COLORS so the card looks identical to the
 // Python plot. (At 0.4 opacity, more saturated tones are needed — a desaturated
@@ -68,13 +105,6 @@ function seasonForMonth(month /* 0-11 */) {
     return 'autumn';
 }
 
-// International Standard Atmosphere — converts altitude [m above sea level]
-// to ambient pressure [Pa]. Valid up to ~11 km (troposphere). Standard
-// reference state: p₀ = 101325 Pa, T₀ = 288.15 K, L = 0.0065 K/m.
-function pressureFromAltitude(altitudeM) {
-    return 101325 * Math.pow(1 - 2.25577e-5 * altitudeM, 5.25588);
-}
-
 // Convert a user-supplied 2-element [min, max] domain to internal units; users
 // give x in g/kg and y in °C, internal x is kg/kg (scale 1/1000) and y is °C
 // (scale 1). Falls back to the default when the value is missing or malformed.
@@ -89,17 +119,29 @@ function parseDomain(input, fallback, scale) {
     return [lo, hi];
 }
 
+const isPair = (v) => Array.isArray(v) && v.length === 2
+    && v.every((n) => n !== null && n !== '' && Number.isFinite(Number(n)));
+
 // Convert user-facing units (°C, %, g/kg) to the kg/kg + 0..1 units that
-// createComfort() expects. Returns null when the config is absent or malformed.
+// createComfort() expects. Returns null when no comfort zone is configured;
+// throws when it is configured but incomplete. absolute_humidity is optional
+// (no upper limit).
 function parseComfortZone(cz) {
-    if (!cz) return null;
+    if (cz === undefined || cz === null || cz === false) return null;
+    if (typeof cz !== 'object' || Array.isArray(cz)) {
+        throw new Error('comfort_zone must be an object with temperature: [min, max] (°C) and humidity: [min, max] (%)');
+    }
     const t = cz.temperature, h = cz.humidity, x = cz.absolute_humidity;
-    const ok = (v) => Array.isArray(v) && v.length === 2 && v.every(Number.isFinite);
-    if (!ok(t) || !ok(h) || !ok(x)) return null;
+    if (!isPair(t)) throw new Error(`comfort_zone.temperature must be [min, max] in °C (got ${JSON.stringify(t)})`);
+    if (!isPair(h)) throw new Error(`comfort_zone.humidity must be [min, max] in % (got ${JSON.stringify(h)})`);
+    const hasX = x !== undefined && x !== null;
+    if (hasX && !isPair(x)) throw new Error(`comfort_zone.absolute_humidity must be [min, max] in g/kg (got ${JSON.stringify(x)})`);
+    const n = (v) => v.map(Number);
     return {
-        range_t: [Number(t[0]), Number(t[1])],
-        range_phi: [Number(h[0]) / 100, Number(h[1]) / 100],
-        range_x: [Number(x[0]) / 1000, Number(x[1]) / 1000],
+        range_t: n(t),
+        range_phi: n(h).map((v) => v / 100),
+        range_x: hasX ? n(x).map((v) => v / 1000) : [...OPEN_RANGE_X],
+        hasX,
     };
 }
 
@@ -107,7 +149,11 @@ export class MollierHxCard extends LitElement {
     _hass;
     _drawn = false;
     _fetchKey = null;
+    _fetchSeq = 0;
+    _retryCount = 0;
     _dailyData = [];
+    _lang = null;
+    _tip = null;
 
     static get properties() {
         return {
@@ -131,37 +177,53 @@ export class MollierHxCard extends LitElement {
             _outdoorPoint: { state: true },
             _outdoorDays: { state: true },
             _error: { state: true },
+            _missing: { state: true },
         };
     }
 
+    constructor() {
+        super();
+        this._missing = [];
+        this._clipId = `mollier-hx-clip-${++clipCounter}`;
+        // A click on the diagram background (or anywhere on the card) closes a
+        // tooltip opened by a tap; markers stop the event themselves.
+        this.addEventListener('click', () => this._hideTip());
+    }
+
     setConfig(config) {
-        this._config = config;
-        this._updateSizingMode();
+        if (!config || typeof config !== 'object') throw new Error('Invalid configuration');
         if (!config.temperature_entity) {
             throw new Error("temperature_entity is required");
         }
         if (!config.humidity_entity) {
             throw new Error("humidity_entity is required");
         }
-        this._header = config.header === "" || config.header === undefined ? nothing : config.header;
+        // Validate everything before changing any state, so a broken edit in
+        // the YAML editor shows an error and leaves the card as it was.
+        const pressure = pressureFromConfig(config, DEFAULT_PRESSURE);
+        const days = daysFromConfig(config, DEFAULT_DAYS);
+        const coloring = enumOption(config, 'coloring', VALID_COLORINGS, DEFAULT_COLORING);
+        const convention = enumOption(config, 'convention', VALID_CONVENTIONS, DEFAULT_CONVENTION);
+        const comfortZone = parseComfortZone(config.comfort_zone);
+
+        this._config = config;
+        this._updateSizingMode();
+        const title = option(config, 'title');
+        this._header = title === '' || title === undefined || title === null ? nothing : title;
         this._tempEntity = config.temperature_entity;
         this._humEntity = config.humidity_entity;
-        // Altitude takes precedence over an explicit pressure if both are set.
-        if (Number.isFinite(Number(config.altitude))) {
-            this._pressure = pressureFromAltitude(Number(config.altitude));
-        } else {
-            this._pressure = Number(config.pressure) || DEFAULT_PRESSURE;
-        }
-        this._days = Math.max(1, Number(config.days) || DEFAULT_DAYS);
-        this._coloring = config.coloring || DEFAULT_COLORING;
-        this._comfortZone = parseComfortZone(config.comfort_zone);
+        this._pressure = pressure;
+        this._days = days;
+        this._coloring = coloring;
+        this._comfortZone = comfortZone;
+        // Comfort zone and axes are always °C; a maximum above 45 is almost
+        // certainly a Fahrenheit value.
+        this._fahrenheitHint = !!comfortZone && Math.max(...comfortZone.range_t) > FAHRENHEIT_HINT_ABOVE;
         this._warningBands = parseWarningBands(config.warning_bands);
-        this._domainX = parseDomain(config.domain_x, DEFAULT_DOMAIN_X, 1 / 1000);
-        this._domainY = parseDomain(config.domain_y, DEFAULT_DOMAIN_Y, 1);
+        this._domainX = parseDomain(option(config, 'x_range'), DEFAULT_DOMAIN_X, 1 / 1000);
+        this._domainY = parseDomain(option(config, 'temperature_range'), DEFAULT_DOMAIN_Y, 1);
         this._lines = parseLines(config.lines);
-        this._convention = VALID_CONVENTIONS.includes(config.convention)
-            ? config.convention
-            : DEFAULT_CONVENTION;
+        this._convention = convention;
         this._mollier = createMollier(this._convention);
         // Outside air (all optional): sensors for the live point and the daily
         // means, a weather entity as fallback for the live point.
@@ -171,6 +233,7 @@ export class MollierHxCard extends LitElement {
         this._outHistory = config.outdoor_history === true;
         this._ventLine = config.ventilation_line !== false;
         if (this._hass) {
+            this._updateMissing();
             this._maybeFetch();
             this._updateCurrentPoint();
         }
@@ -179,29 +242,42 @@ export class MollierHxCard extends LitElement {
     set hass(hass) {
         const firstAttach = !this._hass;
         this._hass = hass;
+        // Captions, legend and messages are translated: redraw on a language switch.
+        const lang = getLanguage(hass);
+        if (!firstAttach && lang !== this._lang) this.requestUpdate();
+        this._lang = lang;
+        this._updateMissing();
         if (firstAttach && this._tempEntity) this._maybeFetch();
         this._updateCurrentPoint();
+    }
+
+    // Configured entities that do not exist in Home Assistant (cheap: a few
+    // lookups; only updates the reactive property when the list changes).
+    _updateMissing() {
+        if (!this._tempEntity) return;
+        const missing = missingEntities(this._hass, [this._tempEntity, this._humEntity, this._outT, this._outH, this._outW]);
+        if (missing.join('|') !== (this._missing || []).join('|')) this._missing = missing;
     }
 
     // Live outside point: outside sensors first, the weather entity as fallback.
     _updateOutdoorPoint() {
         const hass = this._hass;
         if (!hass || !this._mollier || !(this._outT || this._outW)) { this._outdoorPoint = null; return; }
-        let t = NaN, rh = NaN, source = null;
+        let t = NaN, phi = NaN, source = null;
         if (this._outT && this._outH) {
             t = stateCelsius(hass.states[this._outT]);
-            rh = parseFloat(hass.states[this._outH]?.state);
+            phi = stateHumidity(hass.states[this._outH]);
             source = 'sensor';
         }
-        if ((!Number.isFinite(t) || !Number.isFinite(rh)) && this._outW) {
+        if ((!Number.isFinite(t) || !Number.isFinite(phi)) && this._outW) {
             const a = hass.states[this._outW]?.attributes || {};
             t = Number(a.temperature);
             if (a.temperature_unit === '°F') t = (t - 32) * 5 / 9;
-            rh = Number(a.humidity);
+            // Weather entities report humidity in %.
+            phi = Number(a.humidity) / 100;
             source = 'weather';
         }
-        if (!Number.isFinite(t) || !Number.isFinite(rh)) { this._outdoorPoint = null; return; }
-        const phi = rh > 1 ? rh / 100 : rh;
+        if (!Number.isFinite(t) || !Number.isFinite(phi)) { this._outdoorPoint = null; return; }
         const xy = this._mollier.get_x_y(t, phi, this._pressure);
         if (!Number.isFinite(xy.x) || !Number.isFinite(xy.y)) { this._outdoorPoint = null; return; }
         const prev = this._outdoorPoint;
@@ -219,9 +295,8 @@ export class MollierHxCard extends LitElement {
         const hs = this._hass.states[this._humEntity];
         if (!ts || !hs) { this._currentPoint = null; return; }
         const t = stateCelsius(ts);
-        const rh = parseFloat(hs.state);
-        if (!Number.isFinite(t) || !Number.isFinite(rh)) { this._currentPoint = null; return; }
-        const phi = rh > 1 ? rh / 100 : rh;
+        const phi = stateHumidity(hs);
+        if (!Number.isFinite(t) || !Number.isFinite(phi)) { this._currentPoint = null; return; }
         const xy = this._mollier.get_x_y(t, phi, this._pressure);
         if (!Number.isFinite(xy.x) || !Number.isFinite(xy.y)) { this._currentPoint = null; return; }
         // Only update when the on-screen position would visibly change — avoids
@@ -234,38 +309,72 @@ export class MollierHxCard extends LitElement {
     }
 
     // Loads the daily means once per entity/period combination; `force` re-fetches
-    // (hourly timer, retry after an error). A response that arrives after the
-    // config changed is dropped, so a slow old request cannot overwrite a newer one.
+    // (hourly timer, retry after an error, re-attach). A response that arrives
+    // after a newer request started is dropped, so a slow old request cannot
+    // overwrite a newer one. A new entity/period clears the old data; a failed
+    // refresh keeps the last good data and retries with backoff (RETRY_MS).
     async _maybeFetch(force = false) {
         if (!this._hass || !this._tempEntity || !this._humEntity) return;
         const outdoor = this._outHistory && this._outT && this._outH;
         const key = `${this._tempEntity}|${this._humEntity}|${this._days}|${outdoor ? `${this._outT}|${this._outH}` : ''}`;
-        if (key === this._fetchKey && !force) return;
+        const keyChanged = key !== this._fetchKey;
+        if (!keyChanged && !force) return;
+        clearTimeout(this._retryTimer);
+        this._retryTimer = undefined;
+        if (keyChanged) {
+            this._dailyData = [];
+            this._outdoorDays = [];
+            this._error = undefined;
+            this._retryCount = 0;
+        }
         this._fetchKey = key;
+        const seq = ++this._fetchSeq;
         try {
             const [days, outDays] = await Promise.all([
                 fetchDailyMeans(this._hass, this._tempEntity, this._humEntity, this._days),
                 // Outside history is optional: a failure there must not hide the room data.
                 outdoor ? fetchDailyMeans(this._hass, this._outT, this._outH, this._days).catch(() => []) : [],
             ]);
-            if (this._fetchKey !== key) return;
+            if (seq !== this._fetchSeq) return;
             this._dailyData = days;
             this._outdoorDays = outDays;
             this._error = days.length ? undefined : { key: 'card.no_statistics' };
+            this._retryCount = 0;
+            this._retryPending = false;
         } catch (err) {
-            if (this._fetchKey !== key) return;
-            this._error = { key: 'card.fetch_failed', vars: { error: (err && err.message) || err } };
-            this._fetchKey = null;                  // retry on the next timer tick
+            if (seq !== this._fetchSeq) return;
+            // Keep the last good data; only say so when there is nothing to show.
+            if (!this._dailyData.length) {
+                this._error = { key: 'card.fetch_failed', vars: { error: (err && err.message) || err } };
+            }
+            this._scheduleRetry();
         }
         this.requestUpdate();
+    }
+
+    _scheduleRetry() {
+        clearTimeout(this._retryTimer);
+        this._retryTimer = undefined;
+        // Not on screen: retry when the card is attached again.
+        if (!this.isConnected) { this._retryPending = true; return; }
+        const delay = RETRY_MS[Math.min(this._retryCount, RETRY_MS.length - 1)];
+        this._retryCount++;
+        this._retryTimer = setTimeout(() => {
+            this._retryTimer = undefined;
+            this._maybeFetch(true);
+        }, delay);
     }
 
     connectedCallback() {
         super.connectedCallback();
         clearInterval(this._refreshTimer);
         this._refreshTimer = setInterval(() => this._maybeFetch(true), REFRESH_MS);
-        // Re-attached (e.g. back from another dashboard view): refresh once.
-        if (this._wasConnected) this._maybeFetch(true);
+        // Re-attached (e.g. back from another dashboard view) or a fetch failed
+        // while detached: refresh once.
+        if (this._wasConnected || this._retryPending) {
+            this._retryPending = false;
+            this._maybeFetch(true);
+        }
         this._wasConnected = true;
     }
 
@@ -273,6 +382,9 @@ export class MollierHxCard extends LitElement {
         super.disconnectedCallback();
         clearInterval(this._refreshTimer);
         this._refreshTimer = undefined;
+        clearTimeout(this._retryTimer);
+        this._retryTimer = undefined;
+        this._hideTip();
     }
 
     // Two sizing modes (like HA's own chart and gauge cards):
@@ -294,23 +406,40 @@ export class MollierHxCard extends LitElement {
     render() {
         // Rendered before setConfig (e.g. element attached first): nothing to draw yet.
         if (!this._config) return nothing;
+        // The diagram is always drawn; problems are one line above it, so a
+        // missing sensor or a failed load does not hide the live points.
         return html`
             <ha-card header="${this._header}">
                 <div class="card-content">
-                    ${this._error
-                        ? html`<p class="${this._error.key === 'card.no_statistics' ? 'message' : 'error'}">${this._t(this._error.key, this._error.vars)}</p>`
-                        : html`
-                            <div class="sheet">
-                                <div class="diagram-wrap">
-                                    <div class="mollier-host"></div>
-                                    <div class="tooltip"></div>
-                                </div>
-                                ${this._renderZoneLegend()}
-                            </div>
-                          `}
+                    ${this._renderMessages()}
+                    <div class="sheet">
+                        <div class="diagram-wrap">
+                            <div class="mollier-host"></div>
+                            <div class="tooltip"></div>
+                        </div>
+                        ${this._renderZoneLegend()}
+                    </div>
                 </div>
             </ha-card>
         `;
+    }
+
+    _renderMessages() {
+        const lines = [];
+        const missing = this._missing || [];
+        if (missing.length) {
+            lines.push(html`<p class="error">${this._t('card.entity_not_found', { entities: missing.join(', ') })}</p>`);
+        }
+        const roomMissing = missing.includes(this._tempEntity) || missing.includes(this._humEntity);
+        if (this._error?.key === 'card.fetch_failed') {
+            lines.push(html`<p class="error">${this._t(this._error.key, this._error.vars)}</p>`);
+        } else if (this._error && !roomMissing) {
+            lines.push(html`<p class="message">${this._t(this._error.key, this._error.vars)}</p>`);
+        }
+        if (this._fahrenheitHint) {
+            lines.push(html`<p class="message">${this._t('card.fahrenheit_hint')}</p>`);
+        }
+        return lines.length ? html`<div class="messages">${lines}</div>` : nothing;
     }
 
     _t(key, vars) {
@@ -325,9 +454,9 @@ export class MollierHxCard extends LitElement {
         const o = this._outdoorPoint;
         if (!cz && !o) return nothing;
         const r = (v) => Math.round(v * 10) / 10;
-        const zone = cz ? `${r(cz.range_t[0])}–${r(cz.range_t[1])} °C · ${r(cz.range_phi[0] * 100)}–${r(cz.range_phi[1] * 100)} % · `
-            + `${r(cz.range_x[0] * 1000)}–${r(cz.range_x[1] * 1000)} g/kg` : '';
-        const fmt = (k) => `±${k.dt} K · ±${k.dphi} % · ±${k.dx} g/kg`;
+        const zone = cz ? `${r(cz.range_t[0])}–${r(cz.range_t[1])} °C · ${r(cz.range_phi[0] * 100)}–${r(cz.range_phi[1] * 100)} %`
+            + (cz.hasX ? ` · ${r(cz.range_x[0] * 1000)}–${r(cz.range_x[1] * 1000)} g/kg` : '') : '';
+        const fmt = (k) => `±${k.dt} K · ±${k.dphi} %` + (cz.hasX ? ` · ±${k.dx} g/kg` : '');
         const eff = this._ventilationEffect();
         const outTitle = o ? `${o.t.toFixed(1)} °C · ${(o.phi * 100).toFixed(0)} % · ${(o.x * 1000).toFixed(1)} g/kg` : '';
         return html`
@@ -355,10 +484,11 @@ export class MollierHxCard extends LitElement {
         this._drawPoints();
         this._drawOutdoor();
         this._drawCurrentPoint();
+        // The marker of an open tooltip was replaced by the redraw: close it.
+        if (this._tip && !this._tip.node.isConnected) this._hideTip();
     }
 
     _tryDraw() {
-        if (this._error) return;
         const host = this.renderRoot.querySelector('.mollier-host');
         if (!host) return;
         const hash = `${this._domainX[0]}|${this._domainX[1]}|${this._domainY[0]}|${this._domainY[1]}|${this._pressure}|${this._convention}|${getLanguage(this._hass)}|${JSON.stringify(this._lines)}`;
@@ -392,6 +522,15 @@ export class MollierHxCard extends LitElement {
         });
         this._layoutRightCaptions(captions);
         this._placeXAxisCaption(captions);
+        // Clip for the data layers: nothing may be drawn over the axes.
+        d3.select(host).select('#hx_mollier_diagram')
+            .append('defs')
+            .append('clipPath')
+            .attr('id', this._clipId)
+            .append('rect')
+            .attr('x', 0).attr('y', 0)
+            .attr('width', WIDTH - MARGIN.left - MARGIN.right)
+            .attr('height', HEIGHT - MARGIN.top - MARGIN.bottom);
         this._drawHash = hash;
         this._drawn = true;
     }
@@ -445,16 +584,126 @@ export class MollierHxCard extends LitElement {
         cap.el.setAttribute('font-size', Math.min(11, room / (Math.max(len, 1) * 0.56)).toFixed(2));
     }
 
-    _drawComfort() {
-        if (!this._drawn) return;
+    // Diagram helpers shared by the data layers.
+    _plot() {
         const host = this.renderRoot.querySelector('.mollier-host');
-        if (!host) return;
+        const wrap = this.renderRoot.querySelector('.diagram-wrap');
+        if (!this._drawn || !host || !wrap) return null;
         const svg = d3.select(host).select('#hx_mollier_diagram');
-        if (svg.empty()) return;
+        if (svg.empty()) return null;
+        const innerW = WIDTH - MARGIN.left - MARGIN.right;
+        const innerH = HEIGHT - MARGIN.top - MARGIN.bottom;
+        return {
+            svg, wrap, innerW, innerH,
+            tooltip: wrap.querySelector('.tooltip'),
+            xs: d3.scaleLinear().range([0, innerW]).domain(this._domainX),
+            ys: d3.scaleLinear().range([innerH, 0]).domain(this._domainY),
+        };
+    }
 
+    // A layer in plot coordinates; `clip` keeps its content inside the axes.
+    _layer(P, id, clip) {
+        P.svg.select(`#${id}`).remove();
+        const g = P.svg.append('g')
+            .attr('id', id)
+            .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+        if (clip) g.attr('clip-path', `url(#${this._clipId})`);
+        return g;
+    }
+
+    // Plot position of a point, clamped to the axes (`outside` when it was moved).
+    _clamp(P, p) {
+        const rawX = P.xs(p.x), rawY = P.ys(p.y);
+        const cx = Math.min(P.innerW, Math.max(0, rawX));
+        const cy = Math.min(P.innerH, Math.max(0, rawY));
+        return { rawX, rawY, cx, cy, outside: cx !== rawX || cy !== rawY };
+    }
+
+    // Arrow on the edge of the plot pointing to where an off-axis point really
+    // is, with its value next to it. Returns the arrow (for the tooltip).
+    _edgeArrow(layer, P, pos, color, label) {
+        const { rawX, rawY, cx, cy } = pos;
+        const ang = Math.atan2(rawY - cy, rawX - cx);
+        const s = 7;
+        const pts = [[s, 0], [-s * 0.6, -s * 0.75], [-s * 0.6, s * 0.75]]
+            .map(([px, py]) => [cx - Math.cos(ang) * s + px * Math.cos(ang) - py * Math.sin(ang),
+                                cy - Math.sin(ang) * s + px * Math.sin(ang) + py * Math.cos(ang)]);
+        const marker = layer.append('polygon')
+            .attr('points', pts.map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' '))
+            .attr('fill', color).attr('stroke', 'white').attr('stroke-width', 1);
+        const below = rawY > P.innerH, above = rawY < 0;
+        layer.append('text')
+            .attr('x', Math.min(P.innerW - 2, Math.max(2, cx + (rawX > P.innerW ? -10 : rawX < 0 ? 10 : 0))))
+            .attr('y', below ? cy - 12 : above ? cy + 20 : cy + 4)
+            .attr('text-anchor', rawX > P.innerW ? 'end' : rawX < 0 ? 'start' : 'middle')
+            .attr('font-size', 11).attr('font-weight', 600)
+            .attr('fill', color).attr('stroke', 'white').attr('stroke-width', 3).attr('paint-order', 'stroke')
+            .text(label);
+        return marker;
+    }
+
+    // Tooltips: hover shows, mouse-out hides. A click / tap pins the tooltip
+    // (touch has no hover); a second tap on the same marker, a click elsewhere
+    // on the card or 5 s close it. `onShow` / `onHide` enlarge the marker.
+    _bindTooltip(P, node, content, { onShow, onHide } = {}) {
+        const tooltipEl = P.tooltip;
+        if (!tooltipEl || !node) return;
+        node.style.cursor = 'pointer';
+        const show = (pinned) => {
+            if (this._tip && this._tip.node !== node) this._hideTip();
+            const { html: inner, background, color } = content();
+            const wrapRect = P.wrap.getBoundingClientRect();
+            const r = node.getBoundingClientRect();
+            tooltipEl.innerHTML = inner;
+            tooltipEl.style.background = background;
+            tooltipEl.style.color = color;
+            tooltipEl.style.left = (r.left + r.width / 2 - wrapRect.left) + 'px';
+            tooltipEl.style.top = (r.top - wrapRect.top) + 'px';
+            tooltipEl.style.display = 'block';
+            if (!this._tip) onShow?.();
+            clearTimeout(this._tip?.timer);
+            this._tip = {
+                node, el: tooltipEl, pinned, onHide,
+                timer: pinned ? setTimeout(() => this._hideTip(), TOOLTIP_PIN_MS) : undefined,
+            };
+        };
+        node.addEventListener('mouseover', () => { if (!this._tip?.pinned || this._tip.node !== node) show(false); });
+        node.addEventListener('mouseout', () => { if (this._tip?.node === node && !this._tip.pinned) this._hideTip(); });
+        node.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            if (this._tip?.node === node && this._tip.pinned) this._hideTip();
+            else show(true);
+        });
+    }
+
+    _hideTip() {
+        const tip = this._tip;
+        if (!tip) return;
+        this._tip = null;
+        clearTimeout(tip.timer);
+        tip.el.style.display = 'none';
+        tip.onHide?.();
+    }
+
+    // Day of a daily mean in Home Assistant's time zone (the statistics day
+    // buckets are server days), e.g. "2026-11-05" / "05.11.2026".
+    _dateFormatter() {
+        const lang = this._hass?.locale?.language || this._hass?.language || 'en';
+        const opts = { year: 'numeric', month: '2-digit', day: '2-digit' };
+        const tz = this._hass?.config?.time_zone;
+        try {
+            return new Intl.DateTimeFormat(lang, tz ? { ...opts, timeZone: tz } : opts);
+        } catch {
+            try { return new Intl.DateTimeFormat(lang, opts); } catch { return new Intl.DateTimeFormat('en', opts); }
+        }
+    }
+
+    _drawComfort() {
+        const P = this._plot();
+        if (!P) return;
         // Remove and re-append on every update so we run before _drawPoints
         // (called after us in updated()) and stay below the data-points layer.
-        svg.select('#comfort-zone').remove();
+        P.svg.select('#comfort-zone').remove();
         if (!this._comfortZone) return;
 
         const cz = this._comfortZone;
@@ -465,16 +714,9 @@ export class MollierHxCard extends LitElement {
         const points = Array.isArray(polygon[0]) ? polygon[0] : polygon;
         if (points.length < 2) return;
 
-        const innerW = WIDTH - MARGIN.left - MARGIN.right;
-        const innerH = HEIGHT - MARGIN.top - MARGIN.bottom;
-        const xScale = d3.scaleLinear().range([0, innerW]).domain(this._domainX);
-        const yScale = d3.scaleLinear().range([innerH, 0]).domain(this._domainY);
-        const lineGen = d3.line().x(p => xScale(p.x)).y(p => yScale(p.y));
-
-        svg.append('g')
-            .attr('id', 'comfort-zone')
-            .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`)
-            .append('path')
+        const lineGen = d3.line().x(p => P.xs(p.x)).y(p => P.ys(p.y));
+        const group = this._layer(P, 'comfort-zone', true);
+        group.append('path')
             .datum(points)
             .attr('d', lineGen)
             .attr('fill', 'yellowgreen')
@@ -483,7 +725,6 @@ export class MollierHxCard extends LitElement {
 
         // Warning bands — dashed outline only, like pyedautils' drawBand().
         if (!this._warningBands) return;
-        const group = svg.select('#comfort-zone');
         for (const key of ['orange', 'red']) {
             const band = this._warningBands[key];
             const r = bandRanges(cz, band);
@@ -503,23 +744,16 @@ export class MollierHxCard extends LitElement {
     }
 
     _drawPoints() {
-        if (!this._drawn || this._dailyData.length === 0) return;
-        const host = this.renderRoot.querySelector('.mollier-host');
-        const wrap = this.renderRoot.querySelector('.diagram-wrap');
-        if (!host || !wrap) return;
-        const svg = d3.select(host).select('#hx_mollier_diagram');
-        if (svg.empty()) return;
-
-        const innerW = WIDTH - MARGIN.left - MARGIN.right;
-        const innerH = HEIGHT - MARGIN.top - MARGIN.bottom;
-        const xScale = d3.scaleLinear().range([0, innerW]).domain(this._domainX);
-        const yScale = d3.scaleLinear().range([innerH, 0]).domain(this._domainY);
+        const P = this._plot();
+        if (!P) return;
+        P.svg.select('#data-points').remove();
+        if (this._dailyData.length === 0) return;
 
         const points = this._dailyData.map((d, i) => {
             const xy = this._mollier.get_x_y(d.t, d.phi, this._pressure);
             return {
-                cx: xScale(xy.x),
-                cy: yScale(xy.y),
+                cx: P.xs(xy.x),
+                cy: P.ys(xy.y),
                 x: xy.x,
                 color: this._colorFor(d, i),
                 opacity: this._opacityFor(d, i),
@@ -529,10 +763,7 @@ export class MollierHxCard extends LitElement {
             };
         });
 
-        svg.select('#data-points').remove();
-        const layer = svg.append('g')
-            .attr('id', 'data-points')
-            .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+        const layer = this._layer(P, 'data-points', true);
 
         if (this._coloring === 'chronological') {
             const line = d3.line().x(p => p.cx).y(p => p.cy);
@@ -544,7 +775,6 @@ export class MollierHxCard extends LitElement {
                 .attr('stroke-width', 1);
         }
 
-        const tooltipEl = wrap.querySelector('.tooltip');
         const circles = layer.selectAll('circle')
             .data(points)
             .enter()
@@ -554,57 +784,28 @@ export class MollierHxCard extends LitElement {
             .attr('r', 5)
             .attr('fill', p => p.color)
             .attr('opacity', p => p.opacity)
-            .attr('shape-rendering', 'optimizeSpeed')
-            .style('cursor', 'pointer');
+            .attr('shape-rendering', 'optimizeSpeed');
 
-        // Use native listeners + getBoundingClientRect for reliable positioning
+        // Native listeners + getBoundingClientRect for reliable positioning
         // (works regardless of responsive SVG scaling) and to bypass any d3 .on()
         // quirks inside HA's shadow DOM.
-        if (tooltipEl) {
-            circles.each(function (p) {
-                const baseOpacity = p.opacity;
-                const season = seasonForMonth(p.date.getMonth());
-                const bg = SEASON_COLORS[season];
-                const darkText = season !== 'winter' && season !== 'autumn';
-                this.addEventListener('mouseover', () => {
-                    const wrapRect = wrap.getBoundingClientRect();
-                    const circleRect = this.getBoundingClientRect();
-                    const dateStr = p.date.toISOString().slice(0, 10);
-                    tooltipEl.innerHTML =
-                        `${dateStr}<br>x: ${(p.x * 1000).toFixed(2)} g/kg`
-                        + `<br>T: ${p.t.toFixed(2)} °C`
-                        + `<br>φ: ${(p.phi * 100).toFixed(2)} %`;
-                    tooltipEl.style.background = bg;
-                    tooltipEl.style.color = darkText ? 'black' : 'white';
-                    tooltipEl.style.left = (circleRect.left + circleRect.width / 2 - wrapRect.left) + 'px';
-                    tooltipEl.style.top = (circleRect.top - wrapRect.top) + 'px';
-                    tooltipEl.style.display = 'block';
-                    this.setAttribute('r', 10);
-                    this.setAttribute('opacity', 0.9);
-                });
-                this.addEventListener('mouseout', () => {
-                    tooltipEl.style.display = 'none';
-                    this.setAttribute('r', 5);
-                    this.setAttribute('opacity', baseOpacity);
-                });
+        const dateFmt = this._dateFormatter();
+        const card = this;
+        circles.each(function (p) {
+            const node = this;
+            const season = seasonForMonth(p.date.getMonth());
+            const darkText = season !== 'winter' && season !== 'autumn';
+            card._bindTooltip(P, node, () => ({
+                html: `${dateFmt.format(p.date)}<br>x: ${(p.x * 1000).toFixed(2)} g/kg`
+                    + `<br>T: ${p.t.toFixed(2)} °C`
+                    + `<br>φ: ${(p.phi * 100).toFixed(2)} %`,
+                background: SEASON_COLORS[season],
+                color: darkText ? 'black' : 'white',
+            }), {
+                onShow: () => { node.setAttribute('r', 10); node.setAttribute('opacity', 0.9); },
+                onHide: () => { node.setAttribute('r', 5); node.setAttribute('opacity', p.opacity); },
             });
-        }
-    }
-
-    // Diagram helpers shared by the outside layers.
-    _plot() {
-        const host = this.renderRoot.querySelector('.mollier-host');
-        const wrap = this.renderRoot.querySelector('.diagram-wrap');
-        if (!this._drawn || !host || !wrap) return null;
-        const svg = d3.select(host).select('#hx_mollier_diagram');
-        if (svg.empty()) return null;
-        const innerW = WIDTH - MARGIN.left - MARGIN.right;
-        const innerH = HEIGHT - MARGIN.top - MARGIN.bottom;
-        return {
-            svg, wrap, innerW, innerH,
-            xs: d3.scaleLinear().range([0, innerW]).domain(this._domainX),
-            ys: d3.scaleLinear().range([innerH, 0]).domain(this._domainY),
-        };
+        });
     }
 
     _dewPoint(t, phi) {
@@ -628,13 +829,11 @@ export class MollierHxCard extends LitElement {
         P.svg.select('#outdoor-history').remove();
         const days = this._outHistory ? (this._outdoorDays || []) : [];
         if (!days.length) return;
-        const layer = P.svg.append('g')
-            .attr('id', 'outdoor-history')
-            .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+        const layer = this._layer(P, 'outdoor-history', true);
         for (const d of days) {
             const xy = this._mollier.get_x_y(d.t, d.phi, this._pressure);
             const cx = P.xs(xy.x), cy = P.ys(xy.y);
-            if (!(cx >= 0 && cx <= P.innerW && cy >= 0 && cy <= P.innerH)) continue;
+            if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
             layer.append('circle')
                 .attr('cx', cx).attr('cy', cy).attr('r', 3.5)
                 .attr('fill', OUTDOOR_COLOR).attr('fill-opacity', 0.28)
@@ -651,133 +850,71 @@ export class MollierHxCard extends LitElement {
         P.svg.select('#outdoor').remove();
         const o = this._outdoorPoint;
         if (!o) return;
-        const layer = P.svg.append('g')
-            .attr('id', 'outdoor')
-            .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
-        const rawX = P.xs(o.x), rawY = P.ys(o.y);
-        const cx = Math.min(P.innerW, Math.max(0, rawX));
-        const cy = Math.min(P.innerH, Math.max(0, rawY));
-        const outside = cx !== rawX || cy !== rawY;
+        const layer = this._layer(P, 'outdoor', false);
+        const pos = this._clamp(P, o);
 
         const r = this._currentPoint;
         if (this._ventLine && r) {
+            const rp = this._clamp(P, r);
             layer.append('line')
-                .attr('x1', P.xs(r.x)).attr('y1', P.ys(r.y))
-                .attr('x2', cx).attr('y2', cy)
+                .attr('x1', rp.cx).attr('y1', rp.cy)
+                .attr('x2', pos.cx).attr('y2', pos.cy)
                 .attr('stroke', OUTDOOR_COLOR).attr('stroke-width', 1.6)
                 .attr('stroke-dasharray', '4,3').attr('stroke-linecap', 'round');
         }
 
-        let marker;
-        if (!outside) {
-            marker = layer.append('circle')
-                .attr('cx', cx).attr('cy', cy).attr('r', 6)
+        const marker = pos.outside
+            ? this._edgeArrow(layer, P, pos, OUTDOOR_COLOR, `${o.t.toFixed(1)} °C · ${(o.phi * 100).toFixed(0)} %`)
+            : layer.append('circle')
+                .attr('cx', pos.cx).attr('cy', pos.cy).attr('r', 6)
                 .attr('fill', 'white').attr('fill-opacity', 0.85)
                 .attr('stroke', OUTDOOR_COLOR).attr('stroke-width', 2.5);
-        } else {
-            // Arrow on the edge, pointing to where the point really is.
-            const ang = Math.atan2(rawY - cy, rawX - cx);
-            const s = 7;
-            const pts = [[s, 0], [-s * 0.6, -s * 0.75], [-s * 0.6, s * 0.75]]
-                .map(([px, py]) => [cx - Math.cos(ang) * s + px * Math.cos(ang) - py * Math.sin(ang),
-                                    cy - Math.sin(ang) * s + px * Math.sin(ang) + py * Math.cos(ang)]);
-            marker = layer.append('polygon')
-                .attr('points', pts.map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' '))
-                .attr('fill', OUTDOOR_COLOR).attr('stroke', 'white').attr('stroke-width', 1);
-            const label = `${o.t.toFixed(1)} °C · ${(o.phi * 100).toFixed(0)} %`;
-            const below = rawY > P.innerH, above = rawY < 0;
-            layer.append('text')
-                .attr('x', Math.min(P.innerW - 2, Math.max(2, cx + (rawX > P.innerW ? -10 : rawX < 0 ? 10 : 0))))
-                .attr('y', below ? cy - 12 : above ? cy + 20 : cy + 4)
-                .attr('text-anchor', rawX > P.innerW ? 'end' : rawX < 0 ? 'start' : 'middle')
-                .attr('font-size', 11).attr('font-weight', 600)
-                .attr('fill', OUTDOOR_COLOR).attr('stroke', 'white').attr('stroke-width', 3).attr('paint-order', 'stroke')
-                .text(label);
-        }
 
-        const tooltipEl = P.wrap.querySelector('.tooltip');
-        if (tooltipEl && marker) {
-            const node = marker.node();
-            node.style.cursor = 'pointer';
-            const show = () => {
-                const wrapRect = P.wrap.getBoundingClientRect();
-                const rr = node.getBoundingClientRect();
-                const eff = this._ventilationEffect();
-                tooltipEl.innerHTML = `${this._t('card.outdoor')}<br>x: ${(o.x * 1000).toFixed(2)} g/kg`
+        this._bindTooltip(P, marker.node(), () => {
+            const eff = this._ventilationEffect();
+            return {
+                html: `${this._t('card.outdoor')}<br>x: ${(o.x * 1000).toFixed(2)} g/kg`
                     + `<br>T: ${o.t.toFixed(1)} °C<br>φ: ${(o.phi * 100).toFixed(0)} %`
                     + `<br>Td: ${this._dewPoint(o.t, o.phi).toFixed(1)} °C`
-                    + (eff ? `<br>${this._t(`card.ventilation_${eff}`)}` : '');
-                tooltipEl.style.background = OUTDOOR_COLOR;
-                tooltipEl.style.color = 'white';
-                tooltipEl.style.left = (rr.left + rr.width / 2 - wrapRect.left) + 'px';
-                tooltipEl.style.top = (rr.top - wrapRect.top) + 'px';
-                tooltipEl.style.display = 'block';
+                    + (eff ? `<br>${this._t(`card.ventilation_${eff}`)}` : ''),
+                background: OUTDOOR_COLOR,
+                color: 'white',
             };
-            node.addEventListener('mouseover', show);
-            node.addEventListener('click', show);
-            node.addEventListener('mouseout', () => { tooltipEl.style.display = 'none'; });
-        }
+        });
     }
 
+    // Live room point (black). Outside the axes it is drawn as an arrow on
+    // the edge with its value, like the outside point.
     _drawCurrentPoint() {
-        if (!this._drawn) return;
-        const host = this.renderRoot.querySelector('.mollier-host');
-        const wrap = this.renderRoot.querySelector('.diagram-wrap');
-        if (!host || !wrap) return;
-        const svg = d3.select(host).select('#hx_mollier_diagram');
-        if (svg.empty()) return;
-
+        const P = this._plot();
+        if (!P) return;
         // Re-append on every update so this group stays last in paint order
         // (drawn on top of #data-points and #comfort-zone).
-        svg.select('#current-point').remove();
-        if (!this._currentPoint) return;
-
-        const innerW = WIDTH - MARGIN.left - MARGIN.right;
-        const innerH = HEIGHT - MARGIN.top - MARGIN.bottom;
-        const xScale = d3.scaleLinear().range([0, innerW]).domain(this._domainX);
-        const yScale = d3.scaleLinear().range([innerH, 0]).domain(this._domainY);
-
-        const cx = xScale(this._currentPoint.x);
-        const cy = yScale(this._currentPoint.y);
-
-        const tooltipEl = wrap.querySelector('.tooltip');
-        const layer = svg.append('g')
-            .attr('id', 'current-point')
-            .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
-
-        const circle = layer.append('circle')
-            .attr('cx', cx)
-            .attr('cy', cy)
-            .attr('r', 6)
-            .attr('fill', 'black')
-            .attr('stroke', 'white')
-            .attr('stroke-width', 1.5)
-            .style('cursor', 'pointer');
-
-        if (tooltipEl) {
-            const t = this._currentPoint.t;
-            const phi = this._currentPoint.phi;
-            const x = this._currentPoint.x;
-            const node = circle.node();
-            node.addEventListener('mouseover', () => {
-                const wrapRect = wrap.getBoundingClientRect();
-                const r = node.getBoundingClientRect();
-                tooltipEl.innerHTML =
-                    `${this._t('card.now')}<br>x: ${(x * 1000).toFixed(2)} g/kg`
-                    + `<br>T: ${t.toFixed(2)} °C`
-                    + `<br>φ: ${(phi * 100).toFixed(2)} %`;
-                tooltipEl.style.background = 'black';
-                tooltipEl.style.color = 'white';
-                tooltipEl.style.left = (r.left + r.width / 2 - wrapRect.left) + 'px';
-                tooltipEl.style.top = (r.top - wrapRect.top) + 'px';
-                tooltipEl.style.display = 'block';
-                node.setAttribute('r', 10);
-            });
-            node.addEventListener('mouseout', () => {
-                tooltipEl.style.display = 'none';
-                node.setAttribute('r', 6);
-            });
-        }
+        P.svg.select('#current-point').remove();
+        const c = this._currentPoint;
+        if (!c) return;
+        const layer = this._layer(P, 'current-point', false);
+        const pos = this._clamp(P, c);
+        const marker = pos.outside
+            ? this._edgeArrow(layer, P, pos, ROOM_COLOR, `${c.t.toFixed(1)} °C · ${(c.phi * 100).toFixed(0)} %`)
+            : layer.append('circle')
+                .attr('cx', pos.cx)
+                .attr('cy', pos.cy)
+                .attr('r', 6)
+                .attr('fill', ROOM_COLOR)
+                .attr('stroke', 'white')
+                .attr('stroke-width', 1.5);
+        const node = marker.node();
+        this._bindTooltip(P, node, () => ({
+            html: `${this._t('card.now')}<br>x: ${(c.x * 1000).toFixed(2)} g/kg`
+                + `<br>T: ${c.t.toFixed(2)} °C`
+                + `<br>φ: ${(c.phi * 100).toFixed(2)} %`,
+            background: 'black',
+            color: 'white',
+        }), pos.outside ? {} : {
+            onShow: () => node.setAttribute('r', 10),
+            onHide: () => node.setAttribute('r', 6),
+        });
     }
 
     _colorFor(d) {
@@ -805,14 +942,18 @@ export class MollierHxCard extends LitElement {
         return document.createElement("mollier-hx-card-editor");
     }
 
-    static getStubConfig() {
+    // A real sensor pair from this Home Assistant when there is one (with
+    // long-term statistics), else placeholders the user replaces in the editor.
+    static getStubConfig(hass) {
+        const pick = (deviceClass) => Object.keys(hass?.states || {}).find((id) => {
+            const a = hass.states[id]?.attributes || {};
+            return id.startsWith('sensor.') && a.device_class === deviceClass && a.state_class === 'measurement';
+        });
         return {
-            temperature_entity: "sensor.living_room_temperature",
-            humidity_entity: "sensor.living_room_humidity",
-            header: "",
-            days: 7,
+            temperature_entity: pick('temperature') || "sensor.living_room_temperature",
+            humidity_entity: pick('humidity') || "sensor.living_room_humidity",
+            days_to_show: 7,
             coloring: "season",
-            altitude: 450,
         };
     }
 

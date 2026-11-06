@@ -21,14 +21,14 @@ const BASE_CONFIG = {
     type: `custom:${TAG}`,
     temperature_entity: 'sensor.t',
     humidity_entity: 'sensor.h',
-    header: 'Living room',
-    days: 120,
+    title: 'Living room',
+    days_to_show: 120,
     altitude: 450,
     comfort_zone: { temperature: [20, 26], humidity: [30, 60], absolute_humidity: [0, 12] },
     warning_bands: true,
 };
 // Selector inside the card's shadow root that exists once it has drawn.
-const READY = '#hx_mollier_diagram, .error, .message';
+const READY = '#hx_mollier_diagram';
 // ---------------------------------------------------------------------------
 
 // Outside air with sensors, daily means and the ventilation line.
@@ -36,7 +36,8 @@ const OUTDOOR = { outdoor_temperature_entity: 'sensor.ot', outdoor_humidity_enti
 
 // width: tile width; rows: sections row count (fixed height = rows*64-8 px);
 // layout: what HA sets ('grid' in sections, 'panel', or null for masonry);
-// data: 'ok' | 'empty' (no statistics) | 'error' (fetch fails); states: live sensor states.
+// data: 'ok' | 'empty' (no statistics) | 'error' (fetch fails); states: live sensor
+// states (null = entity does not exist).
 const CASES = [
     { name: 'dark-en', theme: 'dark', lang: 'en', width: 500, layout: 'grid' },
     { name: 'light-de', theme: 'light', lang: 'de', width: 500, layout: 'grid' },
@@ -50,7 +51,10 @@ const CASES = [
     { name: 'fetch-error-de', theme: 'dark', lang: 'de', width: 500, layout: 'grid', data: 'error' },
     { name: 'sensor-unavailable', theme: 'dark', lang: 'en', width: 500, layout: 'grid', states: { 'sensor.t': 'unavailable' } },
     { name: 'outdoor-de', theme: 'light', lang: 'de', width: 500, layout: 'grid', config: OUTDOOR },
-    { name: 'outdoor-off-axis', theme: 'dark', lang: 'en', width: 500, layout: 'grid', config: { ...OUTDOOR, domain_y: [15, 30], domain_x: [0, 15] } },
+    { name: 'outdoor-off-axis', theme: 'dark', lang: 'en', width: 500, layout: 'grid', config: { ...OUTDOOR, temperature_range: [15, 30], x_range: [0, 15] } },
+    { name: 'entity-missing', theme: 'dark', lang: 'en', width: 500, layout: 'grid', states: { 'sensor.t': null } },
+    { name: 'room-off-axis', theme: 'light', lang: 'en', width: 500, layout: 'grid', states: { 'sensor.h': '75' }, config: { x_range: [0, 10], temperature_range: [15, 30] } },
+    { name: 'fahrenheit-hint', theme: 'light', lang: 'de', width: 500, layout: 'grid', config: { comfort_zone: { temperature: [68, 79], humidity: [30, 60] } } },
     { name: 'outdoor-weather-only', theme: 'dark', lang: 'en', width: 390, layout: null, config: { outdoor_weather_entity: 'weather.home' } },
 ];
 
@@ -111,8 +115,8 @@ function html(c) {
   ${c.layout ? `card.layout = ${JSON.stringify(c.layout)};` : ''}
   card.setConfig(${JSON.stringify(config)});
   card.hass = {
-    language: '${c.lang}', locale: { language: '${c.lang}' }, themes: { darkMode: ${c.theme === 'dark'} },
-    states: { ...Object.fromEntries(Object.entries(${JSON.stringify(states)}).map(([k, v]) => [k, { entity_id: k, state: v, attributes: {} }])),
+    language: '${c.lang}', locale: { language: '${c.lang}' }, config: { time_zone: 'Europe/Zurich' }, themes: { darkMode: ${c.theme === 'dark'} },
+    states: { ...Object.fromEntries(Object.entries(${JSON.stringify(states)}).filter(([, v]) => v !== null).map(([k, v]) => [k, { entity_id: k, state: v, attributes: {} }])),
       'weather.home': { entity_id: 'weather.home', state: 'cloudy', attributes: { temperature: 41, temperature_unit: '°F', humidity: 85 } } },
     callWS: async (msg) => {
       if (data === 'error') throw new Error('Connection lost');

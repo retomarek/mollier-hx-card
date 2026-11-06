@@ -1,12 +1,15 @@
 import { html, LitElement } from 'lit';
 import { localize } from './localize/localize.js';
-import { LINE_DEFAULTS, parseLines } from './card.js';
+import { LINE_DEFAULTS, parseLines, option } from './card.js';
+import { MAX_DAYS } from './statistics.js';
 
 const LINE_KEYS = Object.keys(LINE_DEFAULTS);
 
 // The editor uses HA's <ha-form> (loaded by HA's frontend at runtime — not on
 // npm). The form's data model is flat; the YAML config is nested. The pair of
-// configToData / dataToConfig translates between them.
+// configToData / dataToConfig translates between them. Old option names
+// (header, days, domain_x, domain_y, lines.relative_humidity) are read and
+// replaced by the 1.0 names on the first edit.
 
 const DEFAULTS = {
     days: 7,
@@ -32,28 +35,33 @@ const DEFAULTS = {
 
 function configToData(config) {
     const c = config || {};
-    const hasAltitude = c.altitude !== undefined && c.altitude !== null;
+    const hasAltitude = c.altitude !== undefined && c.altitude !== null && c.altitude !== '';
+    const xr = option(c, 'x_range');
+    const yr = option(c, 'temperature_range');
+    const cz = c.comfort_zone && typeof c.comfort_zone === 'object' ? c.comfort_zone : null;
     return {
-        header: c.header ?? '',
+        header: option(c, 'title') ?? '',
         temperature_entity: c.temperature_entity ?? '',
         humidity_entity: c.humidity_entity ?? '',
-        days: c.days ?? DEFAULTS.days,
+        days: option(c, 'days_to_show') ?? DEFAULTS.days,
         coloring: c.coloring ?? DEFAULTS.coloring,
         air_mode: hasAltitude ? 'altitude' : 'pressure',
         pressure: c.pressure ?? DEFAULTS.pressure,
         altitude: c.altitude ?? DEFAULTS.altitude,
         convention: c.convention ?? DEFAULTS.convention,
-        x_min: c.domain_x?.[0] ?? DEFAULTS.x_min,
-        x_max: c.domain_x?.[1] ?? DEFAULTS.x_max,
-        y_min: c.domain_y?.[0] ?? DEFAULTS.y_min,
-        y_max: c.domain_y?.[1] ?? DEFAULTS.y_max,
-        comfort_enabled: !!c.comfort_zone,
-        comfort_t_min: c.comfort_zone?.temperature?.[0] ?? DEFAULTS.comfort_t_min,
-        comfort_t_max: c.comfort_zone?.temperature?.[1] ?? DEFAULTS.comfort_t_max,
-        comfort_phi_min: c.comfort_zone?.humidity?.[0] ?? DEFAULTS.comfort_phi_min,
-        comfort_phi_max: c.comfort_zone?.humidity?.[1] ?? DEFAULTS.comfort_phi_max,
-        comfort_x_min: c.comfort_zone?.absolute_humidity?.[0] ?? DEFAULTS.comfort_x_min,
-        comfort_x_max: c.comfort_zone?.absolute_humidity?.[1] ?? DEFAULTS.comfort_x_max,
+        x_min: xr?.[0] ?? DEFAULTS.x_min,
+        x_max: xr?.[1] ?? DEFAULTS.x_max,
+        y_min: yr?.[0] ?? DEFAULTS.y_min,
+        y_max: yr?.[1] ?? DEFAULTS.y_max,
+        comfort_enabled: !!cz,
+        comfort_t_min: cz?.temperature?.[0] ?? DEFAULTS.comfort_t_min,
+        comfort_t_max: cz?.temperature?.[1] ?? DEFAULTS.comfort_t_max,
+        comfort_phi_min: cz?.humidity?.[0] ?? DEFAULTS.comfort_phi_min,
+        comfort_phi_max: cz?.humidity?.[1] ?? DEFAULTS.comfort_phi_max,
+        // The absolute-humidity limit is optional: only on when the zone has one.
+        comfort_x_enabled: Array.isArray(cz?.absolute_humidity),
+        comfort_x_min: cz?.absolute_humidity?.[0] ?? DEFAULTS.comfort_x_min,
+        comfort_x_max: cz?.absolute_humidity?.[1] ?? DEFAULTS.comfort_x_max,
         ...Object.fromEntries(Object.entries(parseLines(c.lines)).map(([k, v]) => [`line_${k}`, v])),
         outdoor_temperature_entity: c.outdoor_temperature_entity ?? '',
         outdoor_humidity_entity: c.outdoor_humidity_entity ?? '',
@@ -74,32 +82,51 @@ function configToData(config) {
 
 // Keys this form owns. Everything else in the existing config (grid_options,
 // visibility, view_layout, card_mod, YAML-only options) is kept as it is.
+// The pre-1.0 aliases are owned too, so they are dropped when the new name is written.
 const OWNED_KEYS = [
-    'type', 'temperature_entity', 'humidity_entity', 'header', 'days', 'coloring', 'convention',
-    'domain_x', 'domain_y', 'lines', 'altitude', 'pressure', 'comfort_zone', 'warning_bands',
+    'type', 'temperature_entity', 'humidity_entity', 'title', 'days_to_show', 'coloring', 'convention',
+    'x_range', 'temperature_range', 'lines', 'altitude', 'pressure', 'comfort_zone', 'warning_bands',
     'outdoor_temperature_entity', 'outdoor_humidity_entity', 'outdoor_weather_entity', 'outdoor_history', 'ventilation_line',
+    'header', 'days', 'domain_x', 'domain_y',
 ];
+
+// A cleared number field (undefined / null / '') falls back to the previous
+// config value, then to the default, so a [min, max] pair never gets a null.
+const isNum = (v) => v !== undefined && v !== null && v !== '' && Number.isFinite(Number(v));
+const pickNum = (...candidates) => {
+    for (const v of candidates) if (isNum(v)) return Number(v);
+    return undefined;
+};
 
 function dataToConfig(data, previous = {}) {
     const config = { ...previous };
     for (const k of OWNED_KEYS) delete config[k];
+    const prevX = option(previous, 'x_range');
+    const prevY = option(previous, 'temperature_range');
+    const prevCz = previous.comfort_zone && typeof previous.comfort_zone === 'object' ? previous.comfort_zone : {};
+    const prevBands = typeof previous.warning_bands === 'object' && previous.warning_bands ? previous.warning_bands : {};
+    const n = (field, prev) => pickNum(data[field], prev, DEFAULTS[field]);
+
     Object.assign(config, {
         type: 'custom:mollier-hx-card',
         temperature_entity: data.temperature_entity,
         humidity_entity: data.humidity_entity,
-        days: data.days,
-        coloring: data.coloring,
-        convention: data.convention,
+        days_to_show: Math.min(MAX_DAYS, Math.max(1, Math.round(n('days', option(previous, 'days_to_show'))))),
+        coloring: data.coloring || DEFAULTS.coloring,
+        convention: data.convention || DEFAULTS.convention,
     });
     // Write the axis ranges only when they differ from the card defaults, so
     // the card follows future default changes.
-    if (data.x_min !== DEFAULTS.x_min || data.x_max !== DEFAULTS.x_max) config.domain_x = [data.x_min, data.x_max];
-    if (data.y_min !== DEFAULTS.y_min || data.y_max !== DEFAULTS.y_max) config.domain_y = [data.y_min, data.y_max];
-    if (data.header) config.header = data.header;
+    const x = [n('x_min', prevX?.[0]), n('x_max', prevX?.[1])];
+    const y = [n('y_min', prevY?.[0]), n('y_max', prevY?.[1])];
+    if (x[0] !== DEFAULTS.x_min || x[1] !== DEFAULTS.x_max) config.x_range = x;
+    if (y[0] !== DEFAULTS.y_min || y[1] !== DEFAULTS.y_max) config.temperature_range = y;
+    if (data.header) config.title = data.header;
     // Store only the lines that differ from the defaults, to keep YAML short.
     const lines = {};
     for (const k of LINE_KEYS) {
-        if (data[`line_${k}`] !== LINE_DEFAULTS[k]) lines[k] = data[`line_${k}`];
+        const v = data[`line_${k}`];
+        if (typeof v === 'boolean' && v !== LINE_DEFAULTS[k]) lines[k] = v;
     }
     if (Object.keys(lines).length) config.lines = lines;
     // Outside air: only what is set; defaults stay out of the YAML.
@@ -112,23 +139,37 @@ function dataToConfig(data, previous = {}) {
     // Persist either pressure or altitude, never both. Do not write the default
     // pressure unless it was set before, so opening the editor changes nothing.
     if (data.air_mode === 'altitude') {
-        config.altitude = data.altitude;
-    } else if (previous.pressure !== undefined || data.pressure !== DEFAULTS.pressure) {
-        config.pressure = data.pressure;
+        config.altitude = n('altitude', previous.altitude);
+    } else {
+        const p = n('pressure', previous.pressure);
+        if (previous.pressure !== undefined || p !== DEFAULTS.pressure) config.pressure = p;
     }
     if (data.comfort_enabled) {
-        config.comfort_zone = {
-            temperature: [data.comfort_t_min, data.comfort_t_max],
-            humidity: [data.comfort_phi_min, data.comfort_phi_max],
-            absolute_humidity: [data.comfort_x_min, data.comfort_x_max],
+        // Keep YAML-only keys of the zone; absolute_humidity only when switched on.
+        const cz = {
+            ...prevCz,
+            temperature: [n('comfort_t_min', prevCz.temperature?.[0]), n('comfort_t_max', prevCz.temperature?.[1])],
+            humidity: [n('comfort_phi_min', prevCz.humidity?.[0]), n('comfort_phi_max', prevCz.humidity?.[1])],
         };
+        delete cz.absolute_humidity;
+        if (data.comfort_x_enabled) {
+            cz.absolute_humidity = [
+                n('comfort_x_min', prevCz.absolute_humidity?.[0]),
+                n('comfort_x_max', prevCz.absolute_humidity?.[1]),
+            ];
+        }
+        config.comfort_zone = cz;
         if (data.bands_enabled) {
-            // Keep YAML-only keys (label, color) the form doesn't edit.
-            const prev = typeof previous.warning_bands === 'object' && previous.warning_bands ? previous.warning_bands : {};
             // Keep YAML-only keys (color); an empty name falls back to the
             // translated default ("Warning band" / "Alarm band").
             const band = (k) => {
-                const b = { ...prev[k], temperature: data[`${k}_dt`], humidity: data[`${k}_dphi`], absolute_humidity: data[`${k}_dx`] };
+                const pb = prevBands[k] || {};
+                const b = {
+                    ...pb,
+                    temperature: n(`${k}_dt`, pb.temperature),
+                    humidity: n(`${k}_dphi`, pb.humidity),
+                    absolute_humidity: n(`${k}_dx`, pb.absolute_humidity),
+                };
                 const name = (data[`${k}_label`] || '').trim();
                 if (name) b.label = name;
                 else delete b.label;
@@ -165,6 +206,10 @@ const COMFORT_FIELDS = [
             { name: 'comfort_phi_max', selector: { number: { min: 0, max: 100, step: 1, mode: 'box', unit_of_measurement: '%' } } },
         ],
     },
+    { name: 'comfort_x_enabled', selector: { boolean: {} } },
+];
+
+const COMFORT_X_FIELDS = [
     {
         type: 'grid',
         schema: [
@@ -190,7 +235,7 @@ function buildSchema(data, t) {
         {
             type: 'grid',
             schema: [
-                { name: 'days', selector: { number: { min: 1, max: 365, step: 1, mode: 'box' } } },
+                { name: 'days', selector: { number: { min: 1, max: MAX_DAYS, step: 1, mode: 'box' } } },
                 {
                     name: 'coloring',
                     selector: {
@@ -303,6 +348,7 @@ function buildSchema(data, t) {
             schema: [
                 { name: 'comfort_enabled', selector: { boolean: {} } },
                 ...(data.comfort_enabled ? COMFORT_FIELDS : []),
+                ...(data.comfort_enabled && data.comfort_x_enabled ? COMFORT_X_FIELDS : []),
             ],
         },
         ...(data.comfort_enabled ? [{

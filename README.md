@@ -113,13 +113,13 @@ Add a card, pick **Mollier hx card** and fill in the form. Or use YAML:
 type: custom:mollier-hx-card
 temperature_entity: sensor.living_room_temperature
 humidity_entity: sensor.living_room_humidity
-header: Living room
-days: 120
+title: Living room
+days_to_show: 120
 altitude: 450
 comfort_zone:
   temperature: [20, 26]
   humidity: [30, 60]
-  absolute_humidity: [0, 12]
+  absolute_humidity: [0, 12]   # optional
 warning_bands: true
 lines:
   density: true        # off by default, like enthalpy
@@ -130,18 +130,22 @@ outdoor_weather_entity: weather.home   # fallback for the current outside point
 
 ### Options
 
+Units: all temperatures in the card config (comfort zone, `temperature_range`) are **°C**, also when your sensors report °F; warning-band offsets are in **K**. Humidity sensors report relative humidity in **%**. An invalid value (unknown `coloring`, a comfort zone without `temperature` or `humidity`, a pressure in the wrong unit, ...) shows a clear error message instead of a wrong diagram.
+
+> **Renamed in 1.0 (old names still work):** `header` → `title`, `days` → `days_to_show`, `domain_x` → `x_range`, `domain_y` → `temperature_range`, `lines.relative_humidity` → `lines.humidity`. If both are set, the new name wins; the visual editor writes the new names.
+
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `temperature_entity` | string | | **Required.** Temperature sensor. |
-| `humidity_entity` | string | | **Required.** Relative-humidity sensor. Values in 0..1 or 0..100 are detected. |
-| `header` | string | | Card title. |
-| `days` | number | `7` | Days of history. The recorder keeps long-term statistics for a year by default. |
+| `humidity_entity` | string | | **Required.** Relative-humidity sensor in %. |
+| `title` | string | | Card title. |
+| `days_to_show` | number | `7` | Days of history, 1 to 3650. Home Assistant keeps the long-term statistics (daily means) indefinitely, so long periods work once the sensor has been recorded that long. |
 | `coloring` | string | `season` | `season`, `age` (older days fade) or `chronological` (days joined by a line). |
-| `altitude` | number | | Altitude in m above sea level. Sets the air pressure from the standard atmosphere and overrides `pressure`. |
-| `pressure` | number | `101325` | Air pressure in Pa. |
+| `altitude` | number | | Altitude in m above sea level (−500 to 9000). Sets the air pressure from the standard atmosphere and overrides `pressure`. |
+| `pressure` | number | `101325` | Air pressure in hPa (300–1100) or Pa (30000–110000). |
 | `convention` | string | `classical` | `classical` (per kg dry air, Recknagel) or `glueck` (per kg moist air). Same physics, slightly different tilt of the isotherms. |
-| `domain_x` | `[min, max]` | `[0, 18]` | Absolute-humidity axis in g/kg. |
-| `domain_y` | `[min, max]` | `[-10, 40]` | Temperature axis in °C. |
+| `x_range` | `[min, max]` | `[0, 18]` | Absolute-humidity axis in g/kg. |
+| `temperature_range` | `[min, max]` | `[-10, 40]` | Temperature axis in °C. Points outside the axes are cut off; the current room and outside points are shown as an arrow on the edge with their value. |
 | `comfort_zone` | object | | Comfort zone, see below. |
 | `warning_bands` | `true` or object | | Needs `comfort_zone`. `true` uses the defaults, see below. |
 | `outdoor_temperature_entity` | string | | Outside temperature sensor. With `outdoor_humidity_entity` it gives the current outside point. |
@@ -149,18 +153,18 @@ outdoor_weather_entity: weather.home   # fallback for the current outside point
 | `outdoor_weather_entity` | string | | A `weather.*` entity, used for the current outside point when the outside sensors are missing or unavailable. |
 | `outdoor_history` | boolean | `false` | Also show the outside daily means as a faint cloud. Needs the outside **sensors** with long-term statistics (a weather entity has none). |
 | `ventilation_line` | boolean | `true` | Dashed line from the current room point to the outside point, plus "ventilating dries / adds moisture" in the legend. |
-| `lines` | object | | Which iso-lines to draw: `temperature`, `relative_humidity`, `absolute_humidity` (on by default), `density`, `enthalpy` (off by default). |
+| `lines` | object | | Which iso-lines to draw: `temperature`, `humidity` (relative humidity), `absolute_humidity` (on by default), `density`, `enthalpy` (off by default). |
 
 #### `comfort_zone`
 
 ```yaml
 comfort_zone:
-  temperature: [20, 26]        # °C
+  temperature: [20, 26]        # °C (always °C, also with °F sensors)
   humidity: [30, 60]           # % relative humidity
-  absolute_humidity: [0, 12]   # g/kg
+  absolute_humidity: [0, 12]   # g/kg, optional
 ```
 
-All three ranges are required. The zone is where all three hold; use `absolute_humidity: [0, 1000]` to leave that limit open.
+`temperature` and `humidity` are required, `absolute_humidity` is optional: without it the zone has no absolute-humidity limit. The zone is where all given ranges hold. If the temperatures look like °F (maximum above 45), the card shows a hint.
 
 #### `warning_bands`
 
@@ -187,7 +191,7 @@ With an outside sensor pair (or a weather entity) the card adds the outside air 
 - **The ventilation line** runs from the current room point to the outside point. When you air the room, the room air moves along this line. The legend says what that does: if the outside point is to the **left** (less water per kg of air), **airing dries the room**, even if the outside air has 90 % relative humidity. If it is to the right, airing brings moisture in, typical for a cool cellar in summer.
 - **Outside daily means** (`outdoor_history: true`) show the season at a glance and how often airing would have helped.
 
-Hover or tap the outside point for its temperature, humidity, water content and dew point. See [The h,x diagram in five minutes](#the-hx-diagram-in-five-minutes) for the background.
+Hover or tap the outside point for its temperature, humidity, water content and dew point (tap again or tap the diagram to close; the daily points and the current room point work the same way). See [The h,x diagram in five minutes](#the-hx-diagram-in-five-minutes) for the background.
 
 ### Size in the dashboard
 

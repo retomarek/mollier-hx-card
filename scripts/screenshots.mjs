@@ -43,7 +43,7 @@ const CONFIG = {
     type: 'custom:mollier-hx-card',
     temperature_entity: 'sensor.living_room_temperature',
     humidity_entity: 'sensor.living_room_humidity',
-    days: 120,
+    days_to_show: 120,
     coloring: 'season',
     altitude: 450,
     comfort_zone: { temperature: [20, 26], humidity: [30, 60], absolute_humidity: [0, 12] },
@@ -54,7 +54,7 @@ const CONFIG = {
 
 function page(shot) {
     const c = THEMES[shot.theme];
-    const config = { ...CONFIG, header: shot.header };
+    const config = { ...CONFIG, title: shot.header };
     return `<!doctype html><html><head><meta charset="utf-8">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
 <style>
@@ -101,7 +101,7 @@ function page(shot) {
   const card = document.getElementById('card');
   card.setConfig(${JSON.stringify(config)});
   card.hass = {
-    language: '${shot.lang}', locale: { language: '${shot.lang}' },
+    language: '${shot.lang}', locale: { language: '${shot.lang}' }, config: { time_zone: 'Europe/Zurich' },
     states: { [T]: { state: '21.8' }, [H]: { state: '43' },
       'sensor.outside_temperature': { state: '6.8', attributes: { unit_of_measurement: '°C' } }, 'sensor.outside_humidity': { state: '89' } },
     callWS: async (m) => (m.statistic_ids[0] === T ? { [T]: tR, [H]: hR }

@@ -32,6 +32,12 @@ export default css`
         flex: 1 1 auto;
         min-height: 0;
     }
+    .messages {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
     .message {
         color: var(--secondary-text-color);
         margin: 0;

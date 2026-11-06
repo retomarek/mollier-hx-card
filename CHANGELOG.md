@@ -4,18 +4,40 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-beta.8] - 2026-11-06
+
 ### Added
 
 - Q&A discussions for questions and ideas (one short template); issues stay for bugs and features. README: "Questions and feedback".
+- A missing room or outside entity is named above the diagram ("Entity not found: ...").
+- Hint when the comfort zone looks like °F (temperatures above 45): the card expects °C.
+- Visual editor: switch for the absolute-humidity limit of the comfort zone.
+
+### Changed
+
+- Options renamed for 1.0; the old names keep working: `header` → `title`, `days` → `days_to_show`, `domain_x` → `x_range`, `domain_y` → `temperature_range`, `lines.relative_humidity` → `lines.humidity`. The new name wins if both are set; the visual editor writes the new names and removes the old ones.
+- `comfort_zone.absolute_humidity` is optional (no limit when left out); `temperature` and `humidity` are required.
+- Invalid settings give a clear error instead of being ignored: `coloring`, `convention`, an incomplete `comfort_zone`, `days_to_show` below 1, an `altitude` or `pressure` out of range.
+- `pressure` is accepted in hPa or Pa. `days_to_show` goes up to 3650 (also in the editor).
+- Humidity sensors are read as %; a value is only taken as a fraction 0..1 when the sensor has no unit and all values are ≤ 1.
+- The new-card picker suggests real temperature and humidity sensors with long-term statistics and no longer sets an altitude.
+- The visual editor no longer adds an absolute-humidity limit to a comfort zone that had none, and a cleared number field falls back to the previous value or the default instead of writing an empty value.
+
+### Fixed
+
+- Errors no longer hide the diagram: the diagram with the current room and outside points is always drawn, messages appear in a line above it.
+- A failed load is retried with a growing delay (30 s up to 10 min); a failed hourly refresh keeps the data already shown. Changing the sensors or the period clears the old points.
+- Days in the tooltip are shown in Home Assistant's time zone and date format (were UTC dates).
+- Comfort zone, bands, daily points and outside means are cut off at the axes instead of being drawn over them. A current room point outside the axes is shown as an arrow on the edge with its value, like the outside point.
+- Tooltips of the daily points and the current room point open on tap too; tap again or on the diagram to close, and they close by themselves after 5 s.
+- Captions and legend follow a language change without reloading the dashboard.
+- README: long-term statistics are kept indefinitely, not for a year.
 
 ## [1.0.0-beta.7] - 2026-11-06
 
 ### Added
 
 - Outside air (optional): current outside point from sensors or a weather entity, outside daily means (`outdoor_history`) and a ventilation line with "ventilating dries / adds moisture" in the legend. Points beyond the axes are shown as an arrow on the edge. Also in the visual editor, translated into all 14 languages.
-
-### Added
-
 - README: link to Wikipedia (Mollier diagram); the h,x diagram in five minutes, with the dew point and mould risk at cold surfaces and examples for ventilating in winter, heating less (comfort and energy) and airing a cellar in summer.
 
 ## [1.0.0-beta.6] - 2026-11-06
@@ -110,7 +132,8 @@ Replaces 1.0.0-beta.4, which was published by mistake from the wrong commit and 
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.7...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.8...HEAD
+[1.0.0-beta.8]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-beta.7...v1.0.0-beta.8
 [1.0.0-beta.7]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.7
 [1.0.0-beta.6]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.6
 [1.0.0-beta.5]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-beta.5
