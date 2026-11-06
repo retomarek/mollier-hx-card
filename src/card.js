@@ -4,7 +4,7 @@ import { drawHXCoordinates } from './d3_mollierhx/coordinateGenerator.js';
 import { createComfort } from './d3_mollierhx/drawComfort.js';
 import { createMollier } from './d3_mollierhx/mollierFunctions.js';
 import { parseWarningBands, bandRanges } from './bands.js';
-import { localize, getLanguage, DIAGRAM_CAPTIONS, RIGHT_CAPTION_KEYS } from './localize/localize.js';
+import { localize, getLanguage } from './localize/localize.js';
 import {
     fetchDailyMeans, stateCelsius, stateHumidity, missingEntities, pressureFromConfig, daysFromConfig,
     REFRESH_MS, RETRY_MS,
@@ -44,6 +44,9 @@ const LINE_OPTS = {
     density: 'showDensity',
     enthalpy: 'showEnthalpy',
 };
+// Caption keys of the vendored drawHXCoordinates (opts.captions); the texts
+// are the `diagram.*` translations. x_axis_title stays empty (upstream default).
+const CAPTION_KEYS = ['temperature', 'rel_humidity', 'density', 'enthalpy', 'x_axis'];
 export function parseLines(cfg) {
     const out = { ...LINE_DEFAULTS };
     if (cfg && typeof cfg === 'object') {
@@ -622,6 +625,9 @@ export class MollierHxCard extends LitElement {
         d3.select(host).selectAll('*').remove();
         const lineOpts = {};
         for (const [k, opt] of Object.entries(LINE_OPTS)) lineOpts[opt] = this._lines[k];
+        // Translated captions; the vendored generator lays them out for the
+        // diagram height (right-edge captions stacked, x caption in the margin).
+        lineOpts.captions = Object.fromEntries(CAPTION_KEYS.map((k) => [k, this._t(`diagram.${k}`)]));
         drawHXCoordinates(d3.select(host), WIDTH, HEIGHT, MARGIN, this._domainX, this._domainY, this._pressure, this._mollier, lineOpts);
         // The vendored coordinate generator emits width/height attributes only,
         // so when the SVG is scaled responsively (height: auto), browsers crop
@@ -630,18 +636,6 @@ export class MollierHxCard extends LitElement {
         d3.select(host).select('#hx_mollier_diagram')
             .attr('viewBox', `0 0 ${WIDTH} ${HEIGHT}`)
             .attr('preserveAspectRatio', 'xMidYMid meet');
-        // Translate the English captions the vendored generator draws.
-        const t = (key) => this._t(key);
-        const captions = [];
-        d3.select(host).selectAll('#hx_mollier_diagram text').each(function () {
-            const key = DIAGRAM_CAPTIONS[this.textContent];
-            if (key) {
-                this.textContent = t(key);
-                captions.push({ el: this, key });
-            }
-        });
-        this._layoutRightCaptions(captions);
-        this._placeXAxisCaption(captions);
         // Clip for the data layers: nothing may be drawn over the axes.
         d3.select(host).select('#hx_mollier_diagram')
             .append('defs')
@@ -653,55 +647,6 @@ export class MollierHxCard extends LitElement {
             .attr('height', HEIGHT - MARGIN.top - MARGIN.bottom);
         this._drawHash = hash;
         this._drawn = true;
-    }
-
-    // The vendored grid places the rotated right-edge captions (relative
-    // humidity, density, enthalpy) at fixed offsets made for a ~700 px tall
-    // chart; in the card's 420 px they run off the top. Stack the visible ones
-    // from the top of the axis down and size the font from the text length.
-    // Uses an estimated glyph width, so it works without layout (hidden
-    // cards, editor preview) and gives the same result every time.
-    _layoutRightCaptions(captions) {
-        const RIGHT = RIGHT_CAPTION_KEYS;
-        const right = captions
-            .filter((c) => RIGHT.includes(c.key))
-            .sort((a, b) => RIGHT.indexOf(a.key) - RIGHT.indexOf(b.key));
-        if (!right.length) return;
-        const axis = HEIGHT - MARGIN.top - MARGIN.bottom;
-        const seg = axis / right.length;
-        right.forEach(({ el }, i) => {
-            // Rotated frame: x runs along the axis, 0 = middle, positive = up.
-            // Each caption ends at the top of its segment, so the first one is
-            // flush with the top of the diagram.
-            const top = axis / 2 - seg * i;
-            let text = el.textContent || '';
-            const fit = (n) => (seg - 12) / (Math.max(n, 1) * 0.56);
-            // Below 8 px the text is unreadable: shorten it instead (long translations).
-            if (fit(text.length) < 8) {
-                const max = Math.max(4, Math.floor((seg - 12) / (8 * 0.56)) - 1);
-                text = `${text.slice(0, max).trimEnd()}…`;
-                el.textContent = text;
-            }
-            el.setAttribute('x', top.toFixed(1));
-            el.setAttribute('text-anchor', 'end');
-            el.setAttribute('font-size', Math.max(8, Math.min(12, fit(text.length))).toFixed(2));
-        });
-    }
-
-    // The vendored grid writes "x [g/kg]" at the right end of the x axis, on
-    // top of the last tick numbers. Move it into the right margin, beside the
-    // end of the axis, and drop the white box behind it.
-    _placeXAxisCaption(captions) {
-        const cap = captions.find((c) => c.key === 'diagram.x_axis');
-        if (!cap) return;
-        const innerW = WIDTH - MARGIN.left - MARGIN.right;
-        const box = cap.el.previousElementSibling;
-        if (box && box.tagName.toLowerCase() === 'rect') box.remove();
-        const len = (cap.el.textContent || '').length;
-        const room = MARGIN.right - 14;
-        cap.el.setAttribute('x', (innerW + 12).toFixed(1));
-        cap.el.setAttribute('text-anchor', 'start');
-        cap.el.setAttribute('font-size', Math.min(11, room / (Math.max(len, 1) * 0.56)).toFixed(2));
     }
 
     // Diagram helpers shared by the data layers.
