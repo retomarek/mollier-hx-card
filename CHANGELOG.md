@@ -4,6 +4,13 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-rc.5] - 2026-11-06
+
+### Changed
+
+- Diagram code updated to pyedautils f9ba0da (= d3-mollierhx v0.2.0). The diagram looks the same: the caption layout (captions fitted to the height, x caption beside the end of the axis) and the room and outside points with their edge arrows, which the card used to adjust itself, are now part of the diagram code. With density and enthalpy lines switched on, the three right-edge captions share one font size.
+- A value next to an edge arrow near a corner of the diagram stays inside the axes.
+
 ## [1.0.0-rc.4] - 2026-11-06
 
 ### Added
@@ -168,7 +175,8 @@ Replaces 1.0.0-beta.4, which was published by mistake from the wrong commit and 
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.4...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.5...HEAD
+[1.0.0-rc.5]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.5
 [1.0.0-rc.4]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.4
 [1.0.0-rc.3]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.3
 [1.0.0-rc.2]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.2

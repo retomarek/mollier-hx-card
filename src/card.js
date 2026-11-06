@@ -1,10 +1,13 @@
 import { html, LitElement, nothing } from 'lit';
 import * as d3 from './d3_mollierhx/d3.js';
 import { drawHXCoordinates } from './d3_mollierhx/coordinateGenerator.js';
-import { createComfort } from './d3_mollierhx/drawComfort.js';
+import {
+    createComfort, hxAddClipPath, hxClampPoint, hxDrawStatePoint, hxDrawOutdoor, hxVentilationEffect,
+    HX_OUTDOOR_COLOR, HX_ROOM_COLOR,
+} from './d3_mollierhx/drawComfort.js';
 import { createMollier } from './d3_mollierhx/mollierFunctions.js';
 import { parseWarningBands, bandRanges } from './bands.js';
-import { localize, getLanguage, DIAGRAM_CAPTIONS, RIGHT_CAPTION_KEYS } from './localize/localize.js';
+import { localize, getLanguage } from './localize/localize.js';
 import {
     fetchDailyMeans, stateCelsius, stateHumidity, missingEntities, pressureFromConfig, daysFromConfig,
     REFRESH_MS, RETRY_MS,
@@ -44,6 +47,9 @@ const LINE_OPTS = {
     density: 'showDensity',
     enthalpy: 'showEnthalpy',
 };
+// Caption keys of the vendored drawHXCoordinates (opts.captions); the texts
+// are the `diagram.*` translations. x_axis_title stays empty (upstream default).
+const CAPTION_KEYS = ['temperature', 'rel_humidity', 'density', 'enthalpy', 'x_axis'];
 export function parseLines(cfg) {
     const out = { ...LINE_DEFAULTS };
     if (cfg && typeof cfg === 'object') {
@@ -63,13 +69,13 @@ function enumOption(config, name, allowed, fallback) {
     return v;
 }
 
-const OUTDOOR_COLOR = '#2563eb';
+const OUTDOOR_COLOR = HX_OUTDOOR_COLOR;
 // Touch targets on screen (diameter in px): 44 px for the live room and outside
 // points (Apple / Google guideline), 24 px for the daily points, which can be
 // hundreds and would otherwise cover each other.
 const POINT_TARGET_PX = 44;
 const DAY_TARGET_PX = 24;
-const ROOM_COLOR = 'black';
+const ROOM_COLOR = HX_ROOM_COLOR;
 
 const MARGIN = { top: 30, right: 60, bottom: 40, left: 50 };
 const WIDTH = 600;
@@ -622,6 +628,9 @@ export class MollierHxCard extends LitElement {
         d3.select(host).selectAll('*').remove();
         const lineOpts = {};
         for (const [k, opt] of Object.entries(LINE_OPTS)) lineOpts[opt] = this._lines[k];
+        // Translated captions; the vendored generator lays them out for the
+        // diagram height (right-edge captions stacked, x caption in the margin).
+        lineOpts.captions = Object.fromEntries(CAPTION_KEYS.map((k) => [k, this._t(`diagram.${k}`)]));
         drawHXCoordinates(d3.select(host), WIDTH, HEIGHT, MARGIN, this._domainX, this._domainY, this._pressure, this._mollier, lineOpts);
         // The vendored coordinate generator emits width/height attributes only,
         // so when the SVG is scaled responsively (height: auto), browsers crop
@@ -630,78 +639,11 @@ export class MollierHxCard extends LitElement {
         d3.select(host).select('#hx_mollier_diagram')
             .attr('viewBox', `0 0 ${WIDTH} ${HEIGHT}`)
             .attr('preserveAspectRatio', 'xMidYMid meet');
-        // Translate the English captions the vendored generator draws.
-        const t = (key) => this._t(key);
-        const captions = [];
-        d3.select(host).selectAll('#hx_mollier_diagram text').each(function () {
-            const key = DIAGRAM_CAPTIONS[this.textContent];
-            if (key) {
-                this.textContent = t(key);
-                captions.push({ el: this, key });
-            }
-        });
-        this._layoutRightCaptions(captions);
-        this._placeXAxisCaption(captions);
         // Clip for the data layers: nothing may be drawn over the axes.
-        d3.select(host).select('#hx_mollier_diagram')
-            .append('defs')
-            .append('clipPath')
-            .attr('id', this._clipId)
-            .append('rect')
-            .attr('x', 0).attr('y', 0)
-            .attr('width', WIDTH - MARGIN.left - MARGIN.right)
-            .attr('height', HEIGHT - MARGIN.top - MARGIN.bottom);
+        this._clipUrl = hxAddClipPath(d3.select(host).select('#hx_mollier_diagram'), this._clipId,
+            WIDTH - MARGIN.left - MARGIN.right, HEIGHT - MARGIN.top - MARGIN.bottom);
         this._drawHash = hash;
         this._drawn = true;
-    }
-
-    // The vendored grid places the rotated right-edge captions (relative
-    // humidity, density, enthalpy) at fixed offsets made for a ~700 px tall
-    // chart; in the card's 420 px they run off the top. Stack the visible ones
-    // from the top of the axis down and size the font from the text length.
-    // Uses an estimated glyph width, so it works without layout (hidden
-    // cards, editor preview) and gives the same result every time.
-    _layoutRightCaptions(captions) {
-        const RIGHT = RIGHT_CAPTION_KEYS;
-        const right = captions
-            .filter((c) => RIGHT.includes(c.key))
-            .sort((a, b) => RIGHT.indexOf(a.key) - RIGHT.indexOf(b.key));
-        if (!right.length) return;
-        const axis = HEIGHT - MARGIN.top - MARGIN.bottom;
-        const seg = axis / right.length;
-        right.forEach(({ el }, i) => {
-            // Rotated frame: x runs along the axis, 0 = middle, positive = up.
-            // Each caption ends at the top of its segment, so the first one is
-            // flush with the top of the diagram.
-            const top = axis / 2 - seg * i;
-            let text = el.textContent || '';
-            const fit = (n) => (seg - 12) / (Math.max(n, 1) * 0.56);
-            // Below 8 px the text is unreadable: shorten it instead (long translations).
-            if (fit(text.length) < 8) {
-                const max = Math.max(4, Math.floor((seg - 12) / (8 * 0.56)) - 1);
-                text = `${text.slice(0, max).trimEnd()}…`;
-                el.textContent = text;
-            }
-            el.setAttribute('x', top.toFixed(1));
-            el.setAttribute('text-anchor', 'end');
-            el.setAttribute('font-size', Math.max(8, Math.min(12, fit(text.length))).toFixed(2));
-        });
-    }
-
-    // The vendored grid writes "x [g/kg]" at the right end of the x axis, on
-    // top of the last tick numbers. Move it into the right margin, beside the
-    // end of the axis, and drop the white box behind it.
-    _placeXAxisCaption(captions) {
-        const cap = captions.find((c) => c.key === 'diagram.x_axis');
-        if (!cap) return;
-        const innerW = WIDTH - MARGIN.left - MARGIN.right;
-        const box = cap.el.previousElementSibling;
-        if (box && box.tagName.toLowerCase() === 'rect') box.remove();
-        const len = (cap.el.textContent || '').length;
-        const room = MARGIN.right - 14;
-        cap.el.setAttribute('x', (innerW + 12).toFixed(1));
-        cap.el.setAttribute('text-anchor', 'start');
-        cap.el.setAttribute('font-size', Math.min(11, room / (Math.max(len, 1) * 0.56)).toFixed(2));
     }
 
     // Diagram helpers shared by the data layers.
@@ -713,11 +655,13 @@ export class MollierHxCard extends LitElement {
         if (svg.empty()) return null;
         const innerW = WIDTH - MARGIN.left - MARGIN.right;
         const innerH = HEIGHT - MARGIN.top - MARGIN.bottom;
+        const xs = d3.scaleLinear().range([0, innerW]).domain(this._domainX);
+        const ys = d3.scaleLinear().range([innerH, 0]).domain(this._domainY);
         return {
-            svg, wrap, innerW, innerH,
+            svg, wrap, innerW, innerH, xs, ys,
             tooltip: wrap.querySelector('.tooltip'),
-            xs: d3.scaleLinear().range([0, innerW]).domain(this._domainX),
-            ys: d3.scaleLinear().range([innerH, 0]).domain(this._domainY),
+            // Context of the vendored overlay helpers (hxDrawStatePoint, ...).
+            ctx: { x: xs, y: ys, width: innerW, height: innerH, mollier: this._mollier, pressure: this._pressure },
         };
     }
 
@@ -727,39 +671,8 @@ export class MollierHxCard extends LitElement {
         const g = P.svg.append('g')
             .attr('id', id)
             .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
-        if (clip) g.attr('clip-path', `url(#${this._clipId})`);
+        if (clip) g.attr('clip-path', this._clipUrl);
         return g;
-    }
-
-    // Plot position of a point, clamped to the axes (`outside` when it was moved).
-    _clamp(P, p) {
-        const rawX = P.xs(p.x), rawY = P.ys(p.y);
-        const cx = Math.min(P.innerW, Math.max(0, rawX));
-        const cy = Math.min(P.innerH, Math.max(0, rawY));
-        return { rawX, rawY, cx, cy, outside: cx !== rawX || cy !== rawY };
-    }
-
-    // Arrow on the edge of the plot pointing to where an off-axis point really
-    // is, with its value next to it. Returns the arrow (for the tooltip).
-    _edgeArrow(layer, P, pos, color, label) {
-        const { rawX, rawY, cx, cy } = pos;
-        const ang = Math.atan2(rawY - cy, rawX - cx);
-        const s = 7;
-        const pts = [[s, 0], [-s * 0.6, -s * 0.75], [-s * 0.6, s * 0.75]]
-            .map(([px, py]) => [cx - Math.cos(ang) * s + px * Math.cos(ang) - py * Math.sin(ang),
-                                cy - Math.sin(ang) * s + px * Math.sin(ang) + py * Math.cos(ang)]);
-        const marker = layer.append('polygon')
-            .attr('points', pts.map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' '))
-            .attr('fill', color).attr('stroke', 'white').attr('stroke-width', 1);
-        const below = rawY > P.innerH, above = rawY < 0;
-        layer.append('text')
-            .attr('x', Math.min(P.innerW - 2, Math.max(2, cx + (rawX > P.innerW ? -10 : rawX < 0 ? 10 : 0))))
-            .attr('y', below ? cy - 12 : above ? cy + 20 : cy + 4)
-            .attr('text-anchor', rawX > P.innerW ? 'end' : rawX < 0 ? 'start' : 'middle')
-            .attr('font-size', 11).attr('font-weight', 600)
-            .attr('fill', color).attr('stroke', 'white').attr('stroke-width', 3).attr('paint-order', 'stroke')
-            .text(label);
-        return marker;
     }
 
     // Tooltips: hover shows, mouse-out hides. A click / tap pins the tooltip
@@ -973,14 +886,10 @@ export class MollierHxCard extends LitElement {
         return this._mollier.temperature_p_sat(phi * this._mollier.p_sat(t));
     }
 
-    // 'dries' / 'humidifies' / 'neutral': does airing move the room point left or right?
+    // 'dries' / 'humidifies' / 'neutral' (more than 0.3 g/kg apart), null
+    // without both points: does airing move the room point left or right?
     _ventilationEffect() {
-        const o = this._outdoorPoint, r = this._currentPoint;
-        if (!o || !r) return null;
-        const dx = (o.x - r.x) * 1000;               // g/kg
-        if (dx < -0.3) return 'dries';
-        if (dx > 0.3) return 'humidifies';
-        return 'neutral';
+        return hxVentilationEffect(this._currentPoint, this._outdoorPoint);
     }
 
     // Outside daily means: a faint second cloud below the room points.
@@ -1003,8 +912,9 @@ export class MollierHxCard extends LitElement {
     }
 
     // Live outside point (hollow blue circle) and the ventilation line from the
-    // room point to it. Outside the visible range the marker sits on the edge
-    // with an arrow and the value, instead of changing the axes.
+    // room point to it (vendored hxDrawOutdoor). Outside the visible range the
+    // marker sits on the edge with an arrow and the value, instead of changing
+    // the axes. The ventilation note is in the legend, not in the diagram.
     _drawOutdoor() {
         const P = this._plot();
         if (!P) return;
@@ -1012,25 +922,12 @@ export class MollierHxCard extends LitElement {
         const o = this._outdoorPoint;
         if (!o) return;
         const layer = this._layer(P, 'outdoor', false);
-        const pos = this._clamp(P, o);
-
         const r = this._currentPoint;
-        if (this._ventLine && r) {
-            const rp = this._clamp(P, r);
-            layer.append('line')
-                .attr('x1', rp.cx).attr('y1', rp.cy)
-                .attr('x2', pos.cx).attr('y2', pos.cy)
-                .attr('stroke', OUTDOOR_COLOR).attr('stroke-width', 1.6)
-                .attr('stroke-dasharray', '4,3').attr('stroke-linecap', 'round');
-        }
-
-        const marker = pos.outside
-            ? this._edgeArrow(layer, P, pos, OUTDOOR_COLOR, `${o.t.toFixed(1)} °C · ${(o.phi * 100).toFixed(0)} %`)
-            : layer.append('circle')
-                .attr('cx', pos.cx).attr('cy', pos.cy).attr('r', 6)
-                .attr('fill', 'white').attr('fill-opacity', 0.85)
-                .attr('stroke', OUTDOOR_COLOR).attr('stroke-width', 2.5);
-
+        const res = hxDrawOutdoor(layer, P.ctx, { t: o.t, phi: o.phi }, r ? { t: r.t, phi: r.phi } : null, {
+            color: OUTDOOR_COLOR, ventilationLine: this._ventLine, note: false,
+        });
+        if (!res.marker) return;
+        const pos = hxClampPoint(P.ctx, res.outdoor);
         const outHit = this._hitArea(layer, P, pos.cx, pos.cy, POINT_TARGET_PX);
         this._bindTooltip(P, outHit, () => {
             const eff = this._ventilationEffect();
@@ -1042,11 +939,11 @@ export class MollierHxCard extends LitElement {
                 background: OUTDOOR_COLOR,
                 color: 'white',
             };
-        }, { anchor: marker.node() });
+        }, { anchor: res.marker.node() });
     }
 
-    // Live room point (black). Outside the axes it is drawn as an arrow on
-    // the edge with its value, like the outside point.
+    // Live room point (black, vendored hxDrawStatePoint). Outside the axes it
+    // is drawn as an arrow on the edge with its value, like the outside point.
     _drawCurrentPoint() {
         const P = this._plot();
         if (!P) return;
@@ -1056,17 +953,10 @@ export class MollierHxCard extends LitElement {
         const c = this._currentPoint;
         if (!c) return;
         const layer = this._layer(P, 'current-point', false);
-        const pos = this._clamp(P, c);
-        const marker = pos.outside
-            ? this._edgeArrow(layer, P, pos, ROOM_COLOR, `${c.t.toFixed(1)} °C · ${(c.phi * 100).toFixed(0)} %`)
-            : layer.append('circle')
-                .attr('cx', pos.cx)
-                .attr('cy', pos.cy)
-                .attr('r', 6)
-                .attr('fill', ROOM_COLOR)
-                .attr('stroke', 'white')
-                .attr('stroke-width', 1.5);
-        const node = marker.node();
+        const pt = hxDrawStatePoint(layer, P.ctx, { t: c.t, phi: c.phi }, { color: ROOM_COLOR });
+        if (!pt) return;
+        const { pos } = pt;
+        const node = pt.marker.node();
         const hit = this._hitArea(layer, P, pos.cx, pos.cy, POINT_TARGET_PX);
         this._bindTooltip(P, hit, () => ({
             html: `${this._t('card.now')}<br>x: ${(c.x * 1000).toFixed(2)} g/kg`

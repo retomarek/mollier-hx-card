@@ -43,16 +43,3 @@ export function localize(hass, key, vars) {
     if (vars) value = value.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? String(vars[k]) : m));
     return value;
 }
-
-// Caption texts the vendored coordinateGenerator.js draws in English. The card
-// swaps them after drawing so the vendored code stays verbatim.
-export const DIAGRAM_CAPTIONS = {
-    'x [g/kg]': 'diagram.x_axis',
-    'Temperature ϑ [°C]': 'diagram.temperature',
-    'rel. humidity φ [%]': 'diagram.rel_humidity',
-    'Density ρ [kg/m³]': 'diagram.density',
-    'Enthalpy [kJ/kg]': 'diagram.enthalpy',
-};
-
-// Right-edge captions, top to bottom, re-laid out by the card.
-export const RIGHT_CAPTION_KEYS = ['diagram.rel_humidity', 'diagram.density', 'diagram.enthalpy'];
