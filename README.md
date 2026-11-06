@@ -30,7 +30,7 @@ Plot your room climate where it belongs: on a Mollier h,x diagram. The card read
 
 Comfort, health and the risk of mould always depend on temperature **and** humidity at the same time. Looking at one of them alone, or at two separate graphs, can easily mislead:
 
-- **Relative humidity changes with temperature.** Air at 21 °C and 60 % holds about 9.3 g of water per kg. Warm the same air to 26 °C and it reads only 44 %; cool it at a 15 °C outer wall and it reaches about 87 %, enough for mould. The amount of water did not change at all.
+- **Relative humidity changes with temperature.** Air at 21 °C and 60 % holds about 9.8 g of water per kg (at 450 m a.s.l.). Warm the same air to 26 °C and it reads only 44 %; cool it at a 15 °C outer wall and it reaches about 87 %, enough for mould. The amount of water did not change at all.
 - **The same reading means different things.** 23 °C feels pleasant at 45 %, but sticky at 70 %.
 
 The h,x diagram shows both in one point: its position gives temperature, relative and absolute humidity at once, and how far each day was from the comfort zone.
@@ -213,11 +213,18 @@ To add a new language, copy [`en.json`](src/localize/languages/en.json) to `<lan
 
 The diagram math and D3 drawing code come from [pyedautils](https://github.com/retomarek/pyedautils) (`data/d3_mollierhx`), so the card draws the same diagram as `pyedautils.plots.plot_mollier_hx()`. Daily means come from Home Assistant's `recorder/statistics_during_period` WebSocket API.
 
+## Related projects
+
+- [d3-mollierhx](https://github.com/hslu-ige-laes/d3-mollierhx): the interactive Mollier h,x diagram for the browser, built on D3.js ([live demo](https://hslu-ige-laes.github.io/d3-mollierhx/)).
+- [pyedautils](https://github.com/retomarek/pyedautils): Python Energy Data Analysis Utilities, with the h,x diagram (`plot_mollier_hx`), the comfort compass (`plot_comfort_compass`) and [guides on reading them](https://retomarek.github.io/pyedautils/guides/) (`pip install pyedautils`).
+- [Comfort Compass Card](https://github.com/retomarek/comfort-compass-card): the comfort compass as a Home Assistant dashboard card: how many days were too warm, too humid, too dry or too cold.
+
 ## Questions and feedback
 
 - **Questions or ideas?** Ask in [Q&A](https://github.com/retomarek/mollier-hx-card/discussions/categories/q-a).
 - **Found a bug or want a feature?** Open an [issue](https://github.com/retomarek/mollier-hx-card/issues/new/choose).
 - **Translation wrong?** See [Translations](#translations): a small pull request is the quickest fix.
+- **Find it useful?** A ⭐ on GitHub helps others find it.
 
 ## Credits
 
