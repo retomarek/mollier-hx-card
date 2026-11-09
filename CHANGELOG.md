@@ -4,6 +4,10 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Added
+
+- The legend lists the live room point ("Now", black dot) whenever it is shown; hover shows its temperature, humidity and absolute humidity.
+
 ### Changed
 
 - Diagram code updated to pyedautils 0.0.34 (= d3-mollierhx v0.2.1). Nothing changes in the card: the update only adds the label placement for frequency contour lines, which the card does not draw.

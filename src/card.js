@@ -460,13 +460,15 @@ export class MollierHxCard extends LitElement {
         const cz = this._comfortZone;
         const b = cz ? this._warningBands : null;
         const o = this._outdoorPoint;
-        if (!cz && !o) return nothing;
+        const c = this._currentPoint;
+        if (!cz && !o && !c) return nothing;
         const r = (v) => Math.round(v * 10) / 10;
         const zone = cz ? `${r(cz.range_t[0])}–${r(cz.range_t[1])} °C · ${r(cz.range_phi[0] * 100)}–${r(cz.range_phi[1] * 100)} %`
             + (cz.hasX ? ` · ${r(cz.range_x[0] * 1000)}–${r(cz.range_x[1] * 1000)} g/kg` : '') : '';
         const fmt = (k) => `±${k.dt} K · ±${k.dphi} %` + (cz.hasX ? ` · ±${k.dx} g/kg` : '');
         const eff = this._ventilationEffect();
         const outTitle = o ? `${o.t.toFixed(1)} °C · ${(o.phi * 100).toFixed(0)} % · ${(o.x * 1000).toFixed(1)} g/kg` : '';
+        const nowTitle = c ? `${c.t.toFixed(1)} °C · ${(c.phi * 100).toFixed(0)} % · ${(c.x * 1000).toFixed(1)} g/kg` : '';
         return html`
             <div class="zone-legend">
                 ${cz ? html`<span title=${zone}><i class="swatch fill"></i>${this._t('card.comfort_zone')}</span>` : nothing}
@@ -474,6 +476,7 @@ export class MollierHxCard extends LitElement {
                     <span title=${fmt(b[k])}>
                         <i class="swatch dash" style="border-color:${b[k].color}"></i>${b[k].label || this._t(k === 'orange' ? 'card.warning_band' : 'card.alarm_band')}
                     </span>`) : nothing}
+                ${c ? html`<span title=${nowTitle}><i class="swatch now" style="background:${ROOM_COLOR}"></i>${this._t('card.now')}</span>` : nothing}
                 ${o ? html`<span title=${outTitle}><i class="swatch outdoor"></i>${this._t('card.outdoor')}${eff && this._ventLine && this._currentPoint
                     ? html`<span class="effect ${eff}">· ${this._t(`card.ventilation_${eff}`)}</span>` : nothing}</span>` : nothing}
             </div>

@@ -199,6 +199,13 @@ export default css`
         background: rgba(154, 205, 50, 0.4);
         border: 1px solid yellowgreen;
     }
+    .swatch.now {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        border: 1.5px solid var(--sheet-bg);
+        box-shadow: 0 0 0 1px var(--sheet-muted);
+    }
     .swatch.outdoor {
         width: 11px;
         height: 11px;
