@@ -64,7 +64,8 @@
       "outdoor_humidity_entity": "Capteur d'humidité extérieure",
       "outdoor_weather_entity": "Météo (secours)",
       "outdoor_history": "Moyennes journalières extérieures",
-      "ventilation_line": "Ligne d'aération"
+      "ventilation_line": "Ligne d'aération",
+      "show_legend": "Afficher la légende"
     },
     "options": {
       "season": "Par saison",

@@ -40,6 +40,7 @@ const OUTDOOR = { outdoor_temperature_entity: 'sensor.ot', outdoor_humidity_enti
 // states (null = entity does not exist).
 const CASES = [
     { name: 'dark-en', theme: 'dark', lang: 'en', width: 500, layout: 'grid' },
+    { name: 'no-legend', theme: 'light', lang: 'de', width: 500, layout: 'grid', config: { show_legend: false } },
     { name: 'light-de', theme: 'light', lang: 'de', width: 500, layout: 'grid' },
     { name: 'narrow-390-masonry', theme: 'dark', lang: 'en', width: 390, layout: null },
     { name: 'full-width-1400', theme: 'dark', lang: 'en', width: 1400, layout: 'grid' },

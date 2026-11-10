@@ -66,6 +66,7 @@ function configToData(config) {
         outdoor_weather_entity: c.outdoor_weather_entity ?? '',
         outdoor_history: c.outdoor_history === true,
         ventilation_line: c.ventilation_line !== false,
+        show_legend: c.show_legend !== false,
         bands_enabled: !!c.warning_bands,
         orange_dt: c.warning_bands?.orange?.temperature ?? DEFAULTS.orange_dt,
         orange_dphi: c.warning_bands?.orange?.humidity ?? DEFAULTS.orange_dphi,
@@ -84,6 +85,7 @@ const OWNED_KEYS = [
     'type', 'temperature_entity', 'humidity_entity', 'title', 'days_to_show', 'coloring', 'convention',
     'x_range', 'temperature_range', 'lines', 'altitude', 'pressure', 'comfort_zone', 'warning_bands',
     'outdoor_temperature_entity', 'outdoor_humidity_entity', 'outdoor_weather_entity', 'outdoor_history', 'ventilation_line',
+    'show_legend',
 ];
 
 // A cleared number field (undefined / null / '') falls back to the previous
@@ -132,6 +134,7 @@ function dataToConfig(data, previous = {}) {
     const hasOutdoor = data.outdoor_temperature_entity || data.outdoor_weather_entity;
     if (hasOutdoor && data.outdoor_history) config.outdoor_history = true;
     if (hasOutdoor && data.ventilation_line === false) config.ventilation_line = false;
+    if (data.show_legend === false) config.show_legend = false;
     // Persist either pressure or altitude, never both. Do not write the default
     // pressure unless it was set before, so opening the editor changes nothing.
     if (data.air_mode === 'altitude') {
@@ -291,7 +294,10 @@ function buildSchema(data, t) {
             schema: [
                 {
                     type: 'grid',
-                    schema: LINE_KEYS.map((k) => ({ name: `line_${k}`, selector: { boolean: {} } })),
+                    schema: [
+                        ...LINE_KEYS.map((k) => ({ name: `line_${k}`, selector: { boolean: {} } })),
+                        { name: 'show_legend', selector: { boolean: {} } },
+                    ],
                 },
             ],
         },

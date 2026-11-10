@@ -64,7 +64,8 @@
       "outdoor_humidity_entity": "Senzor venkovní vlhkosti",
       "outdoor_weather_entity": "Počasí (záloha)",
       "outdoor_history": "Denní průměry venku",
-      "ventilation_line": "Čára větrání"
+      "ventilation_line": "Čára větrání",
+      "show_legend": "Zobrazit legendu"
     },
     "options": {
       "season": "Podle ročního období",

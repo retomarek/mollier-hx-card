@@ -64,7 +64,8 @@
       "outdoor_humidity_entity": "Aussenfeuchte-Sensor",
       "outdoor_weather_entity": "Wetter (Ersatz)",
       "outdoor_history": "Tagesmittel aussen",
-      "ventilation_line": "Lüftungslinie"
+      "ventilation_line": "Lüftungslinie",
+      "show_legend": "Legende anzeigen"
     },
     "options": {
       "season": "Nach Jahreszeit",

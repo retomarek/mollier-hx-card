@@ -109,6 +109,7 @@ Units: all temperatures in the card config (comfort zone, `temperature_range`) a
 | `outdoor_weather_entity` | string | | A `weather.*` entity, used for the current outside point when the outside sensors are missing or unavailable. |
 | `outdoor_history` | boolean | `false` | Also show the outside daily means as a faint cloud. Needs the outside **sensors** with long-term statistics (a weather entity has none). |
 | `ventilation_line` | boolean | `true` | Dashed line from the current room point to the outside point, plus "ventilating dries / adds moisture" in the legend. |
+| `show_legend` | boolean | `true` | The line below the diagram with comfort zone, warning bands, "Now" and outside air (hover shows the values). `false` hides it; the diagram keeps everything. The ventilation note then only appears in the outside point's tooltip; custom band labels and the zone and band limits are only shown in the legend. |
 | `lines` | object | | Which iso-lines to draw: `temperature`, `humidity` (relative humidity), `absolute_humidity` (on by default), `density`, `enthalpy` (off by default). |
 
 #### `comfort_zone`

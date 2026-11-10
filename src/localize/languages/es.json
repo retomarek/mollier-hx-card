@@ -64,7 +64,8 @@
       "outdoor_humidity_entity": "Sensor de humedad exterior",
       "outdoor_weather_entity": "Tiempo (alternativa)",
       "outdoor_history": "Medias diarias exteriores",
-      "ventilation_line": "Línea de ventilación"
+      "ventilation_line": "Línea de ventilación",
+      "show_legend": "Mostrar leyenda"
     },
     "options": {
       "season": "Por estación",

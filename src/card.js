@@ -228,6 +228,7 @@ export class MollierHxCard extends LitElement {
         this._outW = config.outdoor_weather_entity || null;
         this._outHistory = config.outdoor_history === true;
         this._ventLine = config.ventilation_line !== false;
+        this._showLegend = config.show_legend !== false;
         if (this._hass) {
             this._updateMissing();
             this._maybeFetch();
@@ -461,7 +462,7 @@ export class MollierHxCard extends LitElement {
         const b = cz ? this._warningBands : null;
         const o = this._outdoorPoint;
         const c = this._currentPoint;
-        if (!cz && !o && !c) return nothing;
+        if (!this._showLegend || (!cz && !o && !c)) return nothing;
         const r = (v) => Math.round(v * 10) / 10;
         const zone = cz ? `${r(cz.range_t[0])}–${r(cz.range_t[1])} °C · ${r(cz.range_phi[0] * 100)}–${r(cz.range_phi[1] * 100)} %`
             + (cz.hasX ? ` · ${r(cz.range_x[0] * 1000)}–${r(cz.range_x[1] * 1000)} g/kg` : '') : '';

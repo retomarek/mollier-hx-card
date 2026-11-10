@@ -7,6 +7,7 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 ### Added
 
 - The legend lists the live room point ("Now", black dot) whenever it is shown; hover shows its temperature, humidity and absolute humidity.
+- `show_legend` (default on): `false` hides the legend below the diagram. Editor switch under Lines.
 
 ### Changed
 

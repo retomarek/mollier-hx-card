@@ -64,7 +64,8 @@
       "outdoor_humidity_entity": "Czujnik wilgotności zewnętrznej",
       "outdoor_weather_entity": "Pogoda (zapas)",
       "outdoor_history": "Średnie dobowe na zewnątrz",
-      "ventilation_line": "Linia wietrzenia"
+      "ventilation_line": "Linia wietrzenia",
+      "show_legend": "Pokaż legendę"
     },
     "options": {
       "season": "Według pory roku",

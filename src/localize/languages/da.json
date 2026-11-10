@@ -64,7 +64,8 @@
       "outdoor_humidity_entity": "Udefugtsensor",
       "outdoor_weather_entity": "Vejr (reserve)",
       "outdoor_history": "Døgnmiddel ude",
-      "ventilation_line": "Udluftningslinje"
+      "ventilation_line": "Udluftningslinje",
+      "show_legend": "Vis forklaring"
     },
     "options": {
       "season": "Efter årstid",

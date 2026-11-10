@@ -64,7 +64,8 @@
       "outdoor_humidity_entity": "Buitenvochtigheidssensor",
       "outdoor_weather_entity": "Weer (reserve)",
       "outdoor_history": "Daggemiddelden buiten",
-      "ventilation_line": "Ventilatielijn"
+      "ventilation_line": "Ventilatielijn",
+      "show_legend": "Legenda tonen"
     },
     "options": {
       "season": "Per seizoen",

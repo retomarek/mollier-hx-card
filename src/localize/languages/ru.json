@@ -64,7 +64,8 @@
       "outdoor_humidity_entity": "Датчик наружной влажности",
       "outdoor_weather_entity": "Погода (резерв)",
       "outdoor_history": "Среднесуточные снаружи",
-      "ventilation_line": "Линия проветривания"
+      "ventilation_line": "Линия проветривания",
+      "show_legend": "Показывать легенду"
     },
     "options": {
       "season": "По сезону",

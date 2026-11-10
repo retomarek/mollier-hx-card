@@ -64,7 +64,8 @@
       "outdoor_humidity_entity": "Sensore umidità esterna",
       "outdoor_weather_entity": "Meteo (riserva)",
       "outdoor_history": "Medie giornaliere esterne",
-      "ventilation_line": "Linea di ventilazione"
+      "ventilation_line": "Linea di ventilazione",
+      "show_legend": "Mostra legenda"
     },
     "options": {
       "season": "Per stagione",

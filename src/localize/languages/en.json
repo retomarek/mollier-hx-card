@@ -64,7 +64,8 @@
       "outdoor_humidity_entity": "Outside humidity sensor",
       "outdoor_weather_entity": "Weather (fallback)",
       "outdoor_history": "Outside daily means",
-      "ventilation_line": "Ventilation line"
+      "ventilation_line": "Ventilation line",
+      "show_legend": "Show legend"
     },
     "options": {
       "season": "By season",
