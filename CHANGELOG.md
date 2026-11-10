@@ -4,6 +4,8 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-rc.6] - 2026-11-10
+
 ### Added
 
 - The legend lists the live room point ("Now", black dot) whenever it is shown; hover shows its temperature, humidity and absolute humidity.
@@ -184,7 +186,8 @@ Replaces 1.0.0-beta.4, which was published by mistake from the wrong commit and 
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.5...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.6...HEAD
+[1.0.0-rc.6]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.6
 [1.0.0-rc.5]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.5
 [1.0.0-rc.4]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.4
 [1.0.0-rc.3]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.3
