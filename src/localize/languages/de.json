@@ -1,7 +1,7 @@
 {
   "card": {
     "no_statistics": "Keine Tagesstatistiken vorhanden. Prüfe, ob beide Sensoren state_class: measurement haben.",
-    "fetch_failed": "Verlauf konnte nicht geladen werden: {error}",
+    "fetch_failed": "Verlauf konnte nicht geladen werden: {error}. Neuer Versuch in {s} s.",
     "entity_not_found": "Entität nicht gefunden: {entities}",
     "fahrenheit_hint": "Die Komfortzone sieht nach °F aus. Gib die Temperaturen bitte in °C ein.",
     "now": "Jetzt",
@@ -14,7 +14,9 @@
     "ventilation_neutral": "Lüften: keine Änderung",
     "zoom_reset": "Zoom zurücksetzen",
     "zoom_in": "Vergrössern",
-    "zoom_out": "Verkleinern"
+    "zoom_out": "Verkleinern",
+    "fetch_timeout": "Home Assistant hat nicht rechtzeitig geantwortet (ausgelastet, z. B. kurz nach einem Neustart)",
+    "loading_slow": "Verlauf wird geladen … Home Assistant antwortet gerade langsam."
   },
   "diagram": {
     "x_axis": "x [g/kg]",

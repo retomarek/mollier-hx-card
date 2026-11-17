@@ -1,7 +1,7 @@
 {
   "card": {
     "no_statistics": "Nessuna statistica giornaliera disponibile. Verifica che entrambi i sensori abbiano state_class: measurement.",
-    "fetch_failed": "Impossibile caricare la cronologia: {error}",
+    "fetch_failed": "Impossibile caricare la cronologia: {error}. Nuovo tentativo tra {s} s.",
     "entity_not_found": "Entità non trovata: {entities}",
     "fahrenheit_hint": "La zona di comfort sembra espressa in °F. Inserisci le temperature in °C.",
     "now": "Ora",
@@ -14,7 +14,9 @@
     "ventilation_neutral": "arieggiare: nessun effetto",
     "zoom_reset": "Reimposta zoom",
     "zoom_in": "Ingrandisci",
-    "zoom_out": "Riduci"
+    "zoom_out": "Riduci",
+    "fetch_timeout": "Home Assistant non ha risposto in tempo (occupato, ad es. subito dopo un riavvio)",
+    "loading_slow": "Caricamento della cronologia … Home Assistant risponde lentamente."
   },
   "diagram": {
     "x_axis": "x [g/kg]",

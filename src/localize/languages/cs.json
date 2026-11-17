@@ -1,7 +1,7 @@
 {
   "card": {
     "no_statistics": "Nejsou k dispozici žádné denní statistiky. Zkontrolujte, zda oba senzory mají state_class: measurement.",
-    "fetch_failed": "Historii se nepodařilo načíst: {error}",
+    "fetch_failed": "Historii se nepodařilo načíst: {error}. Nový pokus za {s} s.",
     "entity_not_found": "Entita nenalezena: {entities}",
     "fahrenheit_hint": "Komfortní zóna vypadá, jako by byla zadána ve °F. Zadejte teploty ve °C.",
     "now": "Nyní",
@@ -14,7 +14,9 @@
     "ventilation_neutral": "větrání: beze změny",
     "zoom_reset": "Obnovit přiblížení",
     "zoom_in": "Přiblížit",
-    "zoom_out": "Oddálit"
+    "zoom_out": "Oddálit",
+    "fetch_timeout": "Home Assistant neodpověděl včas (vytížený, např. hned po restartu)",
+    "loading_slow": "Načítání historie … Home Assistant odpovídá pomalu."
   },
   "diagram": {
     "x_axis": "x [g/kg]",

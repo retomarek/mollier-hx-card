@@ -10,7 +10,7 @@ import { parseWarningBands, bandRanges } from './bands.js';
 import { localize, getLanguage } from './localize/localize.js';
 import {
     fetchDailyMeans, stateCelsius, stateHumidity, missingEntities, pressureFromConfig, daysFromConfig,
-    REFRESH_MS, RETRY_MS,
+    REFRESH_MS, RETRY_MS, SLOW_MS,
 } from './statistics.js';
 import styles from './card.styles';
 
@@ -172,6 +172,7 @@ export class MollierHxCard extends LitElement {
             _outdoorPoint: { state: true },
             _outdoorDays: { state: true },
             _error: { state: true },
+            _slow: { state: true },
             _zoomed: { state: true },
             _missing: { state: true },
         };
@@ -180,6 +181,7 @@ export class MollierHxCard extends LitElement {
     constructor() {
         super();
         this._missing = [];
+        this._slow = false;
         this._clipId = `mollier-hx-clip-${++clipCounter}`;
         // A click on the diagram background (or anywhere on the card) closes a
         // tooltip opened by a tap; markers stop the event themselves.
@@ -326,6 +328,9 @@ export class MollierHxCard extends LitElement {
         }
         this._fetchKey = key;
         const seq = ++this._fetchSeq;
+        // A first load that takes long says so, instead of an empty diagram.
+        this._clearSlow();
+        if (!this._dailyData.length) this._slowTimer = setTimeout(() => { this._slow = true; }, SLOW_MS);
         try {
             const [days, outDays] = await Promise.all([
                 fetchDailyMeans(this._hass, this._tempEntity, this._humEntity, this._days),
@@ -333,6 +338,7 @@ export class MollierHxCard extends LitElement {
                 outdoor ? fetchDailyMeans(this._hass, this._outT, this._outH, this._days).catch(() => []) : [],
             ]);
             if (seq !== this._fetchSeq) return;
+            this._clearSlow();
             this._dailyData = days;
             this._outdoorDays = outDays;
             this._error = days.length ? undefined : { key: 'card.no_statistics' };
@@ -340,13 +346,23 @@ export class MollierHxCard extends LitElement {
             this._retryPending = false;
         } catch (err) {
             if (seq !== this._fetchSeq) return;
+            this._clearSlow();
             // Keep the last good data; only say so when there is nothing to show.
             if (!this._dailyData.length) {
-                this._error = { key: 'card.fetch_failed', vars: { error: (err && err.message) || err } };
+                const error = err?.code === 'timeout' ? this._t('card.fetch_timeout')
+                    : String((err && err.message) || err).replace(/[.\s]+$/, '');
+                const delay = RETRY_MS[Math.min(this._retryCount, RETRY_MS.length - 1)];
+                this._error = { key: 'card.fetch_failed', vars: { error, s: Math.round(delay / 1000) } };
             }
             this._scheduleRetry();
         }
         this.requestUpdate();
+    }
+
+    _clearSlow() {
+        clearTimeout(this._slowTimer);
+        this._slowTimer = undefined;
+        this._slow = false;
     }
 
     _scheduleRetry() {
@@ -381,6 +397,7 @@ export class MollierHxCard extends LitElement {
         this._refreshTimer = undefined;
         clearTimeout(this._retryTimer);
         this._retryTimer = undefined;
+        this._clearSlow();
         this._hideTip();
     }
 
@@ -444,6 +461,9 @@ export class MollierHxCard extends LitElement {
             lines.push(html`<p class="error">${this._t(this._error.key, this._error.vars)}</p>`);
         } else if (this._error && !roomMissing) {
             lines.push(html`<p class="message">${this._t(this._error.key, this._error.vars)}</p>`);
+        }
+        if (this._slow && !this._error && !roomMissing) {
+            lines.push(html`<p class="message">${this._t('card.loading_slow')}</p>`);
         }
         if (this._fahrenheitHint) {
             lines.push(html`<p class="message">${this._t('card.fahrenheit_hint')}</p>`);

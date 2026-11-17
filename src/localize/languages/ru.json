@@ -1,7 +1,7 @@
 {
   "card": {
     "no_statistics": "Нет суточной статистики. Убедитесь, что у обоих датчиков задан state_class: measurement.",
-    "fetch_failed": "Не удалось загрузить историю: {error}",
+    "fetch_failed": "Не удалось загрузить историю: {error}. Повтор через {s} с.",
     "entity_not_found": "Объект не найден: {entities}",
     "fahrenheit_hint": "Похоже, зона комфорта задана в °F. Укажите температуры в °C.",
     "now": "Сейчас",
@@ -14,7 +14,9 @@
     "ventilation_neutral": "проветривание: без изменений",
     "zoom_reset": "Сбросить масштаб",
     "zoom_in": "Увеличить",
-    "zoom_out": "Уменьшить"
+    "zoom_out": "Уменьшить",
+    "fetch_timeout": "Home Assistant не ответил вовремя (занят, например сразу после перезапуска)",
+    "loading_slow": "Загрузка истории … Home Assistant отвечает медленно."
   },
   "diagram": {
     "x_axis": "x [g/kg]",

@@ -1,7 +1,7 @@
 {
   "card": {
     "no_statistics": "Geen dagelijkse statistieken beschikbaar. Controleer of beide sensoren state_class: measurement hebben.",
-    "fetch_failed": "Kan de geschiedenis niet laden: {error}",
+    "fetch_failed": "Kon de geschiedenis niet laden: {error}. Nieuwe poging over {s} s.",
     "entity_not_found": "Entiteit niet gevonden: {entities}",
     "fahrenheit_hint": "De comfortzone lijkt in °F te staan. Voer de temperaturen in °C in.",
     "now": "Nu",
@@ -14,7 +14,9 @@
     "ventilation_neutral": "luchten: geen verschil",
     "zoom_reset": "Zoom herstellen",
     "zoom_in": "Inzoomen",
-    "zoom_out": "Uitzoomen"
+    "zoom_out": "Uitzoomen",
+    "fetch_timeout": "Home Assistant antwoordde niet op tijd (bezet, bijv. vlak na een herstart)",
+    "loading_slow": "Geschiedenis wordt geladen … Home Assistant reageert traag."
   },
   "diagram": {
     "x_axis": "x [g/kg]",

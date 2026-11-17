@@ -1,7 +1,7 @@
 {
   "card": {
     "no_statistics": "没有可用的每日统计数据。请检查两个传感器是否都设置了 state_class: measurement。",
-    "fetch_failed": "无法加载历史记录：{error}",
+    "fetch_failed": "无法加载历史记录：{error}。{s} 秒后重试。",
     "entity_not_found": "未找到实体：{entities}",
     "fahrenheit_hint": "舒适区看起来是按 °F 填写的。请以 °C 输入温度。",
     "now": "当前",
@@ -14,7 +14,9 @@
     "ventilation_neutral": "通风：无变化",
     "zoom_reset": "重置缩放",
     "zoom_in": "放大",
-    "zoom_out": "缩小"
+    "zoom_out": "缩小",
+    "fetch_timeout": "Home Assistant 未及时响应（繁忙，例如刚重启后）",
+    "loading_slow": "正在加载历史记录 … Home Assistant 响应较慢。"
   },
   "diagram": {
     "x_axis": "x [g/kg]",

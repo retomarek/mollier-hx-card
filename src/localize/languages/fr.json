@@ -1,7 +1,7 @@
 {
   "card": {
     "no_statistics": "Aucune statistique journalière disponible. Vérifiez que les deux capteurs ont state_class: measurement.",
-    "fetch_failed": "Impossible de charger l'historique : {error}",
+    "fetch_failed": "Impossible de charger l'historique : {error}. Nouvel essai dans {s} s.",
     "entity_not_found": "Entité introuvable : {entities}",
     "fahrenheit_hint": "La zone de confort semble être en °F. Veuillez saisir les températures en °C.",
     "now": "Maintenant",
@@ -14,7 +14,9 @@
     "ventilation_neutral": "aérer : aucun effet",
     "zoom_reset": "Réinitialiser le zoom",
     "zoom_in": "Zoom avant",
-    "zoom_out": "Zoom arrière"
+    "zoom_out": "Zoom arrière",
+    "fetch_timeout": "Home Assistant n'a pas répondu à temps (occupé, p. ex. juste après un redémarrage)",
+    "loading_slow": "Chargement de l'historique … Home Assistant répond lentement."
   },
   "diagram": {
     "x_axis": "x [g/kg]",

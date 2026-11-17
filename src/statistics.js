@@ -7,6 +7,11 @@
 export const REFRESH_MS = 60 * 60 * 1000;
 // After a failed fetch: retry soon, then back off (30 s, 1, 2, 4, 8, 10 min).
 export const RETRY_MS = [30e3, 60e3, 120e3, 240e3, 480e3, 600e3];
+// A statistics request that has not answered after FETCH_TIMEOUT_MS is given
+// up (and retried): a busy Home Assistant, e.g. right after a restart, can
+// leave it pending for minutes. After SLOW_MS the card says it is still loading.
+export const FETCH_TIMEOUT_MS = 60e3;
+export const SLOW_MS = 8e3;
 // Upper bound for days_to_show (long-term statistics are kept forever, but
 // a very long request is slow and the diagram gets crowded).
 export const MAX_DAYS = 3650;
@@ -29,7 +34,7 @@ export function humidityFraction(values, unit) {
 // Returns [{ date, t, phi }] sorted by date; [] when there are no statistics.
 export async function fetchDailyMeans(hass, temperatureEntity, humidityEntity, days) {
     const now = Date.now();
-    const result = await hass.callWS({
+    const result = await withTimeout(hass.callWS({
         type: 'recorder/statistics_during_period',
         start_time: new Date(now - (days + 2) * DAY_MS).toISOString(),
         end_time: new Date(now).toISOString(),
@@ -38,7 +43,7 @@ export async function fetchDailyMeans(hass, temperatureEntity, humidityEntity, d
         types: ['mean'],
         // Convert to °C on the server, so Fahrenheit sensors work too.
         units: { temperature: '°C' },
-    });
+    }), FETCH_TIMEOUT_MS);
     const tRows = result?.[temperatureEntity] || [];
     const hRows = result?.[humidityEntity] || [];
     // `start` is epoch ms on current HA (ISO strings on old versions).
@@ -57,6 +62,20 @@ export async function fetchDailyMeans(hass, temperatureEntity, humidityEntity, d
         .map(([, e]) => e)
         .sort((a, b) => a.date - b.date)
         .slice(-days);
+}
+
+// Rejects with an Error whose `code` is 'timeout' when `promise` has not
+// settled after `ms`. A late answer is ignored.
+export function withTimeout(promise, ms) {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => {
+            const err = new Error(`no answer after ${Math.round(ms / 1000)} s`);
+            err.code = 'timeout';
+            reject(err);
+        }, ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
 // Live sensor value in °C (state objects carry their own unit).

@@ -4,6 +4,13 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-rc.7] - 2026-11-17
+
+### Changed
+
+- A first load that takes longer than 8 s says so ("Loading the history … Home Assistant is answering slowly.") instead of showing an empty card, e.g. while Home Assistant is busy right after a restart.
+- A statistics request without an answer after 60 s is given up and retried, so a hanging request no longer leaves the card empty for good. The error message says when the next attempt runs.
+
 ## [1.0.0-rc.6] - 2026-11-10
 
 ### Added
@@ -186,7 +193,8 @@ Replaces 1.0.0-beta.4, which was published by mistake from the wrong commit and 
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.6...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.7...HEAD
+[1.0.0-rc.7]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.6...v1.0.0-rc.7
 [1.0.0-rc.6]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.6
 [1.0.0-rc.5]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.5
 [1.0.0-rc.4]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.4

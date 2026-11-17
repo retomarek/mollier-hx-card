@@ -1,7 +1,7 @@
 {
   "card": {
     "no_statistics": "No daily statistics available. Check that both sensors have state_class: measurement.",
-    "fetch_failed": "Could not load the history: {error}",
+    "fetch_failed": "Could not load the history: {error}. Retrying in {s} s.",
     "entity_not_found": "Entity not found: {entities}",
     "fahrenheit_hint": "The comfort zone looks like °F. Please enter temperatures in °C.",
     "now": "Now",
@@ -14,7 +14,9 @@
     "ventilation_neutral": "ventilating: no change",
     "zoom_reset": "Reset zoom",
     "zoom_in": "Zoom in",
-    "zoom_out": "Zoom out"
+    "zoom_out": "Zoom out",
+    "fetch_timeout": "Home Assistant did not answer in time (busy, e.g. right after a restart)",
+    "loading_slow": "Loading the history … Home Assistant is answering slowly."
   },
   "diagram": {
     "x_axis": "x [g/kg]",

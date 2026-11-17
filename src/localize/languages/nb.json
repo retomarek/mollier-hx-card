@@ -1,7 +1,7 @@
 {
   "card": {
     "no_statistics": "Ingen daglig statistikk tilgjengelig. Kontroller at begge sensorene har state_class: measurement.",
-    "fetch_failed": "Kunne ikke laste inn historikken: {error}",
+    "fetch_failed": "Kunne ikke laste inn historikken: {error}. Prøver igjen om {s} s.",
     "entity_not_found": "Entitet ikke funnet: {entities}",
     "fahrenheit_hint": "Komfortsonen ser ut til å være oppgitt i °F. Oppgi temperaturene i °C.",
     "now": "Nå",
@@ -14,7 +14,9 @@
     "ventilation_neutral": "lufting: ingen endring",
     "zoom_reset": "Tilbakestill zoom",
     "zoom_in": "Zoom inn",
-    "zoom_out": "Zoom ut"
+    "zoom_out": "Zoom ut",
+    "fetch_timeout": "Home Assistant svarte ikke i tide (opptatt, f.eks. rett etter en omstart)",
+    "loading_slow": "Laster inn historikken … Home Assistant svarer tregt."
   },
   "diagram": {
     "x_axis": "x [g/kg]",

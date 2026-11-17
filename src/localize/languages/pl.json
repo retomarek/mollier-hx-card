@@ -1,7 +1,7 @@
 {
   "card": {
     "no_statistics": "Brak dziennych statystyk. Sprawdź, czy oba czujniki mają state_class: measurement.",
-    "fetch_failed": "Nie udało się wczytać historii: {error}",
+    "fetch_failed": "Nie udało się wczytać historii: {error}. Ponowna próba za {s} s.",
     "entity_not_found": "Nie znaleziono encji: {entities}",
     "fahrenheit_hint": "Strefa komfortu wygląda na podaną w °F. Podaj temperatury w °C.",
     "now": "Teraz",
@@ -14,7 +14,9 @@
     "ventilation_neutral": "wietrzenie: bez zmian",
     "zoom_reset": "Resetuj powiększenie",
     "zoom_in": "Powiększ",
-    "zoom_out": "Pomniejsz"
+    "zoom_out": "Pomniejsz",
+    "fetch_timeout": "Home Assistant nie odpowiedział na czas (zajęty, np. tuż po restarcie)",
+    "loading_slow": "Wczytywanie historii … Home Assistant odpowiada powoli."
   },
   "diagram": {
     "x_axis": "x [g/kg]",
