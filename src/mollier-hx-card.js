@@ -1,5 +1,5 @@
 // Keep in sync with "version" in package.json.
-const version = "1.0.0-rc.7";
+const version = "1.0.0-rc.8";
 import { MollierHxCard } from "./card";
 import { MollierHxCardEditor } from "./editor";
 
@@ -15,7 +15,7 @@ customElements.define(
 window.customCards = window.customCards || [];
 window.customCards.push({
     type: "mollier-hx-card",
-    name: "Mollier hx card",
+    name: "Mollier hx Card",
     description: "A custom card which creates a mollier hx diagram out of a temperature- and humidity sensor entity.",
     preview: true,
     documentationURL: "https://github.com/retomarek/mollier-hx-card"

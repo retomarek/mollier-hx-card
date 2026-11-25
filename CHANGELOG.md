@@ -4,6 +4,12 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [1.0.0-rc.8] - 2026-11-25
+
+### Changed
+
+- Name with uppercase "Card": "Mollier hx Card" in the card picker and in HACS, like the logo and the README.
+
 ## [1.0.0-rc.7] - 2026-11-17
 
 ### Changed
@@ -193,7 +199,8 @@ Replaces 1.0.0-beta.4, which was published by mistake from the wrong commit and 
 
 - First release.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.7...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.8...HEAD
+[1.0.0-rc.8]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.7...v1.0.0-rc.8
 [1.0.0-rc.7]: https://github.com/retomarek/mollier-hx-card/compare/v1.0.0-rc.6...v1.0.0-rc.7
 [1.0.0-rc.6]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.6
 [1.0.0-rc.5]: https://github.com/retomarek/mollier-hx-card/releases/tag/v1.0.0-rc.5

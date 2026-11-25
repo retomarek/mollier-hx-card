@@ -65,7 +65,7 @@ From Home Assistant 2026.11 on, community cards come from the built-in **Marketp
 
 ## Configuration
 
-Add a card, pick **Mollier hx card** and fill in the form. Or use YAML:
+Add a card, pick **Mollier hx Card** and fill in the form. Or use YAML:
 
 ```yaml
 type: custom:mollier-hx-card
