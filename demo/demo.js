@@ -418,6 +418,19 @@ const C = {
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 reducedMotion.addEventListener('change', () => update());
 
+// The cards do not animate when the device asks for reduced motion, so the
+// breathing marker stands still; say why (only shown then).
+function motionNote() {
+    const n = el(`<div class="tile-note wide" role="note">
+        <b>The marker does not breathe here</b> because your device asks for reduced motion; Home Assistant shows it the same way.
+        To see it, switch animations on: Windows <i>Settings → Accessibility → Visual effects → Animation effects</i>,
+        macOS <i>System Settings → Accessibility → Display → Reduce motion</i> (off),
+        iOS <i>Settings → Accessibility → Motion → Reduce Motion</i> (off),
+        Android <i>Settings → Accessibility → Remove animations</i> (off).</div>`);
+    refreshers.push(() => (n.hidden = !(reducedMotion.matches && state.showCurrent)));
+    return n;
+}
+
 function buildControls() {
     const side = $('#controls');
     const bandSliders = (k, color, label) => [
@@ -666,9 +679,7 @@ function buildControls() {
                 color: C.now,
                 get: () => state.showCurrent,
                 set: (v) => (state.showCurrent = v),
-                // The card does not animate when the device asks for reduced
-                // motion (e.g. Windows: Animation effects off); say so here.
-                on: () => (reducedMotion.matches ? 'On · still: your device asks for reduced motion' : 'Breathes'),
+                on: () => (reducedMotion.matches ? 'Still (see below)' : 'Breathes'),
                 off: 'Off',
             }),
             slider({
@@ -683,6 +694,7 @@ function buildControls() {
                 fmt: (v) => `${v} %`,
                 enabled: () => state.showCurrent,
             }),
+            motionNote(),
         ]),
         section('chart', 'h,x diagram', '', [
             segments({

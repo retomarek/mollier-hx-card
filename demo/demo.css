@@ -108,7 +108,7 @@ svg.icon {
 .toolbar .title {
     flex: 1;
     min-width: 0;
-    margin-left: 8px;
+    margin-left: 12px;
     font-size: 20px;
     font-weight: 400;
     white-space: nowrap;
@@ -139,7 +139,7 @@ svg.icon {
 /* --- view ---------------------------------------------------------------- */
 
 .view {
-    max-width: 1480px;
+    max-width: 1920px;
     margin: 0 auto;
     padding: 16px 16px 8px;
 }
@@ -166,7 +166,7 @@ svg.icon {
 
 @media (min-width: 1100px) {
     .layout {
-        grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+        grid-template-columns: minmax(0, 1fr) minmax(380px, 460px);
         grid-template-areas: 'main side' 'yaml side';
         grid-template-rows: auto 1fr;
         align-items: start;
@@ -516,8 +516,22 @@ details.section[open] > summary.heading {
     min-width: 0;
 }
 
-.tile.wide {
+.tile.wide,
+.tile-note.wide {
     grid-column: 1 / -1;
+}
+
+/* A short explanation between the tiles, e.g. why the marker stands still. */
+.tile-note {
+    padding: 10px 12px;
+    border-radius: var(--ha-card-border-radius, 12px);
+    background: var(--secondary-background-color);
+    color: var(--primary-text-color);
+    font-size: 13px;
+    line-height: 1.5;
+}
+.tile-note[hidden] {
+    display: none;
 }
 
 .tile-head {
@@ -789,7 +803,7 @@ label.tile {
 /* --- footer -------------------------------------------------------------- */
 
 footer {
-    max-width: 1480px;
+    max-width: 1920px;
     margin: 8px auto 24px;
     padding: 0 20px;
     color: var(--secondary-text-color);
