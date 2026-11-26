@@ -13,9 +13,10 @@ Never push, tag or publish without the user's go-ahead for this release.
    - The Comfort Compass Card and the Mollier hx Card go out together: release both when shared code (`npm run check-shared`) or the shared config schema changed.
 2. Set it in both places: `package.json` `version` and the `version` constant in `src/mollier-hx-card.js`.
 3. Move the `[Unreleased]` entries in `CHANGELOG.md` under the new version with today's date and update the compare links.
-4. `npm test`, `npm run lint`, `npm run format:check`, `npm run check-shared -- --local ../<sister>` and `npm run build`; check the console banner in `dist/` shows the new version.
-5. Run the `visual-check` skill and the `card-reviewer` agent on the changes since the last tag (`git diff <last-tag>`); fix findings first.
-6. Check `hacs.json` (`filename` matches the dist file; `homeassistant` minimum still right) and that the README documents every new option.
+4. The `E2E` workflow in mollier-hx-card (both cards in Home Assistant stable and beta) is green for the current `main` of both repos (run it by hand if needed: Actions → E2E → Run workflow, or `npm run e2e` there with Docker).
+5. `npm test`, `npm run lint`, `npm run format:check`, `npm run check-shared -- --local ../<sister>` and `npm run build`; check the console banner in `dist/` shows the new version.
+6. Run the `visual-check` skill and the `card-reviewer` agent on the changes since the last tag (`git diff <last-tag>`); fix findings first.
+7. Check `hacs.json` (`filename` matches the dist file; `homeassistant` minimum still right) and that the README documents every new option.
 
 ## Publish
 

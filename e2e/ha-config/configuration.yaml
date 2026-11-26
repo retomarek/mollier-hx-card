@@ -1,0 +1,45 @@
+# Minimal Home Assistant for the end-to-end tests (scripts/e2e.mjs): no
+# default_config, so it starts fast. The sensors only need long-term
+# statistics; their history is imported by the test.
+homeassistant:
+  name: E2E
+  latitude: 47.05
+  longitude: 8.31
+  # The cards take the air pressure from here when their config has no
+  # altitude or pressure (checked by the test: "450 m").
+  elevation: 450
+  unit_system: metric
+  time_zone: Europe/Zurich
+  country: CH
+
+frontend:
+
+recorder:
+  commit_interval: 1
+
+template:
+  - sensor:
+      - name: living_temperature
+        unique_id: e2e_living_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: "22.1"
+      - name: living_humidity
+        unique_id: e2e_living_humidity
+        unit_of_measurement: "%"
+        device_class: humidity
+        state_class: measurement
+        state: "46"
+      - name: living_outside_temperature
+        unique_id: e2e_living_outside_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: "5.5"
+      - name: living_outside_humidity
+        unique_id: e2e_living_outside_humidity
+        unit_of_measurement: "%"
+        device_class: humidity
+        state_class: measurement
+        state: "86"

@@ -15,7 +15,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "check-shared": "node scripts/check-shared.mjs",
-    "demo": "node scripts/demo.mjs"
+    "demo": "node scripts/demo.mjs",
+    "e2e": "node scripts/e2e.mjs"
   },
   "targets": {
     "default": {

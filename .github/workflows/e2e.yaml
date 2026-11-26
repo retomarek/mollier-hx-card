@@ -1,0 +1,86 @@
+name: E2E
+
+# Both cards (this one and retomarek/comfort-compass-card) in a real Home
+# Assistant, stable and beta (scripts/e2e.mjs). Weekly, so a change in a new
+# Home Assistant beta shows up before it is released; a failing scheduled run
+# opens an issue (label e2e-ha), a later green one closes it.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Home Assistant ${{ matrix.ha }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        ha: [stable, beta]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          repository: retomarek/comfort-compass-card
+          ref: main
+          path: compass
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            compass/package-lock.json
+      - run: npm ci && npm run build
+      - run: npm ci && npm run build
+        working-directory: compass
+      - name: Pull Home Assistant ${{ matrix.ha }}
+        run: docker pull -q ghcr.io/home-assistant/home-assistant:${{ matrix.ha }}
+      - name: End-to-end test
+        run: node scripts/e2e.mjs --ha ${{ matrix.ha }} --no-build --compass-dir compass
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+      - name: Screenshots and Home Assistant log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-${{ matrix.ha }}
+          path: tmp/e2e/out/
+          retention-days: 14
+
+  report:
+    name: Issue for a failing scheduled run
+    needs: e2e
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v9
+        env:
+          RESULT: ${{ needs.e2e.result }}
+        with:
+          script: |
+            const label = 'e2e-ha';
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { data: open } = await github.rest.issues.listForRepo({ ...context.repo, state: 'open', labels: label });
+            if (process.env.RESULT === 'success') {
+              for (const issue of open) {
+                await github.rest.issues.createComment({ ...context.repo, issue_number: issue.number, body: `Green again: ${run}` });
+                await github.rest.issues.update({ ...context.repo, issue_number: issue.number, state: 'closed' });
+              }
+              return;
+            }
+            const body = `The weekly end-to-end test against Home Assistant stable / beta failed: ${run}\n\n` +
+              'The artifacts of the run hold screenshots, the Home Assistant log and its version.';
+            if (open.length) await github.rest.issues.createComment({ ...context.repo, issue_number: open[0].number, body: `Failed again: ${run}` });
+            else await github.rest.issues.create({ ...context.repo, title: 'E2E test against Home Assistant failed', labels: [label], body });

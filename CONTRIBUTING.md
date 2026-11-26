@@ -18,6 +18,7 @@ npm test               # unit tests
 npm run lint           # ESLint
 npm run format         # Prettier
 npm run build          # dist/ is not committed
+npm run e2e            # optional, needs Docker: both cards in a real Home Assistant
 npm run screenshots    # optional: re-renders docs/*.png (needs Chrome or Chromium)
 ```
 
