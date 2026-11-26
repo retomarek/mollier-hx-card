@@ -19,9 +19,9 @@ Never push, tag or publish without the user's go-ahead for this release.
 
 ## Publish
 
-1. Commit (`dist/` is gitignored), push `main` and wait for `CI` to be green (it also checks the shared code against the sister card).
-2. Create the GitHub release `vX.Y.Z` from `main`; mark betas as pre-release. Release notes = the CHANGELOG section.
-3. Wait for the workflows: `Validate` (HACS action) and `Release` (attaches `mollier-hx-card.js` to the release) must succeed; `Screenshots` may push a `docs: update screenshots` commit.
+1. Commit (`dist/` is gitignored) and push `main` of **both** cards when shared code changed, then re-run the `shared` CI job of the repo pushed first. Wait for `CI` to be green in both.
+2. Create the GitHub release `vX.Y.Z` from `main` as a **full release** (not a pre-release: HACS validation and the Marketplace only look at full releases, and `dist/` is not in the repo). The tag must not exist yet (`git ls-remote --tags origin`). Release notes = the CHANGELOG section.
+3. Wait for the workflows: `Validate` (HACS action) and `Release` (attaches `mollier-hx-card.js` to the release) must succeed; `Validate` runs again by itself once `Release` has attached the asset (until the first full release it is red, because there is no `dist/` to fall back on). `Screenshots` may push a `docs: update screenshots` commit.
 4. Confirm the release has the `mollier-hx-card.js` asset.
 
 ## After

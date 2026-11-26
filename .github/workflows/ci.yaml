@@ -27,12 +27,19 @@ jobs:
   shared:
     # Shared code (bands, statistics, translations helper, psychrometric
     # functions, shared tests and tooling) must match the sister card's main
-    # branch. A change to shared code is red here until both repos have it.
+    # branch. A change to shared code is red here until both repos have it:
+    # push both, then re-run this job in the repo that was pushed first.
     name: Shared code matches the sister card
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Check out the sister card
+        uses: actions/checkout@v7
+        with:
+          repository: retomarek/${{ github.event.repository.name == 'comfort-compass-card' && 'mollier-hx-card' || 'comfort-compass-card' }}
+          ref: main
+          path: sister
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - run: npm run check-shared
+      - run: npm run check-shared -- --local sister

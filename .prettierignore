@@ -11,3 +11,4 @@ package-lock.json
 src/vendor/
 src/d3_mollierhx/
 test/fixtures/
+sister/

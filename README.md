@@ -75,6 +75,8 @@ outdoor_weather_entity: weather.home   # fallback for the current outside point
 
 ### Options
 
+Units: all temperatures in the card config (comfort zone, `temperature_range`) are **°C**, also when your sensors report °F; warning-band offsets are in **K**. Humidity sensors report relative humidity in **%**.
+
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `temperature_entity` | string | | **Required.** Temperature sensor. |
@@ -98,9 +100,9 @@ outdoor_weather_entity: weather.home   # fallback for the current outside point
 | `lines` | object | | Iso-lines: `temperature`, `humidity`, `absolute_humidity` (on by default), `density`, `enthalpy` (off). |
 
 <details>
-<summary>Units, validation and zoom</summary>
+<summary>Validation and zoom</summary>
 
-Units: all temperatures in the card config (comfort zone, `temperature_range`) are **°C**, also when your sensors report °F; warning-band offsets are in **K**. Humidity sensors report relative humidity in **%**. An invalid value (unknown `coloring`, a comfort zone without `temperature` or `humidity`, a pressure in the wrong unit, ...) shows a clear error message instead of a wrong diagram.
+An invalid value (unknown `coloring`, a comfort zone without `temperature` or `humidity`, a pressure in the wrong unit, ...) shows a clear error message instead of a wrong diagram.
 
 **Zoom:** on phones pinch with two fingers and drag to move; with a mouse use the **+ / −** buttons that appear over the diagram, double-click, or ctrl + mouse wheel (trackpad pinch works too), and drag to move. Double-tap / double-click or **1:1** go back. Only the diagram zooms, the legend stays.
 

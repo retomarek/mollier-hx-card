@@ -1,4 +1,5 @@
-// Shared with retomarek/mollier-hx-card: keep both copies identical (`npm run check-shared`).
+// Shared by retomarek/comfort-compass-card and retomarek/mollier-hx-card: keep both copies identical
+// (`npm run check-shared`).
 import { describe, expect, it } from 'vitest';
 import { bandRanges, DEFAULT_BANDS, parseWarningBands } from '../src/bands.js';
 

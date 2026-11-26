@@ -25,7 +25,7 @@ body:
     attributes:
       label: Card version
       description: Shown in the browser console as "MOLLIER-HX-CARD vX.Y.Z", or in the Marketplace / HACS.
-      placeholder: v1.0.0
+      placeholder: v0.1.0
     validations:
       required: true
   - type: input

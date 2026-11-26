@@ -1,4 +1,5 @@
-// Shared with retomarek/mollier-hx-card: keep both copies identical (`npm run check-shared`).
+// Shared by retomarek/comfort-compass-card and retomarek/mollier-hx-card: keep both copies identical
+// (`npm run check-shared`).
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -22,6 +23,13 @@ const placeholders = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1
 const en = flatten(load('en.json'));
 
 describe('translations', () => {
+    // English and German are written by the author and must be complete;
+    // the machine translations may leave keys to the English fallback.
+    it('de.json has every key of en.json', () => {
+        const de = flatten(load('de.json'));
+        expect(Object.keys(en).filter((k) => !(k in de))).toEqual([]);
+    });
+
     it('are all registered in localize.js', () => {
         const src = readFileSync(join(process.cwd(), 'src/localize/localize.js'), 'utf8');
         for (const f of files) expect(src, f).toContain(`./languages/${f}`);

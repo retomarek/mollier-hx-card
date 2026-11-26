@@ -6,7 +6,18 @@ import wc from 'eslint-plugin-wc';
 const browser = ['src/**/*.js', 'demo/**/*.js'];
 
 export default [
-    { ignores: ['dist/', 'node_modules/', 'tmp/', '.parcel-cache/', '_site/', 'src/vendor/', 'src/d3_mollierhx/'] },
+    {
+        ignores: [
+            'dist/',
+            'node_modules/',
+            'tmp/',
+            '.parcel-cache/',
+            '_site/',
+            'sister/',
+            'src/vendor/',
+            'src/d3_mollierhx/',
+        ],
+    },
     js.configs.recommended,
     { ...lit.configs['flat/recommended'], files: browser },
     { ...wc.configs['flat/recommended'], files: browser },

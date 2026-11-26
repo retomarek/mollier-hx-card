@@ -1,5 +1,6 @@
-// Shared with retomarek/mollier-hx-card: keep both copies identical (`npm run check-shared`).
-import { afterEach, describe, expect, it, vi } from 'vitest';
+// Shared by retomarek/comfort-compass-card and retomarek/mollier-hx-card: keep both copies identical
+// (`npm run check-shared`).
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     ALTITUDE_RANGE,
     daysFromConfig,
@@ -119,10 +120,17 @@ describe('withTimeout', () => {
 describe('fetchDailyMeans', () => {
     const T = 'sensor.t';
     const H = 'sensor.h';
+    // A fixed noon far from a daylight-saving change, so "today" and the
+    // 24-hour day buckets are stable in every time zone and at any hour.
+    const NOW = new Date(2026, 5, 15, 12, 0, 0);
+    beforeEach(() => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(NOW);
+    });
+    afterEach(() => vi.useRealTimers());
     // Day buckets at local midnight; bucket 0 is today (not completed yet).
-    const midnight = new Date();
-    midnight.setHours(0, 0, 0, 0);
-    const day = (i) => midnight.getTime() - i * DAY;
+    const midnight = new Date(2026, 5, 15).getTime();
+    const day = (i) => midnight - i * DAY;
 
     const hassWith = (tRows, hRows, unit = '%') => ({
         states: { [H]: { attributes: { unit_of_measurement: unit } } },

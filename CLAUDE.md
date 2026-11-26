@@ -71,6 +71,6 @@ Versioning is SemVer (`MAJOR.MINOR.PATCH`, e.g. `1.0.0`). Don't use Home Assista
 - `.claude/skills/visual-check/`: `npm run visual-check` renders the bundle in ~10 dashboard situations (`scripts/visual-check.mjs`, output in `tmp/visual/`); look at the images after any rendering, style or sizing change.
 - `.claude/skills/release/`: release checklist (versions, changelog, workflows, HACS catalog).
 
-## Config API (stable from 1.0)
+## Config API (stable from 1.0.0)
 
-Option names were settled before 1.0: `title`, `days_to_show`, `x_range`, `temperature_range`, `lines.humidity`, `outdoor_*`, `ventilation_line`, `comfort_zone`, `warning_bands`. There are no aliases for older names.0, renaming or changing an option is a breaking change (major version). Temperatures in the config are always °C (band offsets K); `pressure` accepts hPa or Pa; `altitude` in m; validation errors are thrown from `setConfig` (shared helpers in `src/statistics.js`).
+Option names were settled before 1.0: `title`, `days_to_show`, `x_range`, `temperature_range`, `lines.humidity`, `outdoor_*`, `ventilation_line`, `comfort_zone`, `warning_bands`. There are no aliases for older names. Until 1.0.0 a minor version may still change an option (say so in the CHANGELOG); from 1.0, renaming or changing an option is a breaking change (major version). Temperatures in the config are always °C (band offsets K); `pressure` accepts hPa or Pa; `altitude` in m; validation errors are thrown from `setConfig` (shared helpers in `src/statistics.js`).
