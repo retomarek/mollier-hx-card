@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import '../src/mollier-hx-card.js';
-import { parseComfortZone, parseLines, LINE_DEFAULTS } from '../src/card.js';
+import { cardSizeForHeight, parseComfortZone, parseLines, LINE_DEFAULTS } from '../src/card.js';
 
 const BASE = { type: 'custom:mollier-hx-card', temperature_entity: 'sensor.t', humidity_entity: 'sensor.h' };
 const card = () => document.createElement('mollier-hx-card');
@@ -92,5 +92,19 @@ describe('Home Assistant hooks', () => {
     });
     it('grid options: full width, auto height', () => {
         expect(card().getGridOptions()).toEqual({ columns: 12, min_columns: 6, min_rows: 7 });
+    });
+});
+
+describe('cardSizeForHeight', () => {
+    // Home Assistant's rows when auto height is switched off.
+    const rowsFor = (n) => Math.ceil((n * 50 + 8) / 64);
+    it('gives exactly the rows the card needs', () => {
+        for (let h = 40; h <= 900; h += 7) {
+            const need = Math.ceil((h + 8) / 64);
+            expect(rowsFor(cardSizeForHeight(h)), `${h} px`).toBe(need);
+        }
+    });
+    it('a card stretched to a 5-row neighbour stays at 5 rows', () => {
+        expect(rowsFor(cardSizeForHeight(5 * 64 - 8))).toBe(5);
     });
 });

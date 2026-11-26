@@ -158,6 +158,15 @@ export function parseComfortZone(cz) {
     };
 }
 
+// getCardSize() for a card of h px: the smallest size n for which Home
+// Assistant's row count (ceil((n * 50 + 8) / 64), used when auto height is
+// switched off) gives the rows the card needs (ceil((h + 8) / 64)), so the
+// tile neither shrinks nor grows by a row.
+export function cardSizeForHeight(h) {
+    const rows = Math.max(1, Math.ceil((h + 8) / 64));
+    return Math.max(1, Math.floor((64 * (rows - 1) - 8) / 50) + 1);
+}
+
 export class MollierHxCard extends LitElement {
     _hass;
     _drawn = false;
@@ -1267,7 +1276,7 @@ export class MollierHxCard extends LitElement {
     // mode, otherwise estimated (about 400–600 px with title and legend).
     getCardSize() {
         const h = this._fixedHeight ? 0 : this.renderRoot?.querySelector('ha-card')?.offsetHeight;
-        if (h > 0) return Math.ceil(h / 50);
+        if (h > 0) return cardSizeForHeight(h);
         const c = this._config || {};
         return (c.title ? 1 : 0) + 8 + (c.show_legend === false ? 0 : 1);
     }

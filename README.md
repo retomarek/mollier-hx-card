@@ -164,7 +164,7 @@ Hover or tap the outside point for its temperature, humidity, water content and 
 
 ### Size in the dashboard
 
-In a sections dashboard the card takes the full width and sets its own height. Set a row count under *Layout* to give it a fixed height; the diagram then fills the tile. At full width without a row count the diagram is capped at 480 px height and centred.
+In a sections dashboard the card takes the full width and sets its own height; next to a taller card in the same row it grows to match. Set a row count under *Layout* to give it a fixed height; the diagram then fills the tile. At full width without a row count the diagram is capped at 480 px height and centred.
 
 ## Why temperature and humidity belong together
 
