@@ -24,6 +24,7 @@ First public version. The earlier 0.1.0, 1.0.0 betas and release candidates were
 ### Development
 
 - Unit tests (vitest), ESLint and Prettier, CI on every push, and a check that the code shared with the Comfort Compass Card is identical in both repositories.
+- End-to-end tests of both cards in a real Home Assistant (stable and beta) on every push and weekly.
 
 [Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/retomarek/mollier-hx-card/releases/tag/v0.1.0
