@@ -35,7 +35,7 @@ const DEFAULTS = {
     red_dx: 2.5,
 };
 
-function configToData(config) {
+export function configToData(config) {
     const c = config || {};
     const hasAltitude = c.altitude !== undefined && c.altitude !== null && c.altitude !== '';
     const xr = c.x_range;
@@ -116,7 +116,7 @@ const pickNum = (...candidates) => {
     return undefined;
 };
 
-function dataToConfig(data, previous = {}) {
+export function dataToConfig(data, previous = {}) {
     const config = { ...previous };
     for (const k of OWNED_KEYS) delete config[k];
     const prevX = previous.x_range;
@@ -130,10 +130,14 @@ function dataToConfig(data, previous = {}) {
         type: 'custom:mollier-hx-card',
         temperature_entity: data.temperature_entity,
         humidity_entity: data.humidity_entity,
-        days_to_show: Math.min(MAX_DAYS, Math.max(1, Math.round(n('days', previous.days_to_show)))),
-        coloring: data.coloring || DEFAULTS.coloring,
-        convention: data.convention || DEFAULTS.convention,
     });
+    // Like the comfort-compass-card editor: defaults stay out of the YAML.
+    const days = Math.min(MAX_DAYS, Math.max(1, Math.round(n('days', previous.days_to_show))));
+    if (days !== DEFAULTS.days) config.days_to_show = days;
+    const coloring = data.coloring || DEFAULTS.coloring;
+    if (coloring !== DEFAULTS.coloring) config.coloring = coloring;
+    const convention = data.convention || DEFAULTS.convention;
+    if (convention !== DEFAULTS.convention) config.convention = convention;
     // Write the axis ranges only when they differ from the card defaults, so
     // the card follows future default changes.
     const x = [n('x_min', prevX?.[0]), n('x_max', prevX?.[1])];

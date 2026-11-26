@@ -47,7 +47,7 @@ export function getLanguage(hass) {
 
 const lookup = (obj, path) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
 
-// localize(hass, 'diagram.density') or localize(hass, 'card.fetch_failed', { error })
+// localize(hass, 'card.no_statistics') or localize(hass, 'card.fetch_failed', { error, s })
 export function localize(hass, key, vars) {
     let value = lookup(LANGUAGES[getLanguage(hass)], key);
     if (typeof value !== 'string') value = lookup(en, key);

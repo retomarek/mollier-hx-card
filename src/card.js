@@ -134,7 +134,7 @@ const isPair = (v) =>
 // createComfort() expects. Returns null when no comfort zone is configured;
 // throws when it is configured but incomplete. absolute_humidity is optional
 // (no upper limit).
-function parseComfortZone(cz) {
+export function parseComfortZone(cz) {
     if (cz === undefined || cz === null || cz === false) return null;
     if (typeof cz !== 'object' || Array.isArray(cz)) {
         throw new Error(
@@ -149,7 +149,7 @@ function parseComfortZone(cz) {
     const hasX = x !== undefined && x !== null;
     if (hasX && !isPair(x))
         throw new Error(`comfort_zone.absolute_humidity must be [min, max] in g/kg (got ${JSON.stringify(x)})`);
-    const n = (v) => v.map(Number);
+    const n = (v) => v.map(Number).sort((a, b) => a - b); // [max, min] is accepted too
     return {
         range_t: n(t),
         range_phi: n(h).map((v) => v / 100),

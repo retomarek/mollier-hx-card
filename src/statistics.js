@@ -58,7 +58,7 @@ export async function fetchDailyMeans(hass, temperatureEntity, humidityEntity, d
     const ts = (v) => (typeof v === 'number' ? v : Date.parse(v));
     const hUnit = hass.states?.[humidityEntity]?.attributes?.unit_of_measurement;
     const hFrac = humidityFraction(
-        hRows.map((r) => r.mean),
+        hRows.map((r) => (typeof r.mean === 'number' ? r.mean : NaN)),
         hUnit,
     );
     const byDay = new Map();
