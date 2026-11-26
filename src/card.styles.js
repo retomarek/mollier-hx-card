@@ -89,6 +89,22 @@ export default css`
         overflow: hidden;
         touch-action: pan-x pan-y;
     }
+    /* show_pressure: altitude and air pressure in the top margin, aligned with
+       the left edge of the plot (MARGIN.left / WIDTH); outside the zoomed host,
+       so it stays put, and clear of the zoom buttons on the right. */
+    .air-info {
+        position: absolute;
+        left: calc(100% * 50 / 600);
+        top: 0;
+        height: calc(100% * 30 / 420);
+        display: flex;
+        align-items: center;
+        /* Scales with the diagram like its axis labels (12 of 600 units), readable when small. */
+        font-size: clamp(9px, calc(100cqw * 12 / 600), 12px);
+        color: var(--sheet-muted);
+        white-space: nowrap;
+        pointer-events: none;
+    }
     .mollier-host {
         width: 100%;
         height: 100%;

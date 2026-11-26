@@ -23,7 +23,9 @@
     "temperature": "Température ϑ [°C]",
     "rel_humidity": "humidité rel. φ [%]",
     "density": "Masse volumique ρ [kg/m³]",
-    "enthalpy": "Enthalpie [kJ/kg]"
+    "enthalpy": "Enthalpie [kJ/kg]",
+    "altitude": "{m} m d’altitude",
+    "pressure": "{hpa} hPa"
   },
   "editor": {
     "fields": {
@@ -67,7 +69,8 @@
       "outdoor_weather_entity": "Météo (secours)",
       "outdoor_history": "Moyennes journalières extérieures",
       "ventilation_line": "Ligne d'aération",
-      "show_legend": "Afficher la légende"
+      "show_legend": "Afficher la légende",
+      "show_pressure": "Afficher l’altitude et la pression"
     },
     "options": {
       "season": "Par saison",
@@ -76,7 +79,9 @@
       "pressure": "Pression (Pa)",
       "altitude": "Altitude (m)",
       "classical": "Classique (Recknagel)",
-      "glueck": "Glück"
+      "glueck": "Glück",
+      "home": "Home Assistant ({m} m)",
+      "home_unset": "Home Assistant (non défini : niveau de la mer)"
     },
     "sections": {
       "axes": "Axes",

@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { localize } from './localize/localize.js';
 import { LINE_DEFAULTS, parseLines } from './card.js';
-import { ALTITUDE_RANGE, MAX_DAYS, PRESSURE_PA_RANGE } from './statistics.js';
+import { ALTITUDE_RANGE, elevationOf, MAX_DAYS, PRESSURE_PA_RANGE } from './statistics.js';
 
 const LINE_KEYS = Object.keys(LINE_DEFAULTS);
 
@@ -14,7 +14,7 @@ const DEFAULTS = {
     coloring: 'season',
     pressure: 101325, // the card's default when neither pressure nor altitude is set
     altitude: 450, // only a suggestion when the user switches to altitude
-    air_mode: 'pressure',
+    air_mode: 'home',
     convention: 'classical',
     x_min: 0, // g/kg
     x_max: 18, // g/kg
@@ -35,9 +35,10 @@ const DEFAULTS = {
     red_dx: 2.5,
 };
 
-export function configToData(config) {
+export function configToData(config, hass = undefined) {
     const c = config || {};
     const hasAltitude = c.altitude !== undefined && c.altitude !== null && c.altitude !== '';
+    const hasPressure = c.pressure !== undefined && c.pressure !== null && c.pressure !== '';
     const xr = c.x_range;
     const yr = c.temperature_range;
     const cz = c.comfort_zone && typeof c.comfort_zone === 'object' ? c.comfort_zone : null;
@@ -47,9 +48,11 @@ export function configToData(config) {
         humidity_entity: c.humidity_entity ?? '',
         days: c.days_to_show ?? DEFAULTS.days,
         coloring: c.coloring ?? DEFAULTS.coloring,
-        air_mode: hasAltitude ? 'altitude' : 'pressure',
+        // Neither altitude nor pressure: the elevation set in Home Assistant.
+        air_mode: hasAltitude ? 'altitude' : hasPressure ? 'pressure' : 'home',
         pressure: c.pressure ?? DEFAULTS.pressure,
-        altitude: c.altitude ?? DEFAULTS.altitude,
+        // Suggestion when switching to an own altitude: Home Assistant's.
+        altitude: c.altitude ?? elevationOf(hass) ?? DEFAULTS.altitude,
         convention: c.convention ?? DEFAULTS.convention,
         x_min: xr?.[0] ?? DEFAULTS.x_min,
         x_max: xr?.[1] ?? DEFAULTS.x_max,
@@ -71,6 +74,7 @@ export function configToData(config) {
         outdoor_history: c.outdoor_history === true,
         ventilation_line: c.ventilation_line !== false,
         show_legend: c.show_legend !== false,
+        show_pressure: c.show_pressure === true,
         bands_enabled: !!c.warning_bands,
         orange_dt: c.warning_bands?.orange?.temperature ?? DEFAULTS.orange_dt,
         orange_dphi: c.warning_bands?.orange?.humidity ?? DEFAULTS.orange_dphi,
@@ -106,6 +110,7 @@ const OWNED_KEYS = [
     'outdoor_history',
     'ventilation_line',
     'show_legend',
+    'show_pressure',
 ];
 
 // A cleared number field (undefined / null / '') falls back to the previous
@@ -160,13 +165,13 @@ export function dataToConfig(data, previous = {}) {
     if (hasOutdoor && data.outdoor_history) config.outdoor_history = true;
     if (hasOutdoor && data.ventilation_line === false) config.ventilation_line = false;
     if (data.show_legend === false) config.show_legend = false;
-    // Persist either pressure or altitude, never both. Do not write the default
-    // pressure unless it was set before, so opening the editor changes nothing.
+    if (data.show_pressure === true) config.show_pressure = true;
+    // Persist either pressure or altitude, never both; 'home' (the default)
+    // writes neither, so the card takes the elevation set in Home Assistant.
     if (data.air_mode === 'altitude') {
         config.altitude = n('altitude', previous.altitude);
-    } else {
-        const p = n('pressure', previous.pressure);
-        if (previous.pressure !== undefined || p !== DEFAULTS.pressure) config.pressure = p;
+    } else if (data.air_mode === 'pressure') {
+        config.pressure = n('pressure', previous.pressure);
     }
     if (data.comfort_enabled) {
         // Keep YAML-only keys of the zone; absolute_humidity only when switched on.
@@ -257,7 +262,8 @@ const COMFORT_X_FIELDS = [
     },
 ];
 
-function buildSchema(data, t) {
+function buildSchema(data, t, hass) {
+    const elevation = elevationOf(hass);
     return [
         { name: 'header', selector: { text: {} } },
         {
@@ -302,37 +308,50 @@ function buildSchema(data, t) {
                         select: {
                             mode: 'dropdown',
                             options: [
-                                { value: 'pressure', label: t('editor.options.pressure') },
+                                {
+                                    value: 'home',
+                                    label:
+                                        elevation === null
+                                            ? t('editor.options.home_unset')
+                                            : t('editor.options.home', { m: Math.round(elevation) }),
+                                },
                                 { value: 'altitude', label: t('editor.options.altitude') },
+                                { value: 'pressure', label: t('editor.options.pressure') },
                             ],
                         },
                     },
                 },
-                data.air_mode === 'altitude'
-                    ? {
-                          name: 'altitude',
-                          selector: {
-                              number: {
-                                  min: ALTITUDE_RANGE[0],
-                                  max: ALTITUDE_RANGE[1],
-                                  step: 10,
-                                  mode: 'box',
-                                  unit_of_measurement: 'm',
+                ...(data.air_mode === 'altitude'
+                    ? [
+                          {
+                              name: 'altitude',
+                              selector: {
+                                  number: {
+                                      min: ALTITUDE_RANGE[0],
+                                      max: ALTITUDE_RANGE[1],
+                                      step: 10,
+                                      mode: 'box',
+                                      unit_of_measurement: 'm',
+                                  },
                               },
                           },
-                      }
-                    : {
-                          name: 'pressure',
-                          selector: {
-                              number: {
-                                  min: PRESSURE_PA_RANGE[0],
-                                  max: PRESSURE_PA_RANGE[1],
-                                  step: 1,
-                                  mode: 'box',
-                                  unit_of_measurement: 'Pa',
-                              },
-                          },
-                      },
+                      ]
+                    : data.air_mode === 'pressure'
+                      ? [
+                            {
+                                name: 'pressure',
+                                selector: {
+                                    number: {
+                                        min: PRESSURE_PA_RANGE[0],
+                                        max: PRESSURE_PA_RANGE[1],
+                                        step: 1,
+                                        mode: 'box',
+                                        unit_of_measurement: 'Pa',
+                                    },
+                                },
+                            },
+                        ]
+                      : []),
                 {
                     name: 'convention',
                     selector: {
@@ -356,6 +375,7 @@ function buildSchema(data, t) {
                     schema: [
                         ...LINE_KEYS.map((k) => ({ name: `line_${k}`, selector: { boolean: {} } })),
                         { name: 'show_legend', selector: { boolean: {} } },
+                        { name: 'show_pressure', selector: { boolean: {} } },
                     ],
                 },
             ],
@@ -452,9 +472,9 @@ export class MollierHxCardEditor extends LitElement {
 
     render() {
         if (!this._config) return html``;
-        const data = configToData(this._config);
-        const t = (key) => localize(this.hass, key);
-        const schema = buildSchema(data, t);
+        const data = configToData(this._config, this.hass);
+        const t = (key, vars) => localize(this.hass, key, vars);
+        const schema = buildSchema(data, t, this.hass);
         return html`
             <ha-form
                 .hass=${this.hass}

@@ -23,7 +23,9 @@
     "temperature": "温度 ϑ [°C]",
     "rel_humidity": "相对湿度 φ [%]",
     "density": "密度 ρ [kg/m³]",
-    "enthalpy": "焓 [kJ/kg]"
+    "enthalpy": "焓 [kJ/kg]",
+    "altitude": "海拔 {m} 米",
+    "pressure": "{hpa} hPa"
   },
   "editor": {
     "fields": {
@@ -67,7 +69,8 @@
       "outdoor_weather_entity": "天气（备用）",
       "outdoor_history": "室外日均值",
       "ventilation_line": "通风线",
-      "show_legend": "显示图例"
+      "show_legend": "显示图例",
+      "show_pressure": "显示海拔和气压"
     },
     "options": {
       "season": "按季节",
@@ -76,7 +79,9 @@
       "pressure": "气压 (Pa)",
       "altitude": "海拔 (m)",
       "classical": "经典 (Recknagel)",
-      "glueck": "Glück"
+      "glueck": "Glück",
+      "home": "Home Assistant（{m} 米）",
+      "home_unset": "Home Assistant（未设置：海平面）"
     },
     "sections": {
       "axes": "坐标轴",

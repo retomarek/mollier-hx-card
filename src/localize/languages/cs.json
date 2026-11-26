@@ -23,7 +23,9 @@
     "temperature": "Teplota ϑ [°C]",
     "rel_humidity": "rel. vlhkost φ [%]",
     "density": "Hustota ρ [kg/m³]",
-    "enthalpy": "Entalpie [kJ/kg]"
+    "enthalpy": "Entalpie [kJ/kg]",
+    "altitude": "{m} m n. m.",
+    "pressure": "{hpa} hPa"
   },
   "editor": {
     "fields": {
@@ -67,7 +69,8 @@
       "outdoor_weather_entity": "Počasí (záloha)",
       "outdoor_history": "Denní průměry venku",
       "ventilation_line": "Čára větrání",
-      "show_legend": "Zobrazit legendu"
+      "show_legend": "Zobrazit legendu",
+      "show_pressure": "Zobrazit nadmořskou výšku a tlak"
     },
     "options": {
       "season": "Podle ročního období",
@@ -76,7 +79,9 @@
       "pressure": "Tlak (Pa)",
       "altitude": "Nadmořská výška (m)",
       "classical": "Klasická (Recknagel)",
-      "glueck": "Glück"
+      "glueck": "Glück",
+      "home": "Home Assistant ({m} m)",
+      "home_unset": "Home Assistant (nenastaveno: hladina moře)"
     },
     "sections": {
       "axes": "Osy",

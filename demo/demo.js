@@ -28,6 +28,7 @@ const MDI = {
     brightness:
         'M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31Z',
     mountain: 'M14,6L10.25,11L13.1,14.8L11.5,16C9.81,13.75 7,10 7,10L1,18H23L14,6Z',
+    chevron: 'M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z',
     copy: 'M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z',
     circle: 'M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2Z',
     label: 'M17.63,5.84C17.27,5.33 16.67,5 16,5H5A2,2 0 0,0 3,7V17A2,2 0 0,0 5,19H16C16.67,19 17.27,18.66 17.63,18.15L22,12L17.63,5.84Z',
@@ -114,7 +115,11 @@ const startLang =
 const state = {
     preset: startPreset,
     days: 120,
+    // 'home': the elevation set in Home Assistant (nothing in the YAML);
+    // 'own': `altitude` in the card config.
+    airSource: 'home',
     altitude: 450,
+    showPressure: false,
     dark: startTheme === 'dark',
     lang: startLang,
     zone: { t: [...ZONE_DEFAULT.t], rh: [...ZONE_DEFAULT.rh], x: ZONE_DEFAULT.x },
@@ -170,7 +175,7 @@ function compassConfig() {
         humidity_entity: ids.h,
     };
     if (state.days !== COMPASS_DEFAULT_DAYS) c.days_to_show = state.days;
-    c.altitude = state.altitude;
+    if (state.airSource === 'own') c.altitude = state.altitude;
     if (!sameZone()) c.comfort_zone = zoneConfig();
     const bands = bandsDiff();
     if (Object.keys(bands).length) c.warning_bands = bands;
@@ -194,7 +199,7 @@ function mollierConfig() {
     };
     if (state.days !== MOLLIER_DEFAULT_DAYS) c.days_to_show = state.days;
     if (state.coloring !== 'season') c.coloring = state.coloring;
-    c.altitude = state.altitude;
+    if (state.airSource === 'own') c.altitude = state.altitude;
     c.comfort_zone = zoneConfig();
     const bands = bandsDiff();
     c.warning_bands = Object.keys(bands).length ? bands : true;
@@ -203,6 +208,7 @@ function mollierConfig() {
     if (state.outdoorHistory) c.outdoor_history = true;
     if (!state.ventilation) c.ventilation_line = false;
     if (!state.mollierLegend) c.show_legend = false;
+    if (state.showPressure) c.show_pressure = true;
     return c;
 }
 
@@ -385,9 +391,12 @@ function segments({ ic, name, color, options, get, set, wide }) {
     return t;
 }
 
-function section(ic, title, sub, tiles) {
-    const s = el(`<div class="section"><div class="heading">${icon(ic)}<h2>${title}</h2>
-        ${sub ? `<span class="sub">· ${sub}</span>` : ''}</div><div class="tiles"></div></div>`);
+// A group of controls that folds like an expandable section in Home Assistant's
+// card editor; `open` decides whether it starts unfolded.
+function section(ic, title, sub, tiles, open = false) {
+    const s = el(`<details class="section"${open ? ' open' : ''}><summary class="heading">${icon(ic)}<h2>${title}</h2>
+        ${sub ? `<span class="sub">· ${sub}</span>` : ''}<span class="grow"></span>${icon('chevron', 'icon chevron')}</summary>
+        <div class="tiles"></div></details>`);
     s.querySelector('.tiles').append(...tiles);
     return s;
 }
@@ -449,52 +458,58 @@ function buildControls() {
     ];
 
     side.append(
-        section('thermometer', 'Live values', 'move the “Now” marker', [
-            slider({
-                ic: 'thermometer',
-                name: 'Room temperature',
-                color: C.temp,
-                min: 5,
-                max: 35,
-                step: 0.1,
-                get: () => state.live.t,
-                set: (v) => (state.live.t = v),
-                fmt: c1,
-            }),
-            slider({
-                ic: 'waterPercent',
-                name: 'Room humidity',
-                color: C.hum,
-                min: 5,
-                max: 98,
-                step: 1,
-                get: () => state.live.rh,
-                set: (v) => (state.live.rh = v),
-                fmt: (v) => `${v} %`,
-            }),
-            slider({
-                ic: 'tree',
-                name: 'Outside temperature',
-                color: C.out,
-                min: -15,
-                max: 38,
-                step: 0.5,
-                get: () => state.live.outT,
-                set: (v) => (state.live.outT = v),
-                fmt: c1,
-            }),
-            slider({
-                ic: 'tree',
-                name: 'Outside humidity',
-                color: C.out,
-                min: 10,
-                max: 100,
-                step: 1,
-                get: () => state.live.outH,
-                set: (v) => (state.live.outH = v),
-                fmt: (v) => `${v} %`,
-            }),
-        ]),
+        section(
+            'thermometer',
+            'Live values',
+            'move the “Now” marker',
+            [
+                slider({
+                    ic: 'thermometer',
+                    name: 'Room temperature',
+                    color: C.temp,
+                    min: 5,
+                    max: 35,
+                    step: 0.1,
+                    get: () => state.live.t,
+                    set: (v) => (state.live.t = v),
+                    fmt: c1,
+                }),
+                slider({
+                    ic: 'waterPercent',
+                    name: 'Room humidity',
+                    color: C.hum,
+                    min: 5,
+                    max: 98,
+                    step: 1,
+                    get: () => state.live.rh,
+                    set: (v) => (state.live.rh = v),
+                    fmt: (v) => `${v} %`,
+                }),
+                slider({
+                    ic: 'tree',
+                    name: 'Outside temperature',
+                    color: C.out,
+                    min: -15,
+                    max: 38,
+                    step: 0.5,
+                    get: () => state.live.outT,
+                    set: (v) => (state.live.outT = v),
+                    fmt: c1,
+                }),
+                slider({
+                    ic: 'tree',
+                    name: 'Outside humidity',
+                    color: C.out,
+                    min: 10,
+                    max: 100,
+                    step: 1,
+                    get: () => state.live.outH,
+                    set: (v) => (state.live.outH = v),
+                    fmt: (v) => `${v} %`,
+                }),
+            ],
+            true,
+        ),
         section('home', 'Comfort zone', 'both cards', [
             range({
                 ic: 'thermometer',
@@ -531,18 +546,41 @@ function buildControls() {
                 set: (v) => (state.zone.x = v),
                 fmt: (v) => `≤ ${v} g/kg`,
             }),
-            slider({
-                ic: 'mountain',
-                name: 'Altitude',
-                color: C.alt,
-                min: 0,
-                max: 2500,
-                step: 50,
-                get: () => state.altitude,
-                set: (v) => (state.altitude = v),
-                fmt: (v) => `${v} m`,
-            }),
         ]),
+        section(
+            'mountain',
+            'Location',
+            'altitude sets the air pressure',
+            [
+                segments({
+                    ic: 'mountain',
+                    name: 'Altitude from',
+                    color: C.alt,
+                    options: [
+                        ['home', 'Home Assistant'],
+                        ['own', 'Own altitude'],
+                    ],
+                    get: () => state.airSource,
+                    set: (v) => (state.airSource = v),
+                    wide: true,
+                }),
+                slider({
+                    ic: 'mountain',
+                    name: 'Altitude',
+                    color: C.alt,
+                    min: 0,
+                    max: 4000,
+                    step: 50,
+                    get: () => state.altitude,
+                    set: (v) => (state.altitude = v),
+                    fmt: (v) =>
+                        `${v} m · ${Math.round((101325 * Math.pow(1 - 2.25577e-5 * v, 5.25588)) / 100)} hPa` +
+                        (state.airSource === 'home' ? ' · Settings → General → Elevation' : ' · altitude in the YAML'),
+                    wide: true,
+                }),
+            ],
+            true,
+        ),
         section('alert', 'Warning bands', 'mild · moderate · severe', [
             ...bandSliders('orange', C.orange, 'Orange'),
             ...bandSliders('red', C.red, 'Red'),
@@ -661,6 +699,15 @@ function buildControls() {
                 wide: true,
             }),
             toggle({
+                ic: 'mountain',
+                name: 'Altitude & pressure',
+                color: C.alt,
+                get: () => state.showPressure,
+                set: (v) => (state.showPressure = v),
+                on: 'Shown above the diagram',
+                off: 'Hidden',
+            }),
+            toggle({
                 ic: 'list',
                 name: 'Legend',
                 color: C.display,
@@ -747,6 +794,9 @@ function render() {
         stats,
         language: state.lang,
         dark: state.dark,
+        // The simulated Home Assistant elevation follows the slider in both modes,
+        // so switching to 'own' starts from the same value.
+        elevation: state.altitude,
         onFetch: (msg) => window.__demo.fetches.push(msg.statistic_ids.join(',')),
     });
     compass.hass = hass;

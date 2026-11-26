@@ -108,3 +108,37 @@ describe('cardSizeForHeight', () => {
         expect(rowsFor(cardSizeForHeight(5 * 64 - 8))).toBe(5);
     });
 });
+
+describe('air pressure', () => {
+    const withHass = (config, elevation, language = 'en') => {
+        const c = card();
+        c.setConfig(config);
+        c.hass = { states: {}, locale: { language }, config: { elevation }, callWS: async () => ({}) };
+        return c;
+    };
+    it('sea level without hass', () => {
+        const c = card();
+        c.setConfig(BASE);
+        expect(c._pressure).toBe(101325);
+    });
+    it('the elevation set in Home Assistant when the config has neither altitude nor pressure', () => {
+        expect(withHass(BASE, 1500)._pressure).toBeCloseTo(84556, 0);
+    });
+    it('altitude or pressure in the config win', () => {
+        expect(withHass({ ...BASE, altitude: 0 }, 1500)._pressure).toBeCloseTo(101325, 6);
+        expect(withHass({ ...BASE, pressure: 960 }, 1500)._pressure).toBe(96000);
+    });
+    it('follows a change of the elevation in Home Assistant', () => {
+        const c = withHass(BASE, 0);
+        c.hass = { states: {}, locale: { language: 'en' }, config: { elevation: 1500 }, callWS: async () => ({}) };
+        expect(c._pressure).toBeCloseTo(84556, 0);
+    });
+    it('show_pressure text: altitude and pressure, or only the pressure', () => {
+        expect(withHass(BASE, 1500)._airText()).toBe('1,500 m a.s.l. · 846 hPa');
+        expect(withHass(BASE, 450, 'de')._airText()).toBe('450 m ü. M. · 960 hPa');
+        expect(withHass({ ...BASE, pressure: 960 }, 1500)._airText()).toBe('960 hPa');
+    });
+    it('show_pressure must be a boolean', () => {
+        expect(() => card().setConfig({ ...BASE, show_pressure: 'yes' })).toThrow(/show_pressure/);
+    });
+});

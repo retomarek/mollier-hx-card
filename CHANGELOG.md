@@ -11,7 +11,7 @@ First public version. The earlier 0.1.0, 1.0.0 betas and release candidates were
 ### Added
 
 - Mollier h,x diagram from the daily means of a temperature and a humidity sensor (Home Assistant long-term statistics): one point per day, coloured by season, by age or joined in time order (`coloring`), plus the live room point.
-- Iso-lines to choose (`lines`: temperature, relative and absolute humidity, density, enthalpy), axis ranges (`x_range`, `temperature_range`), `altitude` or `pressure`, `convention` (classical or Glück).
+- Iso-lines to choose (`lines`: temperature, relative and absolute humidity, density, enthalpy), axis ranges (`x_range`, `temperature_range`), the air pressure from the elevation set in Home Assistant (`altitude` or `pressure` override it; `show_pressure` writes it above the diagram), `convention` (classical or Glück).
 - Comfort zone (`comfort_zone`) and orange / red warning bands (`warning_bands`) with the same schema as the Comfort Compass Card.
 - Outside air: current outside point from sensors or a weather entity, outside daily means (`outdoor_history`) and a ventilation line that tells whether airing dries the room or adds moisture (`ventilation_line`).
 - Legend (`show_legend`), tooltips with dew point and water content, zoom up to 4× (pinch, buttons, double-click, ctrl + wheel).

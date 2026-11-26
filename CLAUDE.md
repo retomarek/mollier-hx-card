@@ -71,6 +71,8 @@ Versioning is SemVer (`MAJOR.MINOR.PATCH`, e.g. `1.0.0`). Don't use Home Assista
 - `.claude/skills/visual-check/`: `npm run visual-check` renders the bundle in ~10 dashboard situations (`scripts/visual-check.mjs`, output in `tmp/visual/`); look at the images after any rendering, style or sizing change.
 - `.claude/skills/release/`: release checklist (versions, changelog, workflows, HACS catalog).
 
+Air pressure: `airPressure(config, hass)` in the shared `src/statistics.js`: `altitude`, else `pressure`, else `hass.config.elevation`, else sea level; recomputed when the elevation in `hass` changes (`_pressure` is reactive and part of the grid hash). `show_pressure` (default off) writes the altitude and pressure (`_airText()`, keys `diagram.altitude` / `diagram.pressure`) in the top margin above the plot, outside the zoomed host. The editor's *Air pressure from* has `home` (default, writes nothing), `altitude`, `pressure`.
+
 ## Config API (stable from 1.0.0)
 
 Option names were settled before 1.0: `title`, `days_to_show`, `x_range`, `temperature_range`, `lines.humidity`, `outdoor_*`, `ventilation_line`, `comfort_zone`, `warning_bands`. There are no aliases for older names. Until 1.0.0 a minor version may still change an option (say so in the CHANGELOG); from 1.0, renaming or changing an option is a breaking change (major version). Temperatures in the config are always °C (band offsets K); `pressure` accepts hPa or Pa; `altitude` in m; validation errors are thrown from `setConfig` (shared helpers in `src/statistics.js`).

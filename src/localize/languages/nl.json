@@ -23,7 +23,9 @@
     "temperature": "Temperatuur ϑ [°C]",
     "rel_humidity": "rel. luchtvochtigheid φ [%]",
     "density": "Dichtheid ρ [kg/m³]",
-    "enthalpy": "Enthalpie [kJ/kg]"
+    "enthalpy": "Enthalpie [kJ/kg]",
+    "altitude": "{m} m boven zeeniveau",
+    "pressure": "{hpa} hPa"
   },
   "editor": {
     "fields": {
@@ -67,7 +69,8 @@
       "outdoor_weather_entity": "Weer (reserve)",
       "outdoor_history": "Daggemiddelden buiten",
       "ventilation_line": "Ventilatielijn",
-      "show_legend": "Legenda tonen"
+      "show_legend": "Legenda tonen",
+      "show_pressure": "Hoogte en luchtdruk tonen"
     },
     "options": {
       "season": "Per seizoen",
@@ -76,7 +79,9 @@
       "pressure": "Druk (Pa)",
       "altitude": "Hoogte (m)",
       "classical": "Klassiek (Recknagel)",
-      "glueck": "Glück"
+      "glueck": "Glück",
+      "home": "Home Assistant ({m} m)",
+      "home_unset": "Home Assistant (niet ingesteld: zeeniveau)"
     },
     "sections": {
       "axes": "Assen",

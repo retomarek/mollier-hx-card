@@ -23,7 +23,9 @@
     "temperature": "Temperatur ϑ [°C]",
     "rel_humidity": "rel. Feuchte φ [%]",
     "density": "Dichte ρ [kg/m³]",
-    "enthalpy": "Enthalpie [kJ/kg]"
+    "enthalpy": "Enthalpie [kJ/kg]",
+    "altitude": "{m} m ü. M.",
+    "pressure": "{hpa} hPa"
   },
   "editor": {
     "fields": {
@@ -67,7 +69,8 @@
       "outdoor_weather_entity": "Wetter (Ersatz)",
       "outdoor_history": "Tagesmittel aussen",
       "ventilation_line": "Lüftungslinie",
-      "show_legend": "Legende anzeigen"
+      "show_legend": "Legende anzeigen",
+      "show_pressure": "Höhe und Luftdruck anzeigen"
     },
     "options": {
       "season": "Nach Jahreszeit",
@@ -76,7 +79,9 @@
       "pressure": "Druck (Pa)",
       "altitude": "Höhe (m)",
       "classical": "Klassisch (Recknagel)",
-      "glueck": "Glück"
+      "glueck": "Glück",
+      "home": "Home Assistant ({m} m ü. M.)",
+      "home_unset": "Home Assistant (nicht gesetzt: Meereshöhe)"
     },
     "sections": {
       "axes": "Achsen",

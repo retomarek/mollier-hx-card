@@ -114,20 +114,30 @@ export function missingEntities(hass, ids) {
     return ids.filter((id) => id && !hass.states[id]);
 }
 
+export const SEA_LEVEL_PA = 101325;
+
+// Air pressure in Pa at an altitude in m (international standard atmosphere).
+export function pressureAtAltitude(m) {
+    return SEA_LEVEL_PA * Math.pow(1 - 2.25577e-5 * m, 5.25588);
+}
+
+const inRange = (v, [lo, hi]) => Number.isFinite(v) && v >= lo && v <= hi;
+
 // Air pressure in Pa from the card config: `altitude` (m) wins when it is a real
 // number; `pressure` is accepted in hPa (< 2000) or Pa. Throws on values outside
 // what is physically sensible, so a wrong unit is caught instead of silently
-// drawing nonsense.
-export function pressureFromConfig(config, fallback = 101325) {
+// drawing nonsense. Neither set → `fallback` (null: take it from Home Assistant,
+// see airPressure()).
+export function pressureFromConfig(config, fallback = SEA_LEVEL_PA) {
     const alt = config.altitude;
     if (alt !== undefined && alt !== null && alt !== '') {
         const a = Number(alt);
-        if (!Number.isFinite(a) || a < ALTITUDE_RANGE[0] || a > ALTITUDE_RANGE[1]) {
+        if (!inRange(a, ALTITUDE_RANGE)) {
             throw new Error(
                 `altitude must be in metres between ${ALTITUDE_RANGE[0]} and ${ALTITUDE_RANGE[1]} (got ${alt})`,
             );
         }
-        return 101325 * Math.pow(1 - 2.25577e-5 * a, 5.25588);
+        return pressureAtAltitude(a);
     }
     const pr = config.pressure;
     if (pr === undefined || pr === null || pr === '') return fallback;
@@ -139,6 +149,32 @@ export function pressureFromConfig(config, fallback = 101325) {
         throw new Error(`pressure must be in hPa (${h0}–${h1}) or Pa (${p0}–${p1}) (got ${pr})`);
     }
     return p;
+}
+
+// The elevation set in Home Assistant (Settings → System → General), in m, or
+// null when it is missing or outside ALTITUDE_RANGE.
+export function elevationOf(hass) {
+    const e = hass?.config?.elevation;
+    if (e === undefined || e === null || e === '' || typeof e === 'boolean') return null;
+    const m = Number(e);
+    return inRange(m, ALTITUDE_RANGE) ? m : null;
+}
+
+// The air pressure a card works with: `altitude` from the config, else
+// `pressure` from the config, else the elevation set in Home Assistant, else
+// sea level. Returns { pa, altitude (m, or null when only a pressure is known),
+// source: 'altitude' | 'pressure' | 'home' | 'default' }. The config must have
+// passed pressureFromConfig() (it throws on invalid values).
+export function airPressure(config, hass) {
+    const given = (v) => v !== undefined && v !== null && v !== '';
+    if (given(config?.altitude)) {
+        const altitude = Number(config.altitude);
+        return { pa: pressureAtAltitude(altitude), altitude, source: 'altitude' };
+    }
+    if (given(config?.pressure)) return { pa: pressureFromConfig(config), altitude: null, source: 'pressure' };
+    const elevation = elevationOf(hass);
+    if (elevation !== null) return { pa: pressureAtAltitude(elevation), altitude: elevation, source: 'home' };
+    return { pa: SEA_LEVEL_PA, altitude: 0, source: 'default' };
 }
 
 // days_to_show, 1..MAX_DAYS.

@@ -217,6 +217,43 @@ svg.icon {
     flex: 1;
 }
 
+/* Control groups fold like the expandable sections of Home Assistant's card
+   editor: the heading is the toggle, a chevron shows the state. */
+details.section + details.section {
+    margin-top: 8px;
+}
+details.section[open] {
+    margin-bottom: 16px;
+}
+summary.heading {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 8px;
+    padding: 4px 8px;
+    transition: background 0.15s;
+}
+summary.heading::-webkit-details-marker {
+    display: none;
+}
+summary.heading:hover {
+    background: var(--secondary-background-color);
+}
+summary.heading:focus-visible {
+    outline: 2px solid var(--primary-color, #03a9f4);
+    outline-offset: 2px;
+}
+summary.heading .chevron {
+    color: var(--secondary-text-color);
+    transition: transform 0.2s;
+}
+details.section[open] > summary.heading .chevron {
+    transform: rotate(180deg);
+}
+details.section[open] > summary.heading {
+    margin-bottom: 4px;
+}
+
 /* Generic card shell, like ha-card */
 .card {
     background: var(--ha-card-background, var(--card-background-color));

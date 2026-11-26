@@ -19,6 +19,7 @@ import {
     stateCelsius,
     stateHumidity,
     missingEntities,
+    airPressure,
     pressureFromConfig,
     daysFromConfig,
     REFRESH_MS,
@@ -27,7 +28,6 @@ import {
 } from './statistics.js';
 import styles from './card.styles';
 
-const DEFAULT_PRESSURE = 101325;
 const DEFAULT_DAYS = 7;
 const DEFAULT_COLORING = 'season';
 const DEFAULT_CONVENTION = 'classical';
@@ -225,7 +225,11 @@ export class MollierHxCard extends LitElement {
         }
         // Validate everything before changing any state, so a broken edit in
         // the YAML editor shows an error and leaves the card as it was.
-        const pressure = pressureFromConfig(config, DEFAULT_PRESSURE);
+        // Validates altitude / pressure; neither set → the elevation set in Home Assistant.
+        pressureFromConfig(config, null);
+        if (config.show_pressure !== undefined && typeof config.show_pressure !== 'boolean') {
+            throw new Error(`show_pressure must be true or false (got ${JSON.stringify(config.show_pressure)})`);
+        }
         const days = daysFromConfig(config, DEFAULT_DAYS);
         const coloring = enumOption(config, 'coloring', VALID_COLORINGS, DEFAULT_COLORING);
         const convention = enumOption(config, 'convention', VALID_CONVENTIONS, DEFAULT_CONVENTION);
@@ -237,7 +241,8 @@ export class MollierHxCard extends LitElement {
         this._header = title === '' || title === undefined || title === null ? nothing : title;
         this._tempEntity = config.temperature_entity;
         this._humEntity = config.humidity_entity;
-        this._pressure = pressure;
+        this._updateAir();
+        this._showPressure = config.show_pressure === true;
         this._days = days;
         this._coloring = coloring;
         this._comfortZone = comfortZone;
@@ -265,9 +270,36 @@ export class MollierHxCard extends LitElement {
         }
     }
 
+    // Air pressure for the diagram: altitude or pressure from the config, else
+    // the elevation set in Home Assistant, else sea level. _pressure is reactive:
+    // a change redraws the grid (it is part of the draw hash).
+    _updateAir() {
+        this._air = airPressure(this._config, this._hass);
+        this._pressure = this._air.pa;
+    }
+
+    // "450 m a.s.l. · 960 hPa" (only the pressure when no altitude is known).
+    _airText() {
+        const a = this._air;
+        if (!a) return '';
+        // Numbers in the user's locale (1’500 in de-CH, 1.500 in de).
+        const lang = this._hass?.locale?.language || getLanguage(this._hass);
+        const num = (v) => {
+            try {
+                return new Intl.NumberFormat(lang, { maximumFractionDigits: 0 }).format(v);
+            } catch (e) {
+                return String(Math.round(v));
+            }
+        };
+        const hpa = this._t('diagram.pressure', { hpa: num(a.pa / 100) });
+        return a.altitude === null ? hpa : `${this._t('diagram.altitude', { m: num(a.altitude) })} · ${hpa}`;
+    }
+
     set hass(hass) {
         const firstAttach = !this._hass;
+        const elevationChanged = this._hass?.config?.elevation !== hass?.config?.elevation;
         this._hass = hass;
+        if (elevationChanged && this._config) this._updateAir();
         // Captions, legend and messages are translated: redraw on a language switch.
         const lang = getLanguage(hass);
         if (!firstAttach && lang !== this._lang) this.requestUpdate();
@@ -491,6 +523,7 @@ export class MollierHxCard extends LitElement {
                         <div class="diagram-wrap">
                             <div class="zoom-viewport">
                                 <div class="mollier-host"></div>
+                                ${this._showPressure ? html`<div class="air-info">${this._airText()}</div>` : nothing}
                             </div>
                             <div class="tooltip"></div>
                             <div

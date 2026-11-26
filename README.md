@@ -84,8 +84,8 @@ Units: all temperatures in the card config (comfort zone, `temperature_range`) a
 | `title` | string | | Card title. |
 | `days_to_show` | number | `7` | Days of history, 1 to 3650 (daily statistics are kept indefinitely). |
 | `coloring` | string | `season` | `season`, `age` (older days fade) or `chronological` (days joined by a line). |
-| `altitude` | number | | Altitude in m above sea level (−500 to 9000). Sets the air pressure from the standard atmosphere and overrides `pressure`. |
-| `pressure` | number | `101325` | Air pressure in hPa (300–1100) or Pa (30000–110000). |
+| `altitude` | number | Home Assistant's elevation | Altitude in m above sea level (−500 to 9000). Sets the air pressure from the standard atmosphere and overrides `pressure`. See [Altitude and air pressure](#altitude-and-air-pressure). |
+| `pressure` | number | from the altitude | Air pressure in hPa (300–1100) or Pa (30000–110000), instead of an altitude. |
 | `convention` | string | `classical` | `classical` (per kg dry air, Recknagel) or `glueck` (per kg moist air). Same physics, slightly different tilt of the isotherms. |
 | `x_range` | `[min, max]` | `[0, 18]` | Absolute-humidity axis in g/kg. |
 | `temperature_range` | `[min, max]` | `[-10, 40]` | Temperature axis in °C. Room and outside points beyond the axes show as an arrow on the edge. |
@@ -97,6 +97,7 @@ Units: all temperatures in the card config (comfort zone, `temperature_range`) a
 | `outdoor_history` | boolean | `false` | Also show the outside daily means as a faint cloud. Needs the outside **sensors** (a weather entity has no statistics). |
 | `ventilation_line` | boolean | `true` | Dashed line from the current room point to the outside point, plus "ventilating dries / adds moisture" in the legend. |
 | `show_legend` | boolean | `true` | The line below the diagram with zone, bands, "Now" and outside air. `false` hides it. |
+| `show_pressure` | boolean | `false` | Show the altitude and the air pressure the diagram is drawn for, above it ("450 m a.s.l. · 960 hPa"). |
 | `lines` | object | | Iso-lines: `temperature`, `humidity`, `absolute_humidity` (on by default), `density`, `enthalpy` (off). |
 
 <details>
@@ -161,6 +162,10 @@ With an outside sensor pair (or a weather entity) the card adds the outside air 
 Hover or tap the outside point for its temperature, humidity, water content and dew point (tap again or tap the diagram to close; the daily points and the current room point work the same way). See [The h,x diagram in five minutes](#the-hx-diagram-in-five-minutes) for the background.
 
 </details>
+
+### Altitude and air pressure
+
+The air pressure changes how much water the air holds at a given relative humidity: at 1500 m the same 21 °C and 60 % are about 11 g/kg instead of 9.3 g/kg at sea level. The curves of the diagram shift accordingly; `show_pressure: true` writes the altitude and the pressure above the diagram. By default the card takes the **elevation set in Home Assistant** (*Settings → System → General → Elevation*) and follows it when you change it. Set `altitude` (m) or `pressure` (hPa or Pa) to use another value, e.g. for a sensor in a holiday flat; in the visual editor: *Air pressure from*.
 
 ### Size in the dashboard
 

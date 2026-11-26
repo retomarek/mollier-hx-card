@@ -23,7 +23,7 @@ function sensor(entityId, state, unit, deviceClass, name) {
 // `rooms`: [{ ids: { t, h, outT, outH }, live: { t, rh, outT, outH }, name }],
 // the sensors of every sample room (like a real Home Assistant, all of them
 // exist at the same time). `stats`: { entity_id: [{ start, mean }] } for all.
-export function createHass({ rooms, stats, language, dark, onFetch }) {
+export function createHass({ rooms, stats, language, dark, elevation, onFetch }) {
     const states = {};
     for (const { ids, live, name } of rooms) {
         states[ids.t] = sensor(ids.t, live.t.toFixed(1), '°C', 'temperature', `${name} temperature`);
@@ -35,7 +35,13 @@ export function createHass({ rooms, stats, language, dark, onFetch }) {
         language,
         locale: { language, number_format: 'language', time_format: 'language' },
         themes: { darkMode: dark },
-        config: { time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone, unit_system: { temperature: '°C' } },
+        config: {
+            time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            unit_system: { temperature: '°C' },
+            // Settings → System → General → Elevation: the cards take it when
+            // their config has neither altitude nor pressure.
+            elevation,
+        },
         states,
         async callWS(msg) {
             if (msg.type !== 'recorder/statistics_during_period') throw new Error(`Unsupported call ${msg.type}`);

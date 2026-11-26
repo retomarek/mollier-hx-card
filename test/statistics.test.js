@@ -2,8 +2,12 @@
 // (`npm run check-shared`).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+    airPressure,
     ALTITUDE_RANGE,
     daysFromConfig,
+    elevationOf,
+    pressureAtAltitude,
+    SEA_LEVEL_PA,
     fetchDailyMeans,
     humidityFraction,
     MAX_DAYS,
@@ -86,6 +90,36 @@ describe('pressureFromConfig', () => {
         expect(() => pressureFromConfig({ pressure: 'abc' })).toThrow(/pressure/);
         expect(() => pressureFromConfig({ altitude: 10000 })).toThrow(/altitude must be/);
         expect(() => pressureFromConfig({ altitude: 'high' })).toThrow(/altitude/);
+    });
+});
+
+describe('airPressure', () => {
+    const hass = (elevation) => ({ config: { elevation } });
+    it('standard atmosphere', () => {
+        expect(pressureAtAltitude(0)).toBe(SEA_LEVEL_PA);
+        expect(pressureAtAltitude(1500)).toBeCloseTo(84556, 0);
+    });
+    it('altitude from the config wins, then pressure, then Home Assistant, then sea level', () => {
+        expect(airPressure({ altitude: 450, pressure: 90000 }, hass(1500))).toMatchObject({
+            altitude: 450,
+            source: 'altitude',
+        });
+        expect(airPressure({ pressure: 960 }, hass(1500))).toEqual({ pa: 96000, altitude: null, source: 'pressure' });
+        const home = airPressure({}, hass(1500));
+        expect(home).toMatchObject({ altitude: 1500, source: 'home' });
+        expect(home.pa).toBeCloseTo(84556, 0);
+        expect(airPressure({}, undefined)).toEqual({ pa: SEA_LEVEL_PA, altitude: 0, source: 'default' });
+    });
+    it('ignores a missing or implausible elevation in Home Assistant', () => {
+        for (const e of [undefined, null, '', 'high', true, 12000]) {
+            expect(elevationOf(hass(e)), String(e)).toBeNull();
+            expect(airPressure({}, hass(e)).source).toBe('default');
+        }
+        expect(elevationOf(hass('450'))).toBe(450);
+        expect(elevationOf(hass(0))).toBe(0);
+    });
+    it('a config without air values gives null with fallback null (the card then asks Home Assistant)', () => {
+        expect(pressureFromConfig({}, null)).toBeNull();
     });
 });
 

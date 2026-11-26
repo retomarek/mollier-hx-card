@@ -54,6 +54,24 @@ const CASES = [
     // Sections row with auto height next to a taller card: the tile is stretched
     // (height without grid_options.rows); the card fills it like HA's own cards.
     { name: 'stretched-auto-row', theme: 'dark', lang: 'en', width: 500, height: 640, layout: 'grid' },
+    // show_pressure: altitude (Home Assistant's elevation) and pressure in the top margin.
+    {
+        name: 'show-pressure-home-de',
+        theme: 'light',
+        lang: 'de',
+        width: 500,
+        layout: 'grid',
+        elevation: 1500,
+        config: { show_pressure: true, altitude: null },
+    },
+    {
+        name: 'show-pressure-only-dark-narrow',
+        theme: 'dark',
+        lang: 'en',
+        width: 330,
+        layout: 'grid',
+        config: { show_pressure: true, altitude: null, pressure: 960 },
+    },
     {
         name: 'all-lines',
         theme: 'light',
@@ -168,7 +186,7 @@ function html(c) {
   ${c.layout ? `card.layout = ${JSON.stringify(c.layout)};` : ''}
   card.setConfig(${JSON.stringify(config)});
   card.hass = {
-    language: '${c.lang}', locale: { language: '${c.lang}' }, config: { time_zone: 'Europe/Zurich' }, themes: { darkMode: ${c.theme === 'dark'} },
+    language: '${c.lang}', locale: { language: '${c.lang}' }, config: { time_zone: 'Europe/Zurich'${c.elevation !== undefined ? `, elevation: ${c.elevation}` : ''} }, themes: { darkMode: ${c.theme === 'dark'} },
     states: { ...Object.fromEntries(Object.entries(${JSON.stringify(states)}).filter(([, v]) => v !== null).map(([k, v]) => [k, { entity_id: k, state: v, attributes: {} }])),
       'weather.home': { entity_id: 'weather.home', state: 'cloudy', attributes: { temperature: 41, temperature_unit: '°F', humidity: 85 } } },
     callWS: async (msg) => {

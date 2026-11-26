@@ -23,7 +23,9 @@
     "temperature": "Temperatur ϑ [°C]",
     "rel_humidity": "rel. luftfuktighet φ [%]",
     "density": "Densitet ρ [kg/m³]",
-    "enthalpy": "Entalpi [kJ/kg]"
+    "enthalpy": "Entalpi [kJ/kg]",
+    "altitude": "{m} m ö.h.",
+    "pressure": "{hpa} hPa"
   },
   "editor": {
     "fields": {
@@ -67,7 +69,8 @@
       "outdoor_weather_entity": "Väder (reserv)",
       "outdoor_history": "Dygnsmedel ute",
       "ventilation_line": "Vädringslinje",
-      "show_legend": "Visa förklaring"
+      "show_legend": "Visa förklaring",
+      "show_pressure": "Visa höjd och lufttryck"
     },
     "options": {
       "season": "Efter årstid",
@@ -76,7 +79,9 @@
       "pressure": "Tryck (Pa)",
       "altitude": "Höjd (m)",
       "classical": "Klassisk (Recknagel)",
-      "glueck": "Glück"
+      "glueck": "Glück",
+      "home": "Home Assistant ({m} m)",
+      "home_unset": "Home Assistant (inte angivet: havsnivå)"
     },
     "sections": {
       "axes": "Axlar",
