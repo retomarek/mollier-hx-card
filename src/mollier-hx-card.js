@@ -1,5 +1,5 @@
 // Keep in sync with "version" in package.json.
-const version = '0.1.0';
+const version = '0.1.1';
 import { MollierHxCard } from './card';
 import { MollierHxCardEditor } from './editor';
 

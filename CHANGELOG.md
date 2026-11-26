@@ -4,6 +4,13 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-27
+
+### Changed
+
+- The card picker describes the card like the README: "A Mollier h,x (psychrometric) diagram of your room climate, one point per day, with comfort zone, warning bands and outside air."
+- Live demo: wider page, no empty menu button, and a readable note when the device asks for reduced motion (the "Now" marker then does not breathe).
+
 ## [0.1.0] - 2026-11-26
 
 First public version. The earlier 0.1.0, 1.0.0 betas and release candidates were withdrawn; nobody needs to migrate.
@@ -26,5 +33,6 @@ First public version. The earlier 0.1.0, 1.0.0 betas and release candidates were
 - Unit tests (vitest), ESLint and Prettier, CI on every push, and a check that the code shared with the Comfort Compass Card is identical in both repositories.
 - End-to-end tests of both cards in a real Home Assistant (stable and beta) on every push and weekly.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/retomarek/mollier-hx-card/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/retomarek/mollier-hx-card/releases/tag/v0.1.0
