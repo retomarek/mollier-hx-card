@@ -3,7 +3,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { getLanguage, localize } from '../src/localize/localize.js';
+import { formatNumber, getLanguage, localize } from '../src/localize/localize.js';
 
 // Paths from the repository root (vitest's root); import.meta.url is not a file URL under happy-dom.
 const DIR = join(process.cwd(), 'src/localize/languages');
@@ -66,5 +66,17 @@ describe('localize', () => {
         expect(localize(hass('en'), 'card.fetch_failed', { error: 'boom', s: 30 })).toContain('boom');
         expect(localize(hass('de'), 'card.fetch_failed', { error: 'boom', s: 30 })).toContain('boom');
         expect(localize(hass('en'), 'does.not.exist')).toBe('does.not.exist');
+    });
+});
+
+describe('formatNumber', () => {
+    const hass = (language, number_format) => ({ locale: { language, number_format } });
+    it("follows the profile's number format, else the language", () => {
+        expect(formatNumber(hass('en', 'language'), 1500)).toBe('1,500');
+        expect(formatNumber(hass('de', 'language'), 1500)).toBe('1.500');
+        expect(formatNumber(hass('en', 'decimal_comma'), 1500.5, 1)).toBe('1.500,5');
+        expect(formatNumber(hass('en', 'quote_decimal'), 1500)).toBe('1’500');
+        expect(formatNumber(hass('de', 'none'), 1500)).toBe('1500');
+        expect(formatNumber(undefined, 2.345, 2)).toMatch(/2[.,]35/);
     });
 });

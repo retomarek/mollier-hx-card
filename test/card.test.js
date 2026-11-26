@@ -141,4 +141,21 @@ describe('air pressure', () => {
     it('show_pressure must be a boolean', () => {
         expect(() => card().setConfig({ ...BASE, show_pressure: 'yes' })).toThrow(/show_pressure/);
     });
+
+    it('an empty show_pressure is "not set"', () => {
+        expect(() => card().setConfig({ ...BASE, show_pressure: null })).not.toThrow();
+    });
+    it("the text follows the profile's number format and leaves out an unknown altitude", () => {
+        const c = card();
+        c.setConfig(BASE);
+        c.hass = {
+            states: {},
+            locale: { language: 'en', number_format: 'quote_decimal' },
+            config: { elevation: 1500 },
+            callWS: async () => ({}),
+        };
+        expect(c._airText()).toBe('1’500 m a.s.l. · 846 hPa');
+        c.hass = { states: {}, locale: { language: 'en' }, config: {}, callWS: async () => ({}) };
+        expect(c._airText()).toBe('1,013 hPa');
+    });
 });

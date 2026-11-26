@@ -95,12 +95,18 @@ export default css`
     .air-info {
         position: absolute;
         left: calc(100% * 50 / 600);
-        top: 0;
-        height: calc(100% * 30 / 420);
-        display: flex;
-        align-items: center;
+        top: calc(100% * 15 / 420);
+        transform: translateY(-50%);
         /* Scales with the diagram like its axis labels (12 of 600 units), readable when small. */
-        font-size: clamp(9px, calc(100cqw * 12 / 600), 12px);
+        /* The diagram is min(100cqw, 100cqh * 600 / 420) wide (see .zoom-viewport). */
+        font-size: clamp(9px, calc(min(100cqw, 100cqh * 600 / 420) * 12 / 600), 12px);
+        /* Stays readable over the plot when it is zoomed in. */
+        background: var(--sheet-bg);
+        padding: 0 4px;
+        margin-left: -4px;
+        border-radius: 4px;
+        align-self: center;
+        height: auto;
         color: var(--sheet-muted);
         white-space: nowrap;
         pointer-events: none;

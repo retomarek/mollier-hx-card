@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
-import { localize } from './localize/localize.js';
+import { formatNumber, localize } from './localize/localize.js';
 import { LINE_DEFAULTS, parseLines } from './card.js';
-import { ALTITUDE_RANGE, elevationOf, MAX_DAYS, PRESSURE_PA_RANGE } from './statistics.js';
+import { ALTITUDE_RANGE, elevationOf, MAX_DAYS, pressureAtAltitude, PRESSURE_PA_RANGE } from './statistics.js';
 
 const LINE_KEYS = Object.keys(LINE_DEFAULTS);
 
@@ -12,7 +12,7 @@ const LINE_KEYS = Object.keys(LINE_DEFAULTS);
 const DEFAULTS = {
     days: 7,
     coloring: 'season',
-    pressure: 101325, // the card's default when neither pressure nor altitude is set
+    pressure: 101325, // only a suggestion when the user switches to pressure (sea level)
     altitude: 450, // only a suggestion when the user switches to altitude
     air_mode: 'home',
     convention: 'classical',
@@ -35,6 +35,11 @@ const DEFAULTS = {
     red_dx: 2.5,
 };
 
+const homePressure = (hass) => {
+    const e = elevationOf(hass);
+    return e === null ? undefined : Math.round(pressureAtAltitude(e));
+};
+
 export function configToData(config, hass = undefined) {
     const c = config || {};
     const hasAltitude = c.altitude !== undefined && c.altitude !== null && c.altitude !== '';
@@ -50,7 +55,8 @@ export function configToData(config, hass = undefined) {
         coloring: c.coloring ?? DEFAULTS.coloring,
         // Neither altitude nor pressure: the elevation set in Home Assistant.
         air_mode: hasAltitude ? 'altitude' : hasPressure ? 'pressure' : 'home',
-        pressure: c.pressure ?? DEFAULTS.pressure,
+        // Suggestion when switching to a pressure: the one at Home Assistant's elevation.
+        pressure: c.pressure ?? homePressure(hass) ?? DEFAULTS.pressure,
         // Suggestion when switching to an own altitude: Home Assistant's.
         altitude: c.altitude ?? elevationOf(hass) ?? DEFAULTS.altitude,
         convention: c.convention ?? DEFAULTS.convention,
@@ -313,7 +319,7 @@ function buildSchema(data, t, hass) {
                                     label:
                                         elevation === null
                                             ? t('editor.options.home_unset')
-                                            : t('editor.options.home', { m: Math.round(elevation) }),
+                                            : t('editor.options.home', { m: formatNumber(hass, elevation) }),
                                 },
                                 { value: 'altitude', label: t('editor.options.altitude') },
                                 { value: 'pressure', label: t('editor.options.pressure') },

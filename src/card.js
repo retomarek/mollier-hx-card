@@ -13,7 +13,7 @@ import {
 } from './d3_mollierhx/drawComfort.js';
 import { createMollier } from './d3_mollierhx/mollierFunctions.js';
 import { parseWarningBands, bandRanges } from './bands.js';
-import { localize, getLanguage } from './localize/localize.js';
+import { formatNumber, localize, getLanguage } from './localize/localize.js';
 import {
     fetchDailyMeans,
     stateCelsius,
@@ -227,7 +227,7 @@ export class MollierHxCard extends LitElement {
         // the YAML editor shows an error and leaves the card as it was.
         // Validates altitude / pressure; neither set → the elevation set in Home Assistant.
         pressureFromConfig(config, null);
-        if (config.show_pressure !== undefined && typeof config.show_pressure !== 'boolean') {
+        if (config.show_pressure != null && typeof config.show_pressure !== 'boolean') {
             throw new Error(`show_pressure must be true or false (got ${JSON.stringify(config.show_pressure)})`);
         }
         const days = daysFromConfig(config, DEFAULT_DAYS);
@@ -278,19 +278,12 @@ export class MollierHxCard extends LitElement {
         this._pressure = this._air.pa;
     }
 
-    // "450 m a.s.l. · 960 hPa" (only the pressure when no altitude is known).
+    // "450 m a.s.l. · 960 hPa" (only the pressure when no altitude is known),
+    // numbers in the user's number format.
     _airText() {
         const a = this._air;
         if (!a) return '';
-        // Numbers in the user's locale (1’500 in de-CH, 1.500 in de).
-        const lang = this._hass?.locale?.language || getLanguage(this._hass);
-        const num = (v) => {
-            try {
-                return new Intl.NumberFormat(lang, { maximumFractionDigits: 0 }).format(v);
-            } catch (e) {
-                return String(Math.round(v));
-            }
-        };
+        const num = (v) => formatNumber(this._hass, v);
         const hpa = this._t('diagram.pressure', { hpa: num(a.pa / 100) });
         return a.altitude === null ? hpa : `${this._t('diagram.altitude', { m: num(a.altitude) })} · ${hpa}`;
     }

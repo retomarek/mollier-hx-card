@@ -108,7 +108,7 @@ describe('airPressure', () => {
         const home = airPressure({}, hass(1500));
         expect(home).toMatchObject({ altitude: 1500, source: 'home' });
         expect(home.pa).toBeCloseTo(84556, 0);
-        expect(airPressure({}, undefined)).toEqual({ pa: SEA_LEVEL_PA, altitude: 0, source: 'default' });
+        expect(airPressure({}, undefined)).toEqual({ pa: SEA_LEVEL_PA, altitude: null, source: 'default' });
     });
     it('ignores a missing or implausible elevation in Home Assistant', () => {
         for (const e of [undefined, null, '', 'high', true, 12000]) {

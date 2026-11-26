@@ -575,7 +575,7 @@ function buildControls() {
                     set: (v) => (state.altitude = v),
                     fmt: (v) =>
                         `${v} m · ${Math.round((101325 * Math.pow(1 - 2.25577e-5 * v, 5.25588)) / 100)} hPa` +
-                        (state.airSource === 'home' ? ' · Settings → General → Elevation' : ' · altitude in the YAML'),
+                        (state.airSource === 'home' ? ' · Settings → System → General' : ' · altitude in the YAML'),
                     wide: true,
                 }),
             ],

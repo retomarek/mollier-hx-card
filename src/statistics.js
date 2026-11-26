@@ -174,7 +174,8 @@ export function airPressure(config, hass) {
     if (given(config?.pressure)) return { pa: pressureFromConfig(config), altitude: null, source: 'pressure' };
     const elevation = elevationOf(hass);
     if (elevation !== null) return { pa: pressureAtAltitude(elevation), altitude: elevation, source: 'home' };
-    return { pa: SEA_LEVEL_PA, altitude: 0, source: 'default' };
+    // No (valid) elevation in Home Assistant: sea level, but no altitude to show.
+    return { pa: SEA_LEVEL_PA, altitude: null, source: 'default' };
 }
 
 // days_to_show, 1..MAX_DAYS.

@@ -55,3 +55,26 @@ export function localize(hass, key, vars) {
     if (vars) value = value.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? String(vars[k]) : m));
     return value;
 }
+
+// Home Assistant's number format setting (profile → Number format) → locale for
+// Intl.NumberFormat, like the frontend's numberFormatToLocale().
+const NUMBER_LOCALES = {
+    comma_decimal: ['en-US', 'en'],
+    decimal_comma: ['de', 'es', 'it'],
+    space_comma: ['fr', 'sv', 'cs'],
+    quote_decimal: ['de-CH'],
+};
+
+// formatNumber(hass, 1500) → "1,500" / "1.500" / "1’500" / "1500", as set in
+// the user's Home Assistant profile; `digits` decimals.
+export function formatNumber(hass, value, digits = 0) {
+    const nf = hass?.locale?.number_format;
+    const locale =
+        nf === 'system' ? undefined : NUMBER_LOCALES[nf] || hass?.locale?.language || hass?.language || undefined;
+    const opts = { minimumFractionDigits: digits, maximumFractionDigits: digits, useGrouping: nf !== 'none' };
+    try {
+        return new Intl.NumberFormat(locale, opts).format(value);
+    } catch (e) {
+        return Number(value).toFixed(digits);
+    }
+}
