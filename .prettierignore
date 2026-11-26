@@ -1,0 +1,13 @@
+dist/
+node_modules/
+tmp/
+docs/
+.parcel-cache/
+package-lock.json
+*.md
+*.yml
+*.yaml
+*.html
+src/vendor/
+src/d3_mollierhx/
+test/fixtures/
