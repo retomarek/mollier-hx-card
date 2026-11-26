@@ -1261,10 +1261,15 @@ export class MollierHxCard extends LitElement {
         };
     }
 
-    // Masonry: 1 unit = 50 px. With title and legend the card is about
-    // 400–600 px tall depending on the column width.
+    // Masonry: 1 unit = 50 px. Home Assistant also uses it as the first row
+    // count when the user switches auto height off in the layout editor, so it
+    // should match the real height: measured when the card is shown in auto
+    // mode, otherwise estimated (about 400–600 px with title and legend).
     getCardSize() {
-        return 10;
+        const h = this._fixedHeight ? 0 : this.renderRoot?.querySelector('ha-card')?.offsetHeight;
+        if (h > 0) return Math.ceil(h / 50);
+        const c = this._config || {};
+        return (c.title ? 1 : 0) + 8 + (c.show_legend === false ? 0 : 1);
     }
 
     // Sections: full width by default, auto height (no default rows) like the

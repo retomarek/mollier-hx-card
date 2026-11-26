@@ -20,7 +20,7 @@ Home Assistant card contract
 - `setConfig` validates required keys with useful errors and applies defaults explicitly; it must not throw for optional or malformed optional keys.
 - Missing entities, `unavailable` / `unknown` states, an empty statistics result and a failing `callWS` are all handled without breaking the dashboard, and the user sees a translated message.
 - The editor dispatches `config-changed` with the full config (`bubbles` + `composed`), never mutates the incoming config, and keeps `grid_options` and YAML-only keys it does not edit.
-- Sizing: `getGridOptions` / `getCardSize` match the documented behaviour; fixed mode (`layout` grid with `grid_options.rows`, or panel) fills the tile, auto mode keeps an intrinsic, capped height. Nothing may use `height: 100%` against an auto-height parent.
+- Sizing: `getGridOptions` / `getCardSize` match the documented behaviour; fixed mode (`layout` grid with `grid_options.rows`, or panel) fills the tile, auto mode keeps an intrinsic, capped height. Only `:host` and `ha-card` take `height: 100%` (like HA's cards: stretch in a sections row, content height elsewhere); nothing inside may rely on a percentage height in auto mode. `getCardSize()` stays close to the real auto height.
 
 Lit
 - Reactive properties are initialised in the constructor, not as class fields (a class field shadows Lit's accessor and the card stops re-rendering).

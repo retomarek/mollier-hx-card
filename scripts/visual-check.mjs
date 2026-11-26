@@ -51,6 +51,9 @@ const CASES = [
     { name: 'fixed-7rows-500', theme: 'dark', lang: 'en', width: 500, layout: 'grid', rows: 7 },
     { name: 'fixed-7rows-1400', theme: 'light', lang: 'en', width: 1400, layout: 'grid', rows: 7 },
     { name: 'panel-1200x700', theme: 'dark', lang: 'en', width: 1200, height: 700, layout: 'panel' },
+    // Sections row with auto height next to a taller card: the tile is stretched
+    // (height without grid_options.rows); the card fills it like HA's own cards.
+    { name: 'stretched-auto-row', theme: 'dark', lang: 'en', width: 500, height: 640, layout: 'grid' },
     {
         name: 'all-lines',
         theme: 'light',

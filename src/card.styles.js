@@ -5,21 +5,22 @@ import { css } from 'lit';
 // legend therefore sit on one white "sheet" with fixed chart colours; only the
 // card chrome around it follows the Home Assistant theme.
 export default css`
+    /* height: 100% like Home Assistant's own cards: in a sections row with auto
+       height the card is as tall as its neighbours (the diagram stays at the
+       top); where the parent has no height (masonry, stacks) it is the content height. */
     :host {
         display: block;
+        height: 100%;
         --sheet-bg: #ffffff;
         --sheet-ink: #1f2733;
         --sheet-muted: #6a7482;
         --sheet-line: #e4e8ed;
     }
     ha-card {
+        height: 100%;
+        box-sizing: border-box;
         display: flex;
         flex-direction: column;
-    }
-    /* Fixed mode: fill the tile the dashboard gives us. */
-    :host([fixed-height]),
-    :host([fixed-height]) ha-card {
-        height: 100%;
     }
     .card-content {
         padding: 16px;
