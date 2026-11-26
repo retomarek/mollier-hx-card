@@ -8,6 +8,7 @@
   <img alt="Home Assistant 2024.11+" src="https://img.shields.io/badge/Home%20Assistant-2024.11%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white&cacheSeconds=3600">
   <a href="https://github.com/retomarek/mollier-hx-card/actions/workflows/validate.yaml"><img alt="Validate" src="https://img.shields.io/github/actions/workflow/status/retomarek/mollier-hx-card/validate.yaml?branch=main&style=flat-square&label=HACS%20validation&cacheSeconds=3600"></a>
   <a href="https://github.com/retomarek/mollier-hx-card/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/retomarek/mollier-hx-card/total?style=flat-square&color=9acd32&cacheSeconds=3600"></a>
+  <a href="https://retomarek.github.io/mollier-hx-card/"><img alt="Live demo" src="https://img.shields.io/badge/demo-live-ff9800?style=flat-square"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/retomarek/mollier-hx-card?style=flat-square&cacheSeconds=3600"></a>
 </p>
 
@@ -24,35 +25,19 @@
 
 Plot your room climate where it belongs: on a Mollier h,x diagram. The card reads the daily means of a temperature and a humidity sensor from Home Assistant's long-term statistics and plots one point per day. Draw your comfort zone and add orange and red warning bands around it.
 
-> **Sister card: [Comfort Compass Card](https://github.com/retomarek/comfort-compass-card).** Uses the same comfort zone and warning bands and sums up how many days were in range, too warm, too humid, too dry or too cold. The diagram shows *where* each day was, the compass *how often*.
+**[▶ Try it in the live demo](https://retomarek.github.io/mollier-hx-card/)**: both cards side by side, with sample rooms, sliders for the comfort zone, the room and the outside air, themes and languages, and the YAML to copy.
 
-> **Built on [pyedautils](https://github.com/retomarek/pyedautils)**, the *Python Energy Data Analysis Utilities*: a pip-installable library (`pip install pyedautils`) for analysing and visualising energy and comfort time series. The card draws the same diagram as its `plot_mollier_hx()`, so you can take the same sensor data into Python or Jupyter for deeper analysis.
-
-## Why temperature and humidity belong together
-
-Comfort, health and the risk of mould always depend on temperature **and** humidity at the same time. Looking at one of them alone, or at two separate graphs, can easily mislead:
-
-- **Relative humidity changes with temperature.** Air at 21 °C and 60 % holds about 9.8 g of water per kg (at 450 m a.s.l.). Warm the same air to 26 °C and it reads only 44 %; cool it at a 15 °C outer wall and it reaches about 87 %, enough for mould. The amount of water did not change at all.
-- **The same reading means different things.** 23 °C feels pleasant at 45 %, but sticky at 70 %.
-
-The h,x diagram shows both in one point: its position gives temperature, relative and absolute humidity at once, and how far each day was from the comfort zone.
+> **Sister card: [Comfort Compass Card](https://github.com/retomarek/comfort-compass-card)** uses the same comfort zone and warning bands and sums up how many days were in range, too warm, too humid, too dry or too cold. The diagram shows *where* each day was, the compass *how often*. Both are ports from [pyedautils](https://github.com/retomarek/pyedautils) (`pip install pyedautils`), so the same analysis works in Python or Jupyter.
 
 ## Features
 
-- **h,x diagram** for your altitude or air pressure. Choose which iso-lines to show: temperature, relative and absolute humidity, density, enthalpy.
-- **One point per day** from the recorder's long-term statistics, coloured by season, by age or connected in time order, plus a live point for the current reading.
-- **Comfort zone** as a polygon from temperature, relative and absolute humidity limits.
-- **Warning bands**: orange and red dashed bands as ± offsets around the comfort zone.
-- **Outside air** (optional): the current outside point, the outside daily means and a ventilation line to the room point. The legend tells you whether airing dries the room or adds moisture.
-- **Zoom** into the diagram (up to 4×): on phones pinch with two fingers and drag to move; with a mouse use the **+ / −** buttons that appear over the diagram, double-click, or ctrl + mouse wheel (trackpad pinch works too), and drag to move. Double-tap / double-click or **1:1** go back. Only the diagram zooms, the legend stays. Points have large touch targets, so they are easy to tap.
-- **Fits any dashboard**: fills a sections tile with a fixed height, keeps its aspect ratio (capped and centred) everywhere else, so it also looks right at full width.
-- **Visual editor** with entity pickers limited to sensors that have long-term statistics.
-- **Translated** into 14 languages, following your Home Assistant language. Corrections welcome, see [Translations](#translations).
-- **Self-contained**: one JavaScript file, no external requests at runtime.
-
-## Requirements
-
-Both sensors need long-term statistics, which means `state_class: measurement`. Most temperature and humidity sensors already have it (Zigbee, Z-Wave, ESPHome, Netatmo, AirGradient and many more). The visual editor only lists sensors that qualify.
+- **h,x diagram** for your altitude or air pressure, with the iso-lines you choose (temperature, relative and absolute humidity, density, enthalpy).
+- **One point per day** from the long-term statistics, coloured by season, by age or joined in time order, plus a live point for now.
+- **Comfort zone and warning bands**: the zone as a polygon, orange and red dashed bands around it.
+- **Outside air** (optional): the outside point, its daily means and a ventilation line; the legend says whether airing dries the room or adds moisture.
+- **Zoom** up to 4× (pinch, + / − buttons, double-click or ctrl + wheel); points have large touch targets.
+- **Fits any dashboard**: fills a tile with a fixed height, keeps its aspect ratio everywhere else.
+- **14 languages**, a **visual editor** that only lists sensors with long-term statistics, and one self-contained JavaScript file.
 
 ## Installation
 
@@ -62,6 +47,8 @@ From Home Assistant 2026.11 on, community cards come from the built-in **Marketp
    - Not listed yet? Marketplace: *Add from link* with `https://github.com/retomarek/mollier-hx-card`. HACS: three-dot menu → *Custom repositories*, type *Dashboard*.
 2. Install it. The dashboard resource is added for you.
 3. Reload the browser.
+
+**Requirement:** both sensors need long-term statistics, which means `state_class: measurement`. Most temperature and humidity sensors already have it (Zigbee, Z-Wave, ESPHome, Netatmo, AirGradient and many more). The visual editor only lists sensors that qualify.
 
 ## Configuration
 
@@ -88,29 +75,43 @@ outdoor_weather_entity: weather.home   # fallback for the current outside point
 
 ### Options
 
-Units: all temperatures in the card config (comfort zone, `temperature_range`) are **°C**, also when your sensors report °F; warning-band offsets are in **K**. Humidity sensors report relative humidity in **%**. An invalid value (unknown `coloring`, a comfort zone without `temperature` or `humidity`, a pressure in the wrong unit, ...) shows a clear error message instead of a wrong diagram.
-
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `temperature_entity` | string | | **Required.** Temperature sensor. |
 | `humidity_entity` | string | | **Required.** Relative-humidity sensor in %. |
 | `title` | string | | Card title. |
-| `days_to_show` | number | `7` | Days of history, 1 to 3650. Home Assistant keeps the long-term statistics (daily means) indefinitely, so long periods work once the sensor has been recorded that long. |
+| `days_to_show` | number | `7` | Days of history, 1 to 3650 (daily statistics are kept indefinitely). |
 | `coloring` | string | `season` | `season`, `age` (older days fade) or `chronological` (days joined by a line). |
 | `altitude` | number | | Altitude in m above sea level (−500 to 9000). Sets the air pressure from the standard atmosphere and overrides `pressure`. |
 | `pressure` | number | `101325` | Air pressure in hPa (300–1100) or Pa (30000–110000). |
 | `convention` | string | `classical` | `classical` (per kg dry air, Recknagel) or `glueck` (per kg moist air). Same physics, slightly different tilt of the isotherms. |
 | `x_range` | `[min, max]` | `[0, 18]` | Absolute-humidity axis in g/kg. |
-| `temperature_range` | `[min, max]` | `[-10, 40]` | Temperature axis in °C. Points outside the axes are cut off; the current room and outside points are shown as an arrow on the edge with their value. |
-| `comfort_zone` | object | | Comfort zone, see below. |
-| `warning_bands` | `true` or object | | Needs `comfort_zone`. `true` uses the defaults, see below. |
+| `temperature_range` | `[min, max]` | `[-10, 40]` | Temperature axis in °C. Room and outside points beyond the axes show as an arrow on the edge. |
+| `comfort_zone` | object | | Comfort zone, see [below](#comfort-zone-and-warning-bands). |
+| `warning_bands` | `true` or object | | Needs `comfort_zone`. `true` uses the defaults, see [below](#comfort-zone-and-warning-bands). |
 | `outdoor_temperature_entity` | string | | Outside temperature sensor. With `outdoor_humidity_entity` it gives the current outside point. |
 | `outdoor_humidity_entity` | string | | Outside relative-humidity sensor. |
 | `outdoor_weather_entity` | string | | A `weather.*` entity, used for the current outside point when the outside sensors are missing or unavailable. |
-| `outdoor_history` | boolean | `false` | Also show the outside daily means as a faint cloud. Needs the outside **sensors** with long-term statistics (a weather entity has none). |
+| `outdoor_history` | boolean | `false` | Also show the outside daily means as a faint cloud. Needs the outside **sensors** (a weather entity has no statistics). |
 | `ventilation_line` | boolean | `true` | Dashed line from the current room point to the outside point, plus "ventilating dries / adds moisture" in the legend. |
-| `show_legend` | boolean | `true` | The line below the diagram with comfort zone, warning bands, "Now" and outside air (hover shows the values). `false` hides it; the diagram keeps everything. The ventilation note then only appears in the outside point's tooltip; custom band labels and the zone and band limits are only shown in the legend. |
-| `lines` | object | | Which iso-lines to draw: `temperature`, `humidity` (relative humidity), `absolute_humidity` (on by default), `density`, `enthalpy` (off by default). |
+| `show_legend` | boolean | `true` | The line below the diagram with zone, bands, "Now" and outside air. `false` hides it. |
+| `lines` | object | | Iso-lines: `temperature`, `humidity`, `absolute_humidity` (on by default), `density`, `enthalpy` (off). |
+
+<details>
+<summary>Units, validation and zoom</summary>
+
+Units: all temperatures in the card config (comfort zone, `temperature_range`) are **°C**, also when your sensors report °F; warning-band offsets are in **K**. Humidity sensors report relative humidity in **%**. An invalid value (unknown `coloring`, a comfort zone without `temperature` or `humidity`, a pressure in the wrong unit, ...) shows a clear error message instead of a wrong diagram.
+
+**Zoom:** on phones pinch with two fingers and drag to move; with a mouse use the **+ / −** buttons that appear over the diagram, double-click, or ctrl + mouse wheel (trackpad pinch works too), and drag to move. Double-tap / double-click or **1:1** go back. Only the diagram zooms, the legend stays.
+
+</details>
+
+### Comfort zone and warning bands
+
+The zone is where all given ranges hold (°C, % and optionally g/kg); the warning bands are ± offsets around it, by default orange ±1 K / 5 % / 1 g/kg and red ±2.5 K / 10 % / 2.5 g/kg. The Comfort Compass Card takes the same keys.
+
+<details>
+<summary>YAML and details</summary>
 
 #### `comfort_zone`
 
@@ -140,7 +141,14 @@ warning_bands:
 
 These are the defaults. `label` (the name in the legend, also editable in the visual editor) and `color` are optional per band.
 
+</details>
+
 ### Outside air and ventilation
+
+With outside sensors (or a weather entity) the card adds the current outside point and a ventilation line from the room point to it: airing moves the room air along that line.
+
+<details>
+<summary>How to read it</summary>
 
 With an outside sensor pair (or a weather entity) the card adds the outside air to the diagram:
 
@@ -150,11 +158,34 @@ With an outside sensor pair (or a weather entity) the card adds the outside air 
 
 Hover or tap the outside point for its temperature, humidity, water content and dew point (tap again or tap the diagram to close; the daily points and the current room point work the same way). See [The h,x diagram in five minutes](#the-hx-diagram-in-five-minutes) for the background.
 
+</details>
+
 ### Size in the dashboard
 
 In a sections dashboard the card takes the full width and sets its own height. Set a row count under *Layout* to give it a fixed height; the diagram then fills the tile. At full width without a row count the diagram is capped at 480 px height and centred.
 
+## Why temperature and humidity belong together
+
+Relative humidity changes with temperature: the same air reads 60 % at 21 °C, 44 % at 26 °C and 87 % at a 15 °C wall. The h,x diagram shows both in one point.
+
+<details>
+<summary>Why it matters, with numbers</summary>
+
+Comfort, health and the risk of mould always depend on temperature **and** humidity at the same time. Looking at one of them alone, or at two separate graphs, can easily mislead:
+
+- **Relative humidity changes with temperature.** Air at 21 °C and 60 % holds about 9.8 g of water per kg (at 450 m a.s.l.). Warm the same air to 26 °C and it reads only 44 %; cool it at a 15 °C outer wall and it reaches about 87 %, enough for mould. The amount of water did not change at all.
+- **The same reading means different things.** 23 °C feels pleasant at 45 %, but sticky at 70 %.
+
+The h,x diagram shows both in one point: its position gives temperature, relative and absolute humidity at once, and how far each day was from the comfort zone.
+
+</details>
+
 ## The h,x diagram in five minutes
+
+Up is warmer, right is more water per kg of air, the curves are the relative humidity. Heating moves a point straight up, ventilating with dry air to the left, and straight down to the 100 % curve is the dew point.
+
+<details>
+<summary>Reading the diagram, dew point and mould, three examples</summary>
 
 > **More in the pyedautils guide.** [The h,x diagram in five minutes](https://retomarek.github.io/pyedautils/guides/mollier_hx.html) goes deeper, with more worked examples computed with pyedautils: [reading the diagram](https://retomarek.github.io/pyedautils/guides/mollier_hx.html#hx-reading-the-diagram), [comfort](https://retomarek.github.io/pyedautils/guides/mollier_hx.html#hx-comfort), [saving energy](https://retomarek.github.io/pyedautils/guides/mollier_hx.html#hx-saving-energy).
 
@@ -201,9 +232,14 @@ The limit is on the other side: if the relative humidity at cold surfaces (outsi
 
 Warm summer air carries a lot of water: at 25 °C and 70 % about 14.7 g/kg. Let it into a cellar at 18 °C and it cools below its dew point (about 19 °C): water condenses on the walls. In summer, air a cool cellar in the early morning or at night, when the outside air holds less water. The diagram shows it at a glance: is the outside point to the left of the room point?
 
+</details>
+
 ## Translations
 
-The card follows the language of your Home Assistant profile. Anything not translated falls back to English.
+The card follows the language of your Home Assistant profile. Anything not translated falls back to English. English and German are written by the author, the other 12 languages are machine-translated, so corrections are very welcome.
+
+<details>
+<summary>Languages and how to help</summary>
 
 | Language | Status |
 | --- | --- |
@@ -214,16 +250,23 @@ The card follows the language of your Home Assistant profile. Anything not trans
 
 To add a new language, copy [`en.json`](src/localize/languages/en.json) to `<language code>.json`, translate the values and register the file in [`src/localize/localize.js`](src/localize/localize.js). See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+</details>
+
 ## How it works
+
+<details>
+<summary>Data source and related projects</summary>
 
 The diagram math and D3 drawing code come from [pyedautils](https://github.com/retomarek/pyedautils) (`data/d3_mollierhx`), so the card draws the same diagram as `pyedautils.plots.plot_mollier_hx()`. Daily means come from Home Assistant's `recorder/statistics_during_period` WebSocket API.
 
-## Related projects
+**Related projects**
 
 - [d3-mollierhx](https://github.com/hslu-ige-laes/d3-mollierhx): the interactive Mollier h,x diagram for the browser, built on D3.js ([live demo](https://hslu-ige-laes.github.io/d3-mollierhx/)).
 - [pyedautils](https://github.com/retomarek/pyedautils): Python Energy Data Analysis Utilities, with the h,x diagram (`plot_mollier_hx`), the comfort compass (`plot_comfort_compass`) and [guides on reading them](https://retomarek.github.io/pyedautils/guides/) (`pip install pyedautils`).
 - [EDAP: Energy Data Analysis with Python](https://github.com/retomarek/edap): an interactive online book on analysing and visualising energy and comfort time series with pandas, Plotly and pyedautils ([read the book](https://retomarek.github.io/edap/intro.html)).
 - [Comfort Compass Card](https://github.com/retomarek/comfort-compass-card): the comfort compass as a Home Assistant dashboard card: how many days were too warm, too humid, too dry or too cold.
+
+</details>
 
 ## Questions and feedback
 
