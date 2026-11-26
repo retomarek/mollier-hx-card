@@ -4,16 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-A Home Assistant custom Lovelace card distributed through HACS. Renders a Mollier hx (psychrometric) diagram from a temperature and humidity sensor pair, with a single data point that follows the live sensor values. Built with Lit + Parcel; rendering uses D3 (subpackages: `d3-selection`, `d3-scale`, `d3-shape`, `d3-axis`, `d3-array`).
+A Home Assistant custom Lovelace card distributed through HACS. Renders a Mollier hx (psychrometric) diagram from a temperature and humidity sensor pair, one point per day from the long-term statistics plus the live room and outside points. Built with Lit + Parcel; rendering uses D3 (subpackages: `d3-selection`, `d3-scale`, `d3-shape`, `d3-axis`, `d3-array`).
 
 The diagram math and D3 rendering code under `src/d3_mollierhx/` is **vendored verbatim** from [retomarek/pyedautils](https://github.com/retomarek/pyedautils) (`pyedautils/data/d3_mollierhx/`, commit noted in each file header; currently 42672ff (pyedautils 0.0.34), byte-identical to [hslu-ige-laes/d3-mollierhx](https://github.com/hslu-ige-laes/d3-mollierhx) v0.2.1 `src/`, whose README section "Options / API" documents the functions). Only a 3-line header, ES6 imports and an `export { ... }` block were added (line endings normalised to LF); do not refactor the contents — keep them in sync with upstream by re-copying when pyedautils updates, then check that `d3.js` still exports every `d3.*` symbol the files use. Upstream's `mollierChart.js` (stateful chart, D3 v7, uses `d3.pointer`, `d3.contours`, `d3.utcFormat`, ...) is **not** vendored: the card does not use it, it has its own Lit-based renderer with touch targets, tooltips and zoom.
 
 ## Commands
 
-- `npm run build` — Parcel production build. Source is `src/mollier-hx-card.js`, output is `dist/`.
+- `npm run build` — Parcel production build. Source is `src/mollier-hx-card.js`, output is `dist/` (gitignored: the release workflow builds and attaches the bundle).
 - `npm run watch` — Parcel watch mode for local development.
-
-There are no tests, linter, or typechecker configured.
+- `npm test`: unit tests (vitest + happy-dom, `test/*.test.js`). `npm run lint` (ESLint, flat config, `--max-warnings 0`), `npm run format` / `format:check` (Prettier: 4 spaces, single quotes, width 120; vendored code is ignored). CI (`.github/workflows/ci.yaml`) runs lint, format check, tests and build on every push.
+- `npm run check-shared` (`-- --local ../<sister>` for a local clone): compares the files shared with the sister card (`bands.js`, `statistics.js`, `localize/localize.js`, `mollierFunctions.js`, the shared tests, tooling config, `ci.yaml`) with its `main`; CI fails on a difference. Change shared files in both repos together.
+- `npm run demo`: builds both cards (the comfort-compass-card from `../comfort-compass-card`) and serves the live demo (`demo/`) locally. `.github/workflows/pages.yaml` publishes it to https://retomarek.github.io/mollier-hx-card/ (Settings → Pages → Source: GitHub Actions).
 
 ## Architecture
 
@@ -45,7 +46,7 @@ Styles live in `src/card.styles.js` as a tagged `css\`\`` template imported into
 
 Versioning is SemVer (`MAJOR.MINOR.PATCH`, e.g. `1.0.0`). Don't use Home Assistant-style CalVer: it reads like a Home Assistant version. The version lives in `package.json` and in the `version` constant in `src/mollier-hx-card.js` (console banner); bump both.
 
-1. Bump `version` in `package.json`, run `npm run build`, commit `dist/` too (HACS falls back to `dist/` if a release has no asset).
+1. Bump `version` in `package.json` and the entry file, run `npm test` and `npm run build` (`dist/` is not committed; the release asset is what HACS and the Marketplace download).
 2. Tag and publish a GitHub release named like the version (e.g. `v1.0.0`). `.github/workflows/release.yaml` builds and attaches `mollier-hx-card.js` to the release.
 3. `.github/workflows/validate.yaml` runs the HACS validation action (`hacs/action`, category `plugin`); it must pass without `ignore` for inclusion in the catalog (`hacs/default`, file `plugin`). The catalog serves both HACS (< 2026.11) and the built-in Home Assistant Marketplace (>= 2026.11). The catalog review also requires an image in the README.
 4. Marketplace installs to `www/community/mollier-hx-card/` and registers `/local/community/mollier-hx-card/mollier-hx-card.js?v=...` as a resource. `hacs.json` keys used: `name`, `filename`, `content_in_root`, `homeassistant`; `render_readme` is ignored by the Marketplace but kept for HACS.

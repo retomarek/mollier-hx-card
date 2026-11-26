@@ -4,6 +4,6 @@
 
 ## Checklist
 
-- [ ] `npm run build` works and `dist/mollier-hx-card.js` is committed
+- [ ] `npm test`, `npm run lint`, `npm run format:check` and `npm run build` pass
 - [ ] New or changed texts are in `src/localize/languages/en.json` (and `de.json` if you can)
 - [ ] README updated for new or changed options

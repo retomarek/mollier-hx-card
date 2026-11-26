@@ -40,7 +40,7 @@ Text, theme, accessibility
 
 Shared code and packaging
 - `src/bands.js` stays identical in schema and defaults to the copy in retomarek/comfort-compass-card.
-- `package.json` version, the `version` constant in the entry file and the CHANGELOG agree; `dist/` was rebuilt and committed.
+- `package.json` version, the `version` constant in the entry file and the CHANGELOG agree; `dist/` is not committed (the release workflow attaches the bundle). `npm test`, `npm run lint` and `npm run check-shared -- --local ../<sister>` pass; a change to a shared file is made in both repos.
 - No new runtime dependency or external network request at runtime.
 
 ## Output
