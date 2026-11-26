@@ -1,0 +1,60 @@
+name: Live demo
+
+# Publishes demo/ with the current builds of both cards (this one and
+# retomarek/comfort-compass-card) to GitHub Pages:
+# https://retomarek.github.io/mollier-hx-card/
+# Needs Settings → Pages → Source: GitHub Actions.
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          repository: retomarek/comfort-compass-card
+          ref: main
+          path: compass
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            compass/package-lock.json
+      - run: npm ci && npm run build
+      - run: npm ci && npm run build
+        working-directory: compass
+      - name: Assemble _site
+        run: node scripts/demo.mjs --no-build --no-serve --compass-dir compass
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

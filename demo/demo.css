@@ -1,0 +1,776 @@
+/* Home Assistant look: default theme colours (light / dark), Roboto, a top
+   app bar, a sections view with headings, tile cards with features. */
+
+:root {
+    color-scheme: light;
+    --primary-color: #03a9f4;
+    --primary-background-color: #fafafa;
+    --secondary-background-color: #e5e5e5;
+    --card-background-color: #ffffff;
+    --ha-card-background: #ffffff;
+    --ha-card-border-radius: 12px;
+    --ha-card-border-color: #e0e0e0;
+    --primary-text-color: #212121;
+    --secondary-text-color: #727272;
+    --disabled-text-color: #bdbdbd;
+    --divider-color: rgba(0, 0, 0, 0.12);
+    --app-header-background-color: #03a9f4;
+    --app-header-text-color: #ffffff;
+    --code-background: #f5f5f5;
+    --switch-off-track: #9e9e9e;
+    --switch-off-knob: #fafafa;
+    --link-color: #0288d1;
+
+    --orange-color: #ff9800;
+    --deep-orange-color: #ff6f22;
+    --red-color: #f44336;
+    --blue-color: #2196f3;
+    --light-blue-color: #03a9f4;
+    --cyan-color: #00bcd4;
+    --green-color: #4caf50;
+    --teal-color: #009688;
+    --indigo-color: #3f51b5;
+    --purple-color: #926bc7;
+    --pink-color: #e91e63;
+    --amber-color: #ffc107;
+    --grey-color: #9e9e9e;
+}
+
+:root.dark {
+    color-scheme: dark;
+    --primary-background-color: #111111;
+    --secondary-background-color: #282828;
+    --card-background-color: #1c1c1c;
+    --ha-card-background: #1c1c1c;
+    --ha-card-border-color: rgba(225, 225, 225, 0.12);
+    --primary-text-color: #e1e1e1;
+    --secondary-text-color: #9b9b9b;
+    --disabled-text-color: #6f6f6f;
+    --divider-color: rgba(225, 225, 225, 0.12);
+    --app-header-background-color: #101e24;
+    --app-header-text-color: #e1e1e1;
+    --code-background: #242424;
+    --switch-off-track: #6f6f6f;
+    --switch-off-knob: #bbbbbb;
+    --link-color: #4fc3f7;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    background: var(--primary-background-color);
+    color: var(--primary-text-color);
+    font-family:
+        Roboto,
+        'Noto Sans',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        system-ui,
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: var(--link-color);
+}
+
+svg.icon {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+    flex: none;
+}
+
+/* --- top app bar ------------------------------------------------------- */
+
+.toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 56px;
+    padding: 0 8px 0 4px;
+    background: var(--app-header-background-color);
+    color: var(--app-header-text-color);
+    box-shadow:
+        0 2px 4px -1px rgba(0, 0, 0, 0.2),
+        0 4px 5px 0 rgba(0, 0, 0, 0.14),
+        0 1px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+.toolbar .title {
+    flex: 1;
+    min-width: 0;
+    margin-left: 8px;
+    font-size: 20px;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.icon-button:hover,
+.icon-button:focus-visible {
+    background: rgba(255, 255, 255, 0.14);
+    outline: none;
+}
+
+/* --- view ---------------------------------------------------------------- */
+
+.view {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 16px 16px 8px;
+}
+
+/* Narrow: cards, controls, YAML. Wide: cards and YAML left, controls right. */
+.layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'main' 'side' 'yaml';
+    gap: 24px;
+}
+
+.col-main {
+    grid-area: main;
+}
+
+.col-side {
+    grid-area: side;
+}
+
+.col-yaml {
+    grid-area: yaml;
+}
+
+@media (min-width: 1100px) {
+    .layout {
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+        grid-template-areas: 'main side' 'yaml side';
+        grid-template-rows: auto 1fr;
+        align-items: start;
+    }
+
+    .col-side {
+        position: sticky;
+        top: 72px;
+        max-height: calc(100vh - 88px);
+        overflow-y: auto;
+        padding-right: 4px;
+        scrollbar-width: thin;
+    }
+}
+
+.section + .section {
+    margin-top: 24px;
+}
+
+/* Heading card */
+.heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 4px 4px 8px;
+}
+
+.heading .icon {
+    color: var(--secondary-text-color);
+}
+
+.heading h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    letter-spacing: 0.1px;
+}
+
+.heading .sub {
+    color: var(--secondary-text-color);
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.heading .grow {
+    flex: 1;
+}
+
+/* Generic card shell, like ha-card */
+.card {
+    background: var(--ha-card-background, var(--card-background-color));
+    border: 1px solid var(--ha-card-border-color, var(--divider-color));
+    border-radius: var(--ha-card-border-radius, 12px);
+    color: var(--primary-text-color);
+}
+
+/* Markdown-card-like intro */
+.intro {
+    padding: 16px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.intro h1 {
+    margin: 0 0 4px;
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: -0.012em;
+    line-height: 32px;
+}
+
+.intro p {
+    margin: 0 0 12px;
+    color: var(--secondary-text-color);
+}
+
+.intro p strong {
+    color: var(--primary-text-color);
+    font-weight: 500;
+}
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 16px 0 12px;
+    border-radius: 18px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.1px;
+    text-decoration: none;
+    color: var(--primary-color);
+    border: 1px solid var(--divider-color);
+    background: transparent;
+    cursor: pointer;
+}
+
+.button.filled {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+.button svg.icon {
+    width: 18px;
+    height: 18px;
+}
+
+.button:hover {
+    background: color-mix(in srgb, var(--primary-color) 8%, transparent);
+}
+
+.button.filled:hover {
+    background: color-mix(in srgb, var(--primary-color) 88%, #000);
+}
+
+/* Preset chips (filter chips) */
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 0 12px;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--primary-text-color);
+    font: 500 14px/20px inherit;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.chip svg.icon {
+    width: 18px;
+    height: 18px;
+    display: none;
+}
+
+.chip[aria-pressed='true'] {
+    background: color-mix(in srgb, var(--primary-color) 18%, transparent);
+    border-color: transparent;
+}
+
+.chip[aria-pressed='true'] svg.icon {
+    display: block;
+}
+
+.chip:hover {
+    background: color-mix(in srgb, var(--primary-text-color) 6%, transparent);
+}
+
+.chip[aria-pressed='true']:hover {
+    background: color-mix(in srgb, var(--primary-color) 24%, transparent);
+}
+
+/* The two cards */
+.cards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+}
+
+@media (min-width: 760px) {
+    .cards {
+        grid-template-columns: minmax(280px, 2fr) minmax(0, 3fr);
+        align-items: start;
+    }
+}
+
+.hint {
+    margin: -4px 4px 12px;
+    color: var(--secondary-text-color);
+    font-size: 14px;
+}
+
+/* YAML */
+.yaml-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+}
+
+@media (min-width: 760px) {
+    .yaml-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+}
+
+.yaml-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.yaml-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 8px 4px 16px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.yaml-card .card-header .grow {
+    flex: 1;
+}
+
+.yaml-card .icon-button {
+    width: 40px;
+    height: 40px;
+    color: var(--secondary-text-color);
+}
+
+.yaml-card .icon-button:hover {
+    background: color-mix(in srgb, var(--primary-text-color) 8%, transparent);
+}
+
+.yaml-card pre {
+    margin: 8px 16px 16px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--code-background);
+    font:
+        13px/1.55 'Roboto Mono',
+        ui-monospace,
+        SFMono-Regular,
+        Consolas,
+        monospace;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.yaml-card .k {
+    color: #0277bd;
+}
+
+.yaml-card .s {
+    color: #2e7d32;
+}
+
+.yaml-card .n {
+    color: #c2185b;
+}
+
+:root.dark .yaml-card .k {
+    color: #81d4fa;
+}
+
+:root.dark .yaml-card .s {
+    color: #a5d6a7;
+}
+
+:root.dark .yaml-card .n {
+    color: #f48fb1;
+}
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translate(-50%, 120px);
+    padding: 14px 16px;
+    border-radius: 4px;
+    background: #323232;
+    color: #fff;
+    font-size: 14px;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2);
+    transition:
+        transform 0.2s ease,
+        visibility 0.2s;
+    visibility: hidden;
+    z-index: 10;
+}
+
+.toast.show {
+    transform: translate(-50%, 0);
+    visibility: visible;
+}
+
+/* --- tile cards with features (controls) -------------------------------- */
+
+.tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.tile {
+    --tile-color: var(--primary-color);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px;
+    min-width: 0;
+}
+
+.tile.wide {
+    grid-column: 1 / -1;
+}
+
+.tile-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+}
+
+.tile-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex: none;
+    color: var(--tile-color);
+    background: color-mix(in srgb, var(--tile-color) 20%, transparent);
+}
+
+.tile.off .tile-icon {
+    color: var(--secondary-text-color);
+    background: color-mix(in srgb, var(--secondary-text-color) 18%, transparent);
+}
+
+.tile-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.tile-name {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tile-state {
+    color: var(--secondary-text-color);
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tile.disabled {
+    opacity: 0.5;
+}
+
+/* Slider feature: a 42 px rounded bar, filled up to the value, with a handle. */
+.slider {
+    position: relative;
+    height: 42px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--tile-color) 20%, transparent);
+    touch-action: none;
+}
+
+.slider .fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--lo, 0%);
+    width: calc(var(--hi) - var(--lo, 0%));
+    background: var(--tile-color);
+    pointer-events: none;
+}
+
+.slider .handle {
+    position: absolute;
+    top: 50%;
+    width: 4px;
+    height: 16px;
+    margin: -8px 0 0 -10px;
+    border-radius: 2px;
+    background: #fff;
+    opacity: 0.9;
+    pointer-events: none;
+}
+
+.slider .handle.lo {
+    margin-left: 6px;
+}
+
+.slider input[type='range'] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+}
+
+/* Dual slider: both inputs cover the bar; only the thumbs take the pointer. */
+.slider.dual input[type='range'] {
+    pointer-events: none;
+}
+
+.slider.dual input[type='range']::-webkit-slider-thumb {
+    pointer-events: auto;
+    width: 32px;
+    height: 42px;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.slider.dual input[type='range']::-moz-range-thumb {
+    pointer-events: auto;
+    width: 32px;
+    height: 42px;
+    border: 0;
+}
+
+.slider:focus-within {
+    outline: 2px solid color-mix(in srgb, var(--tile-color) 60%, transparent);
+    outline-offset: 2px;
+}
+
+/* Switch (ha-switch) */
+.switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex: none;
+    cursor: pointer;
+}
+
+.switch input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.switch .track {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    top: 3px;
+    height: 14px;
+    border-radius: 7px;
+    background: var(--switch-off-track);
+    opacity: 0.5;
+    transition: background 0.15s;
+}
+
+.switch .knob {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--switch-off-knob);
+    box-shadow:
+        0 2px 1px -1px rgba(0, 0, 0, 0.2),
+        0 1px 1px 0 rgba(0, 0, 0, 0.14),
+        0 1px 3px 0 rgba(0, 0, 0, 0.12);
+    transition:
+        transform 0.15s,
+        background 0.15s;
+    pointer-events: none;
+}
+
+.switch input:checked ~ .track {
+    background: var(--tile-color, var(--primary-color));
+}
+
+.switch input:checked ~ .knob {
+    transform: translateX(16px);
+    background: var(--tile-color, var(--primary-color));
+}
+
+.switch input:focus-visible ~ .knob {
+    outline: 2px solid var(--tile-color);
+    outline-offset: 2px;
+}
+
+/* Toggle tile: the whole tile is the switch's label */
+label.tile {
+    cursor: pointer;
+}
+
+/* Select feature */
+.select {
+    position: relative;
+}
+
+.select select {
+    width: 100%;
+    height: 42px;
+    padding: 0 36px 0 12px;
+    border: 0;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--tile-color) 20%, transparent);
+    color: var(--primary-text-color);
+    font: inherit;
+    font-size: 14px;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.select select option {
+    background: var(--card-background-color);
+    color: var(--primary-text-color);
+}
+
+.select select:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--tile-color) 60%, transparent);
+}
+
+.select svg.icon {
+    position: absolute;
+    right: 8px;
+    top: 9px;
+    pointer-events: none;
+    color: var(--secondary-text-color);
+}
+
+/* Segmented feature (like the climate mode buttons) */
+.segments {
+    display: flex;
+    gap: 4px;
+    height: 42px;
+    padding: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--tile-color) 14%, transparent);
+}
+
+.segments button {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--primary-text-color);
+    font: 500 13px/1 inherit;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.segments button[aria-pressed='true'] {
+    background: var(--tile-color);
+    color: #fff;
+}
+
+.segments button:focus-visible {
+    outline: 2px solid var(--tile-color);
+    outline-offset: -2px;
+}
+
+/* --- footer -------------------------------------------------------------- */
+
+footer {
+    max-width: 1480px;
+    margin: 8px auto 24px;
+    padding: 0 20px;
+    color: var(--secondary-text-color);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+footer a {
+    color: inherit;
+}
+
+@media (max-width: 600px) {
+    .view {
+        padding: 8px 8px 4px;
+    }
+
+    .intro h1 {
+        font-size: 20px;
+        line-height: 28px;
+    }
+}

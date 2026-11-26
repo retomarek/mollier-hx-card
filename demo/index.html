@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Comfort Compass Card + Mollier hx Card · Live demo for Home Assistant</title>
+        <meta
+            name="description"
+            content="Try the Comfort Compass Card and the Mollier hx Card for Home Assistant in your browser: real cards, simulated room climate, change the comfort zone, warning bands, live values and palettes, and copy the YAML."
+        />
+        <meta name="theme-color" content="#03a9f4" />
+        <link
+            rel="icon"
+            href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%2303a9f4'/%3E%3Cpath fill='white' d='M10,18V14H14V18H17V12H19L12,5.5L5,12H7V18H10Z'/%3E%3C/svg%3E"
+        />
+        <!-- No web fonts: Roboto where installed (Android, most Linux), else the system font. No external requests. -->
+        <link rel="stylesheet" href="demo.css" />
+        <script>
+            // Apply the theme before the first paint.
+            (function () {
+                var t = new URLSearchParams(location.search).get('theme');
+                if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches))
+                    document.documentElement.classList.add('dark');
+            })();
+
+            // Stand-in for Home Assistant's <ha-card>: card background, border,
+            // radius and the header (attribute or property, like the real one).
+            customElements.define(
+                'ha-card',
+                class extends HTMLElement {
+                    static get observedAttributes() {
+                        return ['header'];
+                    }
+                    constructor() {
+                        super();
+                        this.attachShadow({ mode: 'open' }).innerHTML =
+                            '<style>:host{display:block;position:relative;background:var(--ha-card-background,var(--card-background-color));' +
+                            'border:1px solid var(--ha-card-border-color,var(--divider-color));border-radius:var(--ha-card-border-radius,12px);' +
+                            'color:var(--primary-text-color);transition:all .3s ease-out}' +
+                            '.card-header{font-family:Roboto,sans-serif;font-size:24px;letter-spacing:-0.012em;line-height:48px;padding:12px 16px 16px;display:block;color:var(--ha-card-header-color,var(--primary-text-color))}' +
+                            '.card-header[hidden]{display:none}</style><h1 class="card-header" hidden></h1><slot></slot>';
+                    }
+                    set header(v) {
+                        this._header = v;
+                        this._show();
+                    }
+                    get header() {
+                        return this._header;
+                    }
+                    attributeChangedCallback() {
+                        this._header = this.getAttribute('header');
+                        this._show();
+                    }
+                    _show() {
+                        var h = this.shadowRoot.querySelector('.card-header');
+                        h.textContent = this._header || '';
+                        h.hidden = !this._header;
+                    }
+                },
+            );
+        </script>
+        <script type="module" src="./comfort-compass-card.js"></script>
+        <script type="module" src="./mollier-hx-card.js"></script>
+    </head>
+    <body>
+        <header class="toolbar">
+            <span class="icon-button" aria-hidden="true"
+                ><svg class="icon" viewBox="0 0 24 24"><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg
+            ></span>
+            <div class="title">Room climate · Live demo</div>
+            <button id="theme-toggle" class="icon-button" type="button" title="Light / dark" aria-label="Light or dark theme">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path
+                        d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31Z"
+                    />
+                </svg>
+            </button>
+            <a
+                class="icon-button"
+                href="https://github.com/retomarek/mollier-hx-card/tree/main/demo"
+                title="Source of this page on GitHub"
+                aria-label="Source of this page on GitHub"
+            >
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path
+                        d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21V19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26V21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z"
+                    />
+                </svg>
+            </a>
+        </header>
+
+        <main class="view">
+            <div class="card intro">
+                <h1>Comfort Compass Card + Mollier hx Card</h1>
+                <p>
+                    Two Home Assistant dashboard cards for one question:
+                    <strong>how comfortable was this room, and why?</strong> The compass shows <em>how often</em> the
+                    days were in range or too warm, too humid, too dry or too cold. The h,x diagram shows
+                    <em>where</em> each day was, with the outside air. This page runs the real cards on simulated
+                    sensor data: pick a room, change the comfort zone and the live values, and copy the YAML.
+                </p>
+                <div class="buttons">
+                    <a
+                        class="button filled"
+                        href="https://my.home-assistant.io/redirect/hacs_repository/?owner=retomarek&amp;repository=comfort-compass-card&amp;category=plugin"
+                        ><svg class="icon" viewBox="0 0 24 24"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" /></svg
+                        >Install Comfort Compass Card</a
+                    >
+                    <a
+                        class="button filled"
+                        href="https://my.home-assistant.io/redirect/hacs_repository/?owner=retomarek&amp;repository=mollier-hx-card&amp;category=plugin"
+                        ><svg class="icon" viewBox="0 0 24 24"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" /></svg
+                        >Install Mollier hx Card</a
+                    >
+                    <a class="button" href="https://github.com/retomarek/comfort-compass-card">Comfort Compass on GitHub</a>
+                    <a class="button" href="https://github.com/retomarek/mollier-hx-card">Mollier hx on GitHub</a>
+                </div>
+            </div>
+
+            <p id="load-error" class="card intro" hidden>
+                The card bundles did not load. Run <code>npm run demo</code> in the mollier-hx-card repository, which
+                builds both cards and serves this page.
+            </p>
+
+            <div class="layout">
+                <div class="col-main">
+                    <div class="section">
+                        <div class="heading">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" /></svg>
+                            <h2 id="room-name">Living room</h2>
+                        </div>
+                        <div class="chips" id="presets" role="group" aria-label="Sample rooms"></div>
+                        <p class="hint" id="room-hint"></p>
+                        <div class="cards">
+                            <comfort-compass-card id="compass"></comfort-compass-card>
+                            <mollier-hx-card id="mollier"></mollier-hx-card>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="col-side" id="controls" aria-label="Settings"></aside>
+
+                <div class="col-yaml">
+                    <div class="section">
+                        <div class="heading">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path
+                                    d="M14.6,16.6L19.2,12L14.6,7.4L16,6L22,12L16,18L14.6,16.6M9.4,16.6L4.8,12L9.4,7.4L8,6L2,12L8,18L9.4,16.6Z"
+                                />
+                            </svg>
+                            <h2>YAML</h2>
+                            <span class="sub">· only what differs from the defaults</span>
+                        </div>
+                        <div class="yaml-grid">
+                            <div class="card yaml-card" id="yaml-compass">
+                                <div class="card-header">
+                                    <span class="grow">Comfort Compass Card</span>
+                                    <button class="icon-button" type="button" title="Copy" aria-label="Copy YAML">
+                                        <svg class="icon" viewBox="0 0 24 24">
+                                            <path
+                                                d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <pre></pre>
+                            </div>
+                            <div class="card yaml-card" id="yaml-mollier">
+                                <div class="card-header">
+                                    <span class="grow">Mollier hx Card</span>
+                                    <button class="icon-button" type="button" title="Copy" aria-label="Copy YAML">
+                                        <svg class="icon" viewBox="0 0 24 24">
+                                            <path
+                                                d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <pre></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            The sensor data on this page is simulated. The cards are built from the main branches of
+            <a href="https://github.com/retomarek/comfort-compass-card">retomarek/comfort-compass-card</a> and
+            <a href="https://github.com/retomarek/mollier-hx-card">retomarek/mollier-hx-card</a> (MIT), built on
+            <a href="https://github.com/retomarek/pyedautils">pyedautils</a>. Install them from the Home Assistant
+            Marketplace or HACS. Not affiliated with the Home Assistant project.
+        </footer>
+
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+        <script type="module" src="./demo.js"></script>
+    </body>
+</html>
