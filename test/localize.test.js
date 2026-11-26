@@ -75,7 +75,8 @@ describe('formatNumber', () => {
         expect(formatNumber(hass('en', 'language'), 1500)).toBe('1,500');
         expect(formatNumber(hass('de', 'language'), 1500)).toBe('1.500');
         expect(formatNumber(hass('en', 'decimal_comma'), 1500.5, 1)).toBe('1.500,5');
-        expect(formatNumber(hass('en', 'quote_decimal'), 1500)).toBe('1’500');
+        // The Swiss separator is ’ in newer ICU data (Node 24), ' in older (Node 22).
+        expect(formatNumber(hass('en', 'quote_decimal'), 1500)).toMatch(/^1['’]500$/);
         expect(formatNumber(hass('de', 'none'), 1500)).toBe('1500');
         expect(formatNumber(undefined, 2.345, 2)).toMatch(/2[.,]35/);
     });

@@ -154,7 +154,7 @@ describe('air pressure', () => {
             config: { elevation: 1500 },
             callWS: async () => ({}),
         };
-        expect(c._airText()).toBe('1’500 m a.s.l. · 846 hPa');
+        expect(c._airText()).toMatch(/^1['’]500 m a\.s\.l\. · 846 hPa$/); // ’ or ' depending on the ICU data
         c.hass = { states: {}, locale: { language: 'en' }, config: {}, callWS: async () => ({}) };
         expect(c._airText()).toBe('1,013 hPa');
     });
