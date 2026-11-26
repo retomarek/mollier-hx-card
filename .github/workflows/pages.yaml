@@ -3,12 +3,11 @@ name: Live demo
 # Publishes demo/ with the current builds of both cards (this one and
 # retomarek/comfort-compass-card) to GitHub Pages:
 # https://retomarek.github.io/mollier-hx-card/
-# Needs Settings → Pages → Source: GitHub Actions.
+# Needs Settings → Pages → Source: GitHub Actions. Not on release events: the
+# github-pages environment only accepts deployments from main, not from a tag.
 on:
   push:
     branches: [main]
-  release:
-    types: [published]
   schedule:
     - cron: "17 4 * * *"
   workflow_dispatch:
