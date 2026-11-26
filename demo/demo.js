@@ -334,7 +334,7 @@ function toggle({ ic, name, color, get, set, on = 'On', off = 'Off', wide, enabl
         const v = get();
         input.checked = v;
         t.classList.toggle('off', !v);
-        t.querySelector('.tile-state').textContent = v ? on : off;
+        t.querySelector('.tile-state').textContent = v ? (typeof on === 'function' ? on() : on) : off;
         const en = enabled ? enabled() : true;
         t.classList.toggle('disabled', !en);
         input.disabled = !en;
@@ -405,6 +405,9 @@ const C = {
     now: 'var(--pink-color)',
     alt: 'var(--teal-color)',
 };
+
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+reducedMotion.addEventListener('change', () => update());
 
 function buildControls() {
     const side = $('#controls');
@@ -625,7 +628,9 @@ function buildControls() {
                 color: C.now,
                 get: () => state.showCurrent,
                 set: (v) => (state.showCurrent = v),
-                on: 'Breathes',
+                // The card does not animate when the device asks for reduced
+                // motion (e.g. Windows: Animation effects off); say so here.
+                on: () => (reducedMotion.matches ? 'On · still: your device asks for reduced motion' : 'Breathes'),
                 off: 'Off',
             }),
             slider({
