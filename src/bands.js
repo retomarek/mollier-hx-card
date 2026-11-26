@@ -1,6 +1,8 @@
 // Warning bands: orange / red ± offsets around the comfort zone.
-// Same schema and defaults as the comfort-compass-card, where the bands are
-// the severity stages (mild / moderate / severe). Keep both copies in sync.
+// Shared by retomarek/comfort-compass-card (where the bands are the severity
+// stages mild / moderate / severe) and retomarek/mollier-hx-card (where they are
+// drawn as dashed outlines around the comfort zone). Keep both copies identical;
+// `npm run check-shared` compares them.
 
 // pyedautils defaults (temp_stage_limits, hum_stage_limits, hum_abs_stage_limits).
 // Offsets around the comfort zone: K, %-points RH, g/kg.
@@ -12,7 +14,7 @@ export const DEFAULT_BANDS = {
 const num = (v, fb) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : fb);
 
 // `warning_bands: true` → defaults; an object overrides per band; anything
-// falsy → null (no bands drawn).
+// falsy → null (no bands drawn; the compass then uses the defaults).
 export function parseWarningBands(cfg) {
     if (!cfg) return null;
     const src = cfg === true ? {} : cfg;

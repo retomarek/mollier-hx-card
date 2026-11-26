@@ -40,7 +40,6 @@ Translations live in `src/localize/` (`languages/en.json` is the base and per-ke
 
 Styles live in `src/card.styles.js` as a tagged `css\`\`` template imported into `card.js`. The editor's styles are inlined.
 
-`src/card.html` is a static reference of the rendered DOM shape; it is not imported or built — it exists as a layout sketch.
 
 ## Releasing
 

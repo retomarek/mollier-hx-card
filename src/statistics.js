@@ -1,6 +1,6 @@
 // Daily means from Home Assistant's long-term statistics, and the live
 // sensor values. Shared with retomarek/comfort-compass-card and
-// retomarek/mollier-hx-card: keep both copies identical.
+// retomarek/mollier-hx-card: keep both copies identical (`npm run check-shared`).
 
 // Re-fetch interval while the card is on screen: a new day appears in the
 // statistics shortly after midnight, so hourly is plenty.
@@ -15,6 +15,11 @@ export const SLOW_MS = 8e3;
 // Upper bound for days_to_show (long-term statistics are kept forever, but
 // a very long request is slow and the diagram gets crowded).
 export const MAX_DAYS = 3650;
+
+// Accepted air pressure and altitude, shared by the cards and their editors.
+export const PRESSURE_PA_RANGE = [30000, 110000];
+export const PRESSURE_HPA_RANGE = [300, 1100];
+export const ALTITUDE_RANGE = [-500, 9000];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -117,8 +122,10 @@ export function pressureFromConfig(config, fallback = 101325) {
     const alt = config.altitude;
     if (alt !== undefined && alt !== null && alt !== '') {
         const a = Number(alt);
-        if (!Number.isFinite(a) || a < -500 || a > 9000) {
-            throw new Error(`altitude must be in metres between -500 and 9000 (got ${alt})`);
+        if (!Number.isFinite(a) || a < ALTITUDE_RANGE[0] || a > ALTITUDE_RANGE[1]) {
+            throw new Error(
+                `altitude must be in metres between ${ALTITUDE_RANGE[0]} and ${ALTITUDE_RANGE[1]} (got ${alt})`,
+            );
         }
         return 101325 * Math.pow(1 - 2.25577e-5 * a, 5.25588);
     }
@@ -126,8 +133,10 @@ export function pressureFromConfig(config, fallback = 101325) {
     if (pr === undefined || pr === null || pr === '') return fallback;
     let p = Number(pr);
     if (Number.isFinite(p) && p > 0 && p < 2000) p *= 100; // hPa → Pa
-    if (!Number.isFinite(p) || p < 30000 || p > 110000) {
-        throw new Error(`pressure must be in hPa (300–1100) or Pa (30000–110000) (got ${pr})`);
+    if (!Number.isFinite(p) || p < PRESSURE_PA_RANGE[0] || p > PRESSURE_PA_RANGE[1]) {
+        const [h0, h1] = PRESSURE_HPA_RANGE;
+        const [p0, p1] = PRESSURE_PA_RANGE;
+        throw new Error(`pressure must be in hPa (${h0}–${h1}) or Pa (${p0}–${p1}) (got ${pr})`);
     }
     return p;
 }

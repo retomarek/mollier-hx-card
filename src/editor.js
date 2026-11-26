@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { localize } from './localize/localize.js';
 import { LINE_DEFAULTS, parseLines } from './card.js';
-import { MAX_DAYS } from './statistics.js';
+import { ALTITUDE_RANGE, MAX_DAYS, PRESSURE_PA_RANGE } from './statistics.js';
 
 const LINE_KEYS = Object.keys(LINE_DEFAULTS);
 
@@ -307,12 +307,26 @@ function buildSchema(data, t) {
                 data.air_mode === 'altitude'
                     ? {
                           name: 'altitude',
-                          selector: { number: { min: 0, max: 5000, step: 10, mode: 'box', unit_of_measurement: 'm' } },
+                          selector: {
+                              number: {
+                                  min: ALTITUDE_RANGE[0],
+                                  max: ALTITUDE_RANGE[1],
+                                  step: 10,
+                                  mode: 'box',
+                                  unit_of_measurement: 'm',
+                              },
+                          },
                       }
                     : {
                           name: 'pressure',
                           selector: {
-                              number: { min: 50000, max: 110000, step: 1, mode: 'box', unit_of_measurement: 'Pa' },
+                              number: {
+                                  min: PRESSURE_PA_RANGE[0],
+                                  max: PRESSURE_PA_RANGE[1],
+                                  step: 1,
+                                  mode: 'box',
+                                  unit_of_measurement: 'Pa',
+                              },
                           },
                       },
                 {
