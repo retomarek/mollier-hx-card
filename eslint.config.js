@@ -11,6 +11,9 @@ export default [
     { ...lit.configs['flat/recommended'], files: browser },
     { ...wc.configs['flat/recommended'], files: browser },
     { files: browser, languageOptions: { globals: globals.browser } },
-    { files: ['scripts/**/*.mjs', 'test/**/*.js', '*.js'], languageOptions: { globals: { ...globals.node, ...globals.browser } } },
+    {
+        files: ['scripts/**/*.mjs', 'test/**/*.js', '*.js'],
+        languageOptions: { globals: { ...globals.node, ...globals.browser } },
+    },
     { rules: { 'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrors: 'none' }] } },
 ];

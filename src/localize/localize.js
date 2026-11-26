@@ -21,9 +21,21 @@ import zhHans from './languages/zh-Hans.json';
 // Keys are lower-case Home Assistant language codes. A code like "pt-BR" or
 // "de-CH" falls back to its base language ("pt", "de"), anything else to English.
 const LANGUAGES = {
-    en, de, fr, it, es, pt, nl, pl, sv, da, nb, cs, ru,
+    en,
+    de,
+    fr,
+    it,
+    es,
+    pt,
+    nl,
+    pl,
+    sv,
+    da,
+    nb,
+    cs,
+    ru,
     'zh-hans': zhHans,
-    no: nb,          // older Norwegian code
+    no: nb, // older Norwegian code
 };
 
 export function getLanguage(hass) {

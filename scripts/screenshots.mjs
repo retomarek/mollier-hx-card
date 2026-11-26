@@ -23,7 +23,9 @@ function findChrome() {
         try {
             const p = execSync(`command -v ${name}`, { encoding: 'utf8' }).trim();
             if (p && existsSync(p)) return p;
-        } catch { /* not found */ }
+        } catch {
+            /* not found */
+        }
     }
     throw new Error('No Chrome/Chromium found. Set CHROME_PATH.');
 }
@@ -122,10 +124,13 @@ try {
         await tab.setContent(page(shot), { waitUntil: 'networkidle0' });
         await tab.evaluate(() => document.fonts.ready);
         // Wait until the card has drawn the diagram and the daily points.
-        await tab.waitForFunction(() => {
-            const root = document.querySelector('mollier-hx-card')?.shadowRoot;
-            return root?.querySelector('#data-points circle');
-        }, { timeout: 15000 });
+        await tab.waitForFunction(
+            () => {
+                const root = document.querySelector('mollier-hx-card')?.shadowRoot;
+                return root?.querySelector('#data-points circle');
+            },
+            { timeout: 15000 },
+        );
         const el = await tab.$('#wrap');
         await el.screenshot({ path: resolve(outDir, shot.file) });
         console.log(`docs/${shot.file}`);

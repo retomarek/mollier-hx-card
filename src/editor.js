@@ -12,14 +12,14 @@ const LINE_KEYS = Object.keys(LINE_DEFAULTS);
 const DEFAULTS = {
     days: 7,
     coloring: 'season',
-    pressure: 101325,   // the card's default when neither pressure nor altitude is set
-    altitude: 450,      // only a suggestion when the user switches to altitude
+    pressure: 101325, // the card's default when neither pressure nor altitude is set
+    altitude: 450, // only a suggestion when the user switches to altitude
     air_mode: 'pressure',
     convention: 'classical',
-    x_min: 0,    // g/kg
-    x_max: 18,   // g/kg
-    y_min: -10,  // °C
-    y_max: 40,   // °C
+    x_min: 0, // g/kg
+    x_max: 18, // g/kg
+    y_min: -10, // °C
+    y_max: 40, // °C
     comfort_t_min: 20,
     comfort_t_max: 26,
     comfort_phi_min: 30,
@@ -27,8 +27,12 @@ const DEFAULTS = {
     comfort_x_min: 0,
     comfort_x_max: 12,
     // Warning-band offsets around the comfort zone (pyedautils defaults).
-    orange_dt: 1, orange_dphi: 5, orange_dx: 1,
-    red_dt: 2.5, red_dphi: 10, red_dx: 2.5,
+    orange_dt: 1,
+    orange_dphi: 5,
+    orange_dx: 1,
+    red_dt: 2.5,
+    red_dphi: 10,
+    red_dx: 2.5,
 };
 
 function configToData(config) {
@@ -82,9 +86,25 @@ function configToData(config) {
 // Keys this form owns. Everything else in the existing config (grid_options,
 // visibility, view_layout, card_mod, YAML-only options) is kept as it is.
 const OWNED_KEYS = [
-    'type', 'temperature_entity', 'humidity_entity', 'title', 'days_to_show', 'coloring', 'convention',
-    'x_range', 'temperature_range', 'lines', 'altitude', 'pressure', 'comfort_zone', 'warning_bands',
-    'outdoor_temperature_entity', 'outdoor_humidity_entity', 'outdoor_weather_entity', 'outdoor_history', 'ventilation_line',
+    'type',
+    'temperature_entity',
+    'humidity_entity',
+    'title',
+    'days_to_show',
+    'coloring',
+    'convention',
+    'x_range',
+    'temperature_range',
+    'lines',
+    'altitude',
+    'pressure',
+    'comfort_zone',
+    'warning_bands',
+    'outdoor_temperature_entity',
+    'outdoor_humidity_entity',
+    'outdoor_weather_entity',
+    'outdoor_history',
+    'ventilation_line',
     'show_legend',
 ];
 
@@ -102,7 +122,8 @@ function dataToConfig(data, previous = {}) {
     const prevX = previous.x_range;
     const prevY = previous.temperature_range;
     const prevCz = previous.comfort_zone && typeof previous.comfort_zone === 'object' ? previous.comfort_zone : {};
-    const prevBands = typeof previous.warning_bands === 'object' && previous.warning_bands ? previous.warning_bands : {};
+    const prevBands =
+        typeof previous.warning_bands === 'object' && previous.warning_bands ? previous.warning_bands : {};
     const n = (field, prev) => pickNum(data[field], prev, DEFAULTS[field]);
 
     Object.assign(config, {
@@ -180,12 +201,14 @@ function dataToConfig(data, previous = {}) {
     return config;
 }
 
-
 const bandRow = (key) => ({
     type: 'grid',
     schema: [
         { name: `${key}_dt`, selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'K' } } },
-        { name: `${key}_dphi`, selector: { number: { min: 0, max: 100, step: 1, mode: 'box', unit_of_measurement: '%' } } },
+        {
+            name: `${key}_dphi`,
+            selector: { number: { min: 0, max: 100, step: 1, mode: 'box', unit_of_measurement: '%' } },
+        },
         { name: `${key}_dx`, selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'g/kg' } } },
     ],
 });
@@ -201,8 +224,14 @@ const COMFORT_FIELDS = [
     {
         type: 'grid',
         schema: [
-            { name: 'comfort_phi_min', selector: { number: { min: 0, max: 100, step: 1, mode: 'box', unit_of_measurement: '%' } } },
-            { name: 'comfort_phi_max', selector: { number: { min: 0, max: 100, step: 1, mode: 'box', unit_of_measurement: '%' } } },
+            {
+                name: 'comfort_phi_min',
+                selector: { number: { min: 0, max: 100, step: 1, mode: 'box', unit_of_measurement: '%' } },
+            },
+            {
+                name: 'comfort_phi_max',
+                selector: { number: { min: 0, max: 100, step: 1, mode: 'box', unit_of_measurement: '%' } },
+            },
         ],
     },
     { name: 'comfort_x_enabled', selector: { boolean: {} } },
@@ -212,8 +241,14 @@ const COMFORT_X_FIELDS = [
     {
         type: 'grid',
         schema: [
-            { name: 'comfort_x_min', selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'g/kg' } } },
-            { name: 'comfort_x_max', selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'g/kg' } } },
+            {
+                name: 'comfort_x_min',
+                selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'g/kg' } },
+            },
+            {
+                name: 'comfort_x_max',
+                selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'g/kg' } },
+            },
         ],
     },
 ];
@@ -227,7 +262,11 @@ function buildSchema(data, t) {
                 // Use the statistic selector so only entities with long-term
                 // statistics (state_class: measurement) appear, and filter by
                 // device_class to pre-narrow to the right sensor type.
-                { name: 'temperature_entity', required: true, selector: { statistic: { device_class: 'temperature' } } },
+                {
+                    name: 'temperature_entity',
+                    required: true,
+                    selector: { statistic: { device_class: 'temperature' } },
+                },
                 { name: 'humidity_entity', required: true, selector: { statistic: { device_class: 'humidity' } } },
             ],
         },
@@ -267,13 +306,15 @@ function buildSchema(data, t) {
                 },
                 data.air_mode === 'altitude'
                     ? {
-                        name: 'altitude',
-                        selector: { number: { min: 0, max: 5000, step: 10, mode: 'box', unit_of_measurement: 'm' } },
-                    }
+                          name: 'altitude',
+                          selector: { number: { min: 0, max: 5000, step: 10, mode: 'box', unit_of_measurement: 'm' } },
+                      }
                     : {
-                        name: 'pressure',
-                        selector: { number: { min: 50000, max: 110000, step: 1, mode: 'box', unit_of_measurement: 'Pa' } },
-                    },
+                          name: 'pressure',
+                          selector: {
+                              number: { min: 50000, max: 110000, step: 1, mode: 'box', unit_of_measurement: 'Pa' },
+                          },
+                      },
                 {
                     name: 'convention',
                     selector: {
@@ -309,7 +350,10 @@ function buildSchema(data, t) {
                 {
                     type: 'grid',
                     schema: [
-                        { name: 'outdoor_temperature_entity', selector: { statistic: { device_class: 'temperature' } } },
+                        {
+                            name: 'outdoor_temperature_entity',
+                            selector: { statistic: { device_class: 'temperature' } },
+                        },
                         { name: 'outdoor_humidity_entity', selector: { statistic: { device_class: 'humidity' } } },
                     ],
                 },
@@ -353,20 +397,26 @@ function buildSchema(data, t) {
                 ...(data.comfort_enabled && data.comfort_x_enabled ? COMFORT_X_FIELDS : []),
             ],
         },
-        ...(data.comfort_enabled ? [{
-            type: 'expandable',
-            title: t('editor.sections.bands'),
-            expanded: !!data.bands_enabled,
-            schema: [
-                { name: 'bands_enabled', selector: { boolean: {} } },
-                ...(data.bands_enabled ? [
-                    { name: 'orange_label', selector: { text: {} } },
-                    bandRow('orange'),
-                    { name: 'red_label', selector: { text: {} } },
-                    bandRow('red'),
-                ] : []),
-            ],
-        }] : []),
+        ...(data.comfort_enabled
+            ? [
+                  {
+                      type: 'expandable',
+                      title: t('editor.sections.bands'),
+                      expanded: !!data.bands_enabled,
+                      schema: [
+                          { name: 'bands_enabled', selector: { boolean: {} } },
+                          ...(data.bands_enabled
+                              ? [
+                                    { name: 'orange_label', selector: { text: {} } },
+                                    bandRow('orange'),
+                                    { name: 'red_label', selector: { text: {} } },
+                                    bandRow('red'),
+                                ]
+                              : []),
+                      ],
+                  },
+              ]
+            : []),
     ];
 }
 
@@ -400,10 +450,12 @@ export class MollierHxCardEditor extends LitElement {
 
     _valueChanged(ev) {
         const newConfig = dataToConfig(ev.detail.value, this._config);
-        this.dispatchEvent(new CustomEvent('config-changed', {
-            detail: { config: newConfig },
-            bubbles: true,
-            composed: true,
-        }));
+        this.dispatchEvent(
+            new CustomEvent('config-changed', {
+                detail: { config: newConfig },
+                bubbles: true,
+                composed: true,
+            }),
+        );
     }
 }

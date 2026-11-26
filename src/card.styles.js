@@ -217,8 +217,12 @@ export default css`
         margin-left: 4px;
         font-weight: 500;
     }
-    .zone-legend .effect.dries { color: #b45309; }
-    .zone-legend .effect.humidifies { color: #2563eb; }
+    .zone-legend .effect.dries {
+        color: #b45309;
+    }
+    .zone-legend .effect.humidifies {
+        color: #2563eb;
+    }
     .swatch.dash {
         height: 0;
         border-top: 2px dashed;

@@ -2,15 +2,28 @@ import { html, LitElement, nothing } from 'lit';
 import * as d3 from './d3_mollierhx/d3.js';
 import { drawHXCoordinates } from './d3_mollierhx/coordinateGenerator.js';
 import {
-    createComfort, hxAddClipPath, hxClampPoint, hxDrawStatePoint, hxDrawOutdoor, hxVentilationEffect,
-    HX_OUTDOOR_COLOR, HX_ROOM_COLOR,
+    createComfort,
+    hxAddClipPath,
+    hxClampPoint,
+    hxDrawStatePoint,
+    hxDrawOutdoor,
+    hxVentilationEffect,
+    HX_OUTDOOR_COLOR,
+    HX_ROOM_COLOR,
 } from './d3_mollierhx/drawComfort.js';
 import { createMollier } from './d3_mollierhx/mollierFunctions.js';
 import { parseWarningBands, bandRanges } from './bands.js';
 import { localize, getLanguage } from './localize/localize.js';
 import {
-    fetchDailyMeans, stateCelsius, stateHumidity, missingEntities, pressureFromConfig, daysFromConfig,
-    REFRESH_MS, RETRY_MS, SLOW_MS,
+    fetchDailyMeans,
+    stateCelsius,
+    stateHumidity,
+    missingEntities,
+    pressureFromConfig,
+    daysFromConfig,
+    REFRESH_MS,
+    RETRY_MS,
+    SLOW_MS,
 } from './statistics.js';
 import styles from './card.styles';
 
@@ -114,8 +127,8 @@ function parseDomain(input, fallback, scale) {
     return [lo, hi];
 }
 
-const isPair = (v) => Array.isArray(v) && v.length === 2
-    && v.every((n) => n !== null && n !== '' && Number.isFinite(Number(n)));
+const isPair = (v) =>
+    Array.isArray(v) && v.length === 2 && v.every((n) => n !== null && n !== '' && Number.isFinite(Number(n)));
 
 // Convert user-facing units (°C, %, g/kg) to the kg/kg + 0..1 units that
 // createComfort() expects. Returns null when no comfort zone is configured;
@@ -124,13 +137,18 @@ const isPair = (v) => Array.isArray(v) && v.length === 2
 function parseComfortZone(cz) {
     if (cz === undefined || cz === null || cz === false) return null;
     if (typeof cz !== 'object' || Array.isArray(cz)) {
-        throw new Error('comfort_zone must be an object with temperature: [min, max] (°C) and humidity: [min, max] (%)');
+        throw new Error(
+            'comfort_zone must be an object with temperature: [min, max] (°C) and humidity: [min, max] (%)',
+        );
     }
-    const t = cz.temperature, h = cz.humidity, x = cz.absolute_humidity;
+    const t = cz.temperature,
+        h = cz.humidity,
+        x = cz.absolute_humidity;
     if (!isPair(t)) throw new Error(`comfort_zone.temperature must be [min, max] in °C (got ${JSON.stringify(t)})`);
     if (!isPair(h)) throw new Error(`comfort_zone.humidity must be [min, max] in % (got ${JSON.stringify(h)})`);
     const hasX = x !== undefined && x !== null;
-    if (hasX && !isPair(x)) throw new Error(`comfort_zone.absolute_humidity must be [min, max] in g/kg (got ${JSON.stringify(x)})`);
+    if (hasX && !isPair(x))
+        throw new Error(`comfort_zone.absolute_humidity must be [min, max] in g/kg (got ${JSON.stringify(x)})`);
     const n = (v) => v.map(Number);
     return {
         range_t: n(t),
@@ -191,10 +209,10 @@ export class MollierHxCard extends LitElement {
     setConfig(config) {
         if (!config || typeof config !== 'object') throw new Error('Invalid configuration');
         if (!config.temperature_entity) {
-            throw new Error("temperature_entity is required");
+            throw new Error('temperature_entity is required');
         }
         if (!config.humidity_entity) {
-            throw new Error("humidity_entity is required");
+            throw new Error('humidity_entity is required');
         }
         // Validate everything before changing any state, so a broken edit in
         // the YAML editor shows an error and leaves the card as it was.
@@ -254,15 +272,26 @@ export class MollierHxCard extends LitElement {
     // lookups; only updates the reactive property when the list changes).
     _updateMissing() {
         if (!this._tempEntity) return;
-        const missing = missingEntities(this._hass, [this._tempEntity, this._humEntity, this._outT, this._outH, this._outW]);
+        const missing = missingEntities(this._hass, [
+            this._tempEntity,
+            this._humEntity,
+            this._outT,
+            this._outH,
+            this._outW,
+        ]);
         if (missing.join('|') !== (this._missing || []).join('|')) this._missing = missing;
     }
 
     // Live outside point: outside sensors first, the weather entity as fallback.
     _updateOutdoorPoint() {
         const hass = this._hass;
-        if (!hass || !this._mollier || !(this._outT || this._outW)) { this._outdoorPoint = null; return; }
-        let t = NaN, phi = NaN, source = null;
+        if (!hass || !this._mollier || !(this._outT || this._outW)) {
+            this._outdoorPoint = null;
+            return;
+        }
+        let t = NaN,
+            phi = NaN,
+            source = null;
         if (this._outT && this._outH) {
             t = stateCelsius(hass.states[this._outT]);
             phi = stateHumidity(hass.states[this._outH]);
@@ -271,14 +300,20 @@ export class MollierHxCard extends LitElement {
         if ((!Number.isFinite(t) || !Number.isFinite(phi)) && this._outW) {
             const a = hass.states[this._outW]?.attributes || {};
             t = Number(a.temperature);
-            if (a.temperature_unit === '°F') t = (t - 32) * 5 / 9;
+            if (a.temperature_unit === '°F') t = ((t - 32) * 5) / 9;
             // Weather entities report humidity in %.
             phi = Number(a.humidity) / 100;
             source = 'weather';
         }
-        if (!Number.isFinite(t) || !Number.isFinite(phi)) { this._outdoorPoint = null; return; }
+        if (!Number.isFinite(t) || !Number.isFinite(phi)) {
+            this._outdoorPoint = null;
+            return;
+        }
         const xy = this._mollier.get_x_y(t, phi, this._pressure);
-        if (!Number.isFinite(xy.x) || !Number.isFinite(xy.y)) { this._outdoorPoint = null; return; }
+        if (!Number.isFinite(xy.x) || !Number.isFinite(xy.y)) {
+            this._outdoorPoint = null;
+            return;
+        }
         const prev = this._outdoorPoint;
         if (prev && prev.x === xy.x && prev.y === xy.y) return;
         this._outdoorPoint = { x: xy.x, y: xy.y, t, phi, source };
@@ -292,12 +327,21 @@ export class MollierHxCard extends LitElement {
         }
         const ts = this._hass.states[this._tempEntity];
         const hs = this._hass.states[this._humEntity];
-        if (!ts || !hs) { this._currentPoint = null; return; }
+        if (!ts || !hs) {
+            this._currentPoint = null;
+            return;
+        }
         const t = stateCelsius(ts);
         const phi = stateHumidity(hs);
-        if (!Number.isFinite(t) || !Number.isFinite(phi)) { this._currentPoint = null; return; }
+        if (!Number.isFinite(t) || !Number.isFinite(phi)) {
+            this._currentPoint = null;
+            return;
+        }
         const xy = this._mollier.get_x_y(t, phi, this._pressure);
-        if (!Number.isFinite(xy.x) || !Number.isFinite(xy.y)) { this._currentPoint = null; return; }
+        if (!Number.isFinite(xy.x) || !Number.isFinite(xy.y)) {
+            this._currentPoint = null;
+            return;
+        }
         // Only update when the on-screen position would visibly change — avoids
         // re-rendering on every hass state churn (which fires for unrelated
         // entities too).
@@ -330,7 +374,10 @@ export class MollierHxCard extends LitElement {
         const seq = ++this._fetchSeq;
         // A first load that takes long says so, instead of an empty diagram.
         this._clearSlow();
-        if (!this._dailyData.length) this._slowTimer = setTimeout(() => { this._slow = true; }, SLOW_MS);
+        if (!this._dailyData.length)
+            this._slowTimer = setTimeout(() => {
+                this._slow = true;
+            }, SLOW_MS);
         try {
             const [days, outDays] = await Promise.all([
                 fetchDailyMeans(this._hass, this._tempEntity, this._humEntity, this._days),
@@ -349,8 +396,10 @@ export class MollierHxCard extends LitElement {
             this._clearSlow();
             // Keep the last good data; only say so when there is nothing to show.
             if (!this._dailyData.length) {
-                const error = err?.code === 'timeout' ? this._t('card.fetch_timeout')
-                    : String((err && err.message) || err).replace(/[.\s]+$/, '');
+                const error =
+                    err?.code === 'timeout'
+                        ? this._t('card.fetch_timeout')
+                        : String((err && err.message) || err).replace(/[.\s]+$/, '');
                 const delay = RETRY_MS[Math.min(this._retryCount, RETRY_MS.length - 1)];
                 this._error = { key: 'card.fetch_failed', vars: { error, s: Math.round(delay / 1000) } };
             }
@@ -369,7 +418,10 @@ export class MollierHxCard extends LitElement {
         clearTimeout(this._retryTimer);
         this._retryTimer = undefined;
         // Not on screen: retry when the card is attached again.
-        if (!this.isConnected) { this._retryPending = true; return; }
+        if (!this.isConnected) {
+            this._retryPending = true;
+            return;
+        }
         const delay = RETRY_MS[Math.min(this._retryCount, RETRY_MS.length - 1)];
         this._retryCount++;
         this._retryTimer = setTimeout(() => {
@@ -432,15 +484,43 @@ export class MollierHxCard extends LitElement {
                                 <div class="mollier-host"></div>
                             </div>
                             <div class="tooltip"></div>
-                            <div class="zoom-controls ${this._zoomed ? 'zoomed' : ''}" @click=${(ev) => ev.stopPropagation()}>
-                                ${this._zoomed ? html`<button class="zoom-btn zoom-reset" type="button"
-                                    title=${this._t('card.zoom_reset')} aria-label=${this._t('card.zoom_reset')}
-                                    @click=${() => this._resetZoom()}>1:1</button>` : nothing}
+                            <div
+                                class="zoom-controls ${this._zoomed ? 'zoomed' : ''}"
+                                @click=${(ev) => ev.stopPropagation()}
+                            >
+                                ${
+                                    this._zoomed
+                                        ? html`<button
+                                              class="zoom-btn zoom-reset"
+                                              type="button"
+                                              title=${this._t('card.zoom_reset')}
+                                              aria-label=${this._t('card.zoom_reset')}
+                                              @click=${() => this._resetZoom()}
+                                          >
+                                              1:1
+                                          </button>`
+                                        : nothing
+                                }
                                 <!-- + and − stay at the same place; 1:1 appears to their left. -->
-                                <button class="zoom-btn zoom-in mouse-only" type="button" title=${this._t('card.zoom_in')}
-                                    aria-label=${this._t('card.zoom_in')} @click=${() => this._zoomBy?.(1.6)}>+</button>
-                                <button class="zoom-btn zoom-out mouse-only" type="button" title=${this._t('card.zoom_out')}
-                                    aria-label=${this._t('card.zoom_out')} ?disabled=${!this._zoomed} @click=${() => this._zoomBy?.(1 / 1.6)}>−</button>
+                                <button
+                                    class="zoom-btn zoom-in mouse-only"
+                                    type="button"
+                                    title=${this._t('card.zoom_in')}
+                                    aria-label=${this._t('card.zoom_in')}
+                                    @click=${() => this._zoomBy?.(1.6)}
+                                >
+                                    +
+                                </button>
+                                <button
+                                    class="zoom-btn zoom-out mouse-only"
+                                    type="button"
+                                    title=${this._t('card.zoom_out')}
+                                    aria-label=${this._t('card.zoom_out')}
+                                    ?disabled=${!this._zoomed}
+                                    @click=${() => this._zoomBy?.(1 / 1.6)}
+                                >
+                                    −
+                                </button>
                             </div>
                         </div>
                         ${this._renderZoneLegend()}
@@ -454,7 +534,9 @@ export class MollierHxCard extends LitElement {
         const lines = [];
         const missing = this._missing || [];
         if (missing.length) {
-            lines.push(html`<p class="error">${this._t('card.entity_not_found', { entities: missing.join(', ') })}</p>`);
+            lines.push(
+                html`<p class="error">${this._t('card.entity_not_found', { entities: missing.join(', ') })}</p>`,
+            );
         }
         const roomMissing = missing.includes(this._tempEntity) || missing.includes(this._humEntity);
         if (this._error?.key === 'card.fetch_failed') {
@@ -484,22 +566,44 @@ export class MollierHxCard extends LitElement {
         const c = this._currentPoint;
         if (!this._showLegend || (!cz && !o && !c)) return nothing;
         const r = (v) => Math.round(v * 10) / 10;
-        const zone = cz ? `${r(cz.range_t[0])}–${r(cz.range_t[1])} °C · ${r(cz.range_phi[0] * 100)}–${r(cz.range_phi[1] * 100)} %`
-            + (cz.hasX ? ` · ${r(cz.range_x[0] * 1000)}–${r(cz.range_x[1] * 1000)} g/kg` : '') : '';
+        const zone = cz
+            ? `${r(cz.range_t[0])}–${r(cz.range_t[1])} °C · ${r(cz.range_phi[0] * 100)}–${r(cz.range_phi[1] * 100)} %` +
+              (cz.hasX ? ` · ${r(cz.range_x[0] * 1000)}–${r(cz.range_x[1] * 1000)} g/kg` : '')
+            : '';
         const fmt = (k) => `±${k.dt} K · ±${k.dphi} %` + (cz.hasX ? ` · ±${k.dx} g/kg` : '');
         const eff = this._ventilationEffect();
-        const outTitle = o ? `${o.t.toFixed(1)} °C · ${(o.phi * 100).toFixed(0)} % · ${(o.x * 1000).toFixed(1)} g/kg` : '';
-        const nowTitle = c ? `${c.t.toFixed(1)} °C · ${(c.phi * 100).toFixed(0)} % · ${(c.x * 1000).toFixed(1)} g/kg` : '';
+        const outTitle = o
+            ? `${o.t.toFixed(1)} °C · ${(o.phi * 100).toFixed(0)} % · ${(o.x * 1000).toFixed(1)} g/kg`
+            : '';
+        const nowTitle = c
+            ? `${c.t.toFixed(1)} °C · ${(c.phi * 100).toFixed(0)} % · ${(c.x * 1000).toFixed(1)} g/kg`
+            : '';
         return html`
             <div class="zone-legend">
                 ${cz ? html`<span title=${zone}><i class="swatch fill"></i>${this._t('card.comfort_zone')}</span>` : nothing}
-                ${b ? ['orange', 'red'].map((k) => html`
-                    <span title=${fmt(b[k])}>
-                        <i class="swatch dash" style="border-color:${b[k].color}"></i>${b[k].label || this._t(k === 'orange' ? 'card.warning_band' : 'card.alarm_band')}
-                    </span>`) : nothing}
+                ${
+                    b
+                        ? ['orange', 'red'].map(
+                              (k) =>
+                                  html` <span title=${fmt(b[k])}>
+                                      <i class="swatch dash" style="border-color:${b[k].color}"></i
+                                      >${b[k].label || this._t(k === 'orange' ? 'card.warning_band' : 'card.alarm_band')}
+                                  </span>`,
+                          )
+                        : nothing
+                }
                 ${c ? html`<span title=${nowTitle}><i class="swatch now" style="background:${ROOM_COLOR}"></i>${this._t('card.now')}</span>` : nothing}
-                ${o ? html`<span title=${outTitle}><i class="swatch outdoor"></i>${this._t('card.outdoor')}${eff && this._ventLine && this._currentPoint
-                    ? html`<span class="effect ${eff}">· ${this._t(`card.ventilation_${eff}`)}</span>` : nothing}</span>` : nothing}
+                ${
+                    o
+                        ? html`<span title=${outTitle}
+                              ><i class="swatch outdoor"></i>${this._t('card.outdoor')}${
+                                  eff && this._ventLine && this._currentPoint
+                                      ? html`<span class="effect ${eff}">· ${this._t(`card.ventilation_${eff}`)}</span>`
+                                      : nothing
+                              }</span
+                          >`
+                        : nothing
+                }
             </div>
         `;
     }
@@ -523,7 +627,8 @@ export class MollierHxCard extends LitElement {
         this._zoomState = z;
         const MAX = 4;
         const clamp = () => {
-            const w = host.offsetWidth, h = host.offsetHeight;
+            const w = host.offsetWidth,
+                h = host.offsetHeight;
             z.s = Math.min(MAX, Math.max(1, z.s));
             z.x = Math.min(0, Math.max(w * (1 - z.s), z.x));
             z.y = Math.min(0, Math.max(h * (1 - z.s), z.y));
@@ -531,7 +636,11 @@ export class MollierHxCard extends LitElement {
         const apply = () => {
             clamp();
             const zoomed = z.s > 1.001;
-            if (!zoomed) { z.s = 1; z.x = 0; z.y = 0; }
+            if (!zoomed) {
+                z.s = 1;
+                z.x = 0;
+                z.y = 0;
+            }
             host.style.transform = zoomed ? `translate(${z.x}px, ${z.y}px) scale(${z.s})` : '';
             vp.style.touchAction = zoomed ? 'none' : 'pan-x pan-y';
             if (this._zoomed !== zoomed) this._zoomed = zoomed;
@@ -539,13 +648,17 @@ export class MollierHxCard extends LitElement {
         // Zoom to scale `s` keeping the client point (cx, cy) fixed.
         const zoomAt = (s, cx, cy) => {
             const r = vp.getBoundingClientRect();
-            const lx = (cx - r.left - z.x) / z.s, ly = (cy - r.top - z.y) / z.s;
+            const lx = (cx - r.left - z.x) / z.s,
+                ly = (cy - r.top - z.y) / z.s;
             z.s = Math.min(MAX, Math.max(1, s));
             z.x = cx - r.left - lx * z.s;
             z.y = cy - r.top - ly * z.s;
             apply();
         };
-        this._resetZoom = () => { z.s = 1; apply(); };
+        this._resetZoom = () => {
+            z.s = 1;
+            apply();
+        };
         // Buttons zoom around the centre of the diagram.
         this._zoomBy = (f) => {
             const r = vp.getBoundingClientRect();
@@ -570,18 +683,28 @@ export class MollierHxCard extends LitElement {
             const p = pts();
             if (z.g?.kind === 'pinch' && p.length >= 2) {
                 const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1;
-                const mx = (p[0].x + p[1].x) / 2, my = (p[0].y + p[1].y) / 2;
+                const mx = (p[0].x + p[1].x) / 2,
+                    my = (p[0].y + p[1].y) / 2;
                 // scale around the start midpoint, then follow the fingers
                 const before = { s: z.s, x: z.x, y: z.y };
-                zoomAt(z.g.s * d / z.g.d, z.g.mx, z.g.my);
-                z.x += mx - z.g.mx; z.y += my - z.g.my;
-                z.g.mx = mx; z.g.my = my; z.g.s = z.s; z.g.d = d;
+                zoomAt((z.g.s * d) / z.g.d, z.g.mx, z.g.my);
+                z.x += mx - z.g.mx;
+                z.y += my - z.g.my;
+                z.g.mx = mx;
+                z.g.my = my;
+                z.g.s = z.s;
+                z.g.d = d;
                 apply();
                 if (before.s !== z.s || before.x !== z.x) ev.preventDefault();
             } else if (z.g?.kind === 'pan' && p.length === 1) {
-                const dx = ev.clientX - z.g.px, dy = ev.clientY - z.g.py;
-                if (Math.abs(dx) + Math.abs(dy) > 4) { z.g.moved = true; this._hideTip(); }
-                z.x = z.g.x + dx; z.y = z.g.y + dy;
+                const dx = ev.clientX - z.g.px,
+                    dy = ev.clientY - z.g.py;
+                if (Math.abs(dx) + Math.abs(dy) > 4) {
+                    z.g.moved = true;
+                    this._hideTip();
+                }
+                z.x = z.g.x + dx;
+                z.y = z.g.y + dy;
                 apply();
                 ev.preventDefault();
             }
@@ -589,16 +712,18 @@ export class MollierHxCard extends LitElement {
         const end = (ev) => {
             const wasPan = z.g?.kind === 'pan' && z.g.moved;
             const wasPinch = z.g?.kind === 'pinch';
-            if (wasPan || wasPinch) z.suppressClick = true;   // the click that follows is not a tap
+            if (wasPan || wasPinch) z.suppressClick = true; // the click that follows is not a tap
             z.pts.delete(ev.pointerId);
             if (z.pts.size < 2 && z.g?.kind === 'pinch') z.g = null;
             if (z.pts.size === 0) z.g = null;
             // Double tap: zoom in 2.5× at the tap, or back to 1:1 when zoomed.
             if (ev.type === 'pointerup' && ev.pointerType !== 'mouse' && !wasPan && z.pts.size === 0) {
-                const now = Date.now(), t = z.lastTap;
+                const now = Date.now(),
+                    t = z.lastTap;
                 if (t && now - t.time < 320 && Math.hypot(ev.clientX - t.x, ev.clientY - t.y) < 30) {
                     z.lastTap = null;
-                    if (z.s > 1) this._resetZoom(); else zoomAt(2.5, ev.clientX, ev.clientY);
+                    if (z.s > 1) this._resetZoom();
+                    else zoomAt(2.5, ev.clientX, ev.clientY);
                     this._hideTip();
                 } else {
                     z.lastTap = { time: now, x: ev.clientX, y: ev.clientY };
@@ -608,20 +733,40 @@ export class MollierHxCard extends LitElement {
         vp.addEventListener('pointerup', end);
         vp.addEventListener('pointercancel', end);
         // A pan must not end in a click on a point (tooltip).
-        vp.addEventListener('click', (ev) => { if (z.suppressClick) { ev.stopPropagation(); z.suppressClick = false; } }, true);
-        vp.addEventListener('pointerdown', () => { z.suppressClick = false; }, true);
+        vp.addEventListener(
+            'click',
+            (ev) => {
+                if (z.suppressClick) {
+                    ev.stopPropagation();
+                    z.suppressClick = false;
+                }
+            },
+            true,
+        );
+        vp.addEventListener(
+            'pointerdown',
+            () => {
+                z.suppressClick = false;
+            },
+            true,
+        );
         // Mouse: double-click zooms in at the pointer, or back to 1:1.
         vp.addEventListener('dblclick', (ev) => {
             ev.preventDefault();
-            if (z.s > 1) this._resetZoom(); else zoomAt(2.5, ev.clientX, ev.clientY);
+            if (z.s > 1) this._resetZoom();
+            else zoomAt(2.5, ev.clientX, ev.clientY);
             this._hideTip();
         });
-        vp.addEventListener('wheel', (ev) => {
-            if (!ev.ctrlKey) return;                       // plain wheel scrolls the page
-            ev.preventDefault();
-            zoomAt(z.s * Math.exp(-ev.deltaY / 200), ev.clientX, ev.clientY);
-            this._hideTip();
-        }, { passive: false });
+        vp.addEventListener(
+            'wheel',
+            (ev) => {
+                if (!ev.ctrlKey) return; // plain wheel scrolls the page
+                ev.preventDefault();
+                zoomAt(z.s * Math.exp(-ev.deltaY / 200), ev.clientX, ev.clientY);
+                this._hideTip();
+            },
+            { passive: false },
+        );
         apply();
     }
 
@@ -655,17 +800,32 @@ export class MollierHxCard extends LitElement {
         // Translated captions; the vendored generator lays them out for the
         // diagram height (right-edge captions stacked, x caption in the margin).
         lineOpts.captions = Object.fromEntries(CAPTION_KEYS.map((k) => [k, this._t(`diagram.${k}`)]));
-        drawHXCoordinates(d3.select(host), WIDTH, HEIGHT, MARGIN, this._domainX, this._domainY, this._pressure, this._mollier, lineOpts);
+        drawHXCoordinates(
+            d3.select(host),
+            WIDTH,
+            HEIGHT,
+            MARGIN,
+            this._domainX,
+            this._domainY,
+            this._pressure,
+            this._mollier,
+            lineOpts,
+        );
         // The vendored coordinate generator emits width/height attributes only,
         // so when the SVG is scaled responsively (height: auto), browsers crop
         // the bottom-right instead of scaling the content. Adding a viewBox
         // makes the internal coordinate system scale with the rendered size.
-        d3.select(host).select('#hx_mollier_diagram')
+        d3.select(host)
+            .select('#hx_mollier_diagram')
             .attr('viewBox', `0 0 ${WIDTH} ${HEIGHT}`)
             .attr('preserveAspectRatio', 'xMidYMid meet');
         // Clip for the data layers: nothing may be drawn over the axes.
-        this._clipUrl = hxAddClipPath(d3.select(host).select('#hx_mollier_diagram'), this._clipId,
-            WIDTH - MARGIN.left - MARGIN.right, HEIGHT - MARGIN.top - MARGIN.bottom);
+        this._clipUrl = hxAddClipPath(
+            d3.select(host).select('#hx_mollier_diagram'),
+            this._clipId,
+            WIDTH - MARGIN.left - MARGIN.right,
+            HEIGHT - MARGIN.top - MARGIN.bottom,
+        );
         this._drawHash = hash;
         this._drawn = true;
     }
@@ -682,7 +842,12 @@ export class MollierHxCard extends LitElement {
         const xs = d3.scaleLinear().range([0, innerW]).domain(this._domainX);
         const ys = d3.scaleLinear().range([innerH, 0]).domain(this._domainY);
         return {
-            svg, wrap, innerW, innerH, xs, ys,
+            svg,
+            wrap,
+            innerW,
+            innerH,
+            xs,
+            ys,
             tooltip: wrap.querySelector('.tooltip'),
             // Context of the vendored overlay helpers (hxDrawStatePoint, ...).
             ctx: { x: xs, y: ys, width: innerW, height: innerH, mollier: this._mollier, pressure: this._pressure },
@@ -692,9 +857,7 @@ export class MollierHxCard extends LitElement {
     // A layer in plot coordinates; `clip` keeps its content inside the axes.
     _layer(P, id, clip) {
         P.svg.select(`#${id}`).remove();
-        const g = P.svg.append('g')
-            .attr('id', id)
-            .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+        const g = P.svg.append('g').attr('id', id).attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
         if (clip) g.attr('clip-path', this._clipUrl);
         return g;
     }
@@ -715,18 +878,25 @@ export class MollierHxCard extends LitElement {
             tooltipEl.innerHTML = inner;
             tooltipEl.style.background = background;
             tooltipEl.style.color = color;
-            tooltipEl.style.left = (r.left + r.width / 2 - wrapRect.left) + 'px';
-            tooltipEl.style.top = (r.top - wrapRect.top) + 'px';
+            tooltipEl.style.left = r.left + r.width / 2 - wrapRect.left + 'px';
+            tooltipEl.style.top = r.top - wrapRect.top + 'px';
             tooltipEl.style.display = 'block';
             if (!this._tip) onShow?.();
             clearTimeout(this._tip?.timer);
             this._tip = {
-                node, el: tooltipEl, pinned, onHide,
+                node,
+                el: tooltipEl,
+                pinned,
+                onHide,
                 timer: pinned ? setTimeout(() => this._hideTip(), TOOLTIP_PIN_MS) : undefined,
             };
         };
-        node.addEventListener('mouseover', () => { if (!this._tip?.pinned || this._tip.node !== node) show(false); });
-        node.addEventListener('mouseout', () => { if (this._tip?.node === node && !this._tip.pinned) this._hideTip(); });
+        node.addEventListener('mouseover', () => {
+            if (!this._tip?.pinned || this._tip.node !== node) show(false);
+        });
+        node.addEventListener('mouseout', () => {
+            if (this._tip?.node === node && !this._tip.pinned) this._hideTip();
+        });
         node.addEventListener('click', (ev) => {
             ev.stopPropagation();
             if (this._tip?.node === node && this._tip.pinned) this._hideTip();
@@ -740,9 +910,11 @@ export class MollierHxCard extends LitElement {
     _hitArea(layer, P, cx, cy, px, minR = 0) {
         const w = P.svg.node().getBoundingClientRect().width;
         const scale = w > 0 ? w / WIDTH : 1;
-        return layer.append('circle')
+        return layer
+            .append('circle')
             .attr('class', 'hit')
-            .attr('cx', cx).attr('cy', cy)
+            .attr('cx', cx)
+            .attr('cy', cy)
             .attr('r', Math.max(minR, px / 2 / scale))
             .attr('fill', 'transparent')
             .style('pointer-events', 'all')
@@ -771,8 +943,16 @@ export class MollierHxCard extends LitElement {
         const tz = this._hass?.config?.time_zone;
         const opts = { year: 'numeric', month: 'numeric', day: 'numeric' };
         const make = (l) => {
-            try { return new Intl.DateTimeFormat(l, tz ? { ...opts, timeZone: tz } : opts); } catch { /* bad tz or locale */ }
-            try { return new Intl.DateTimeFormat(l, opts); } catch { return new Intl.DateTimeFormat('en', opts); }
+            try {
+                return new Intl.DateTimeFormat(l, tz ? { ...opts, timeZone: tz } : opts);
+            } catch {
+                /* bad tz or locale */
+            }
+            try {
+                return new Intl.DateTimeFormat(l, opts);
+            } catch {
+                return new Intl.DateTimeFormat('en', opts);
+            }
         };
         const fmt = make(dateFormat === 'system' ? undefined : lang);
         if (dateFormat === 'language' || dateFormat === 'system' || !['DMY', 'MDY', 'YMD'].includes(dateFormat)) {
@@ -784,7 +964,7 @@ export class MollierHxCard extends LitElement {
                 const get = (type) => parts.find((p) => p.type === type)?.value ?? '';
                 const sep = parts.find((p) => p.type === 'literal')?.value ?? '/';
                 const last = parts[parts.length - 1];
-                const tail = last?.type === 'literal' ? last.value : '';   // e.g. the trailing "." in some languages
+                const tail = last?.type === 'literal' ? last.value : ''; // e.g. the trailing "." in some languages
                 const [day, month, year] = [get('day'), get('month'), get('year')];
                 if (dateFormat === 'DMY') return `${day}${sep}${month}${sep}${year}${tail}`;
                 if (dateFormat === 'MDY') return `${month}${sep}${day}${sep}${year}${tail}`;
@@ -809,9 +989,13 @@ export class MollierHxCard extends LitElement {
         const points = Array.isArray(polygon[0]) ? polygon[0] : polygon;
         if (points.length < 2) return;
 
-        const lineGen = d3.line().x(p => P.xs(p.x)).y(p => P.ys(p.y));
+        const lineGen = d3
+            .line()
+            .x((p) => P.xs(p.x))
+            .y((p) => P.ys(p.y));
         const group = this._layer(P, 'comfort-zone', true);
-        group.append('path')
+        group
+            .append('path')
             .datum(points)
             .attr('d', lineGen)
             .attr('fill', 'yellowgreen')
@@ -827,7 +1011,8 @@ export class MollierHxCard extends LitElement {
             if (!Array.isArray(pb) || pb.length === 0) continue;
             const pts = Array.isArray(pb[0]) ? pb[0] : pb;
             if (pts.length < 2) continue;
-            group.append('path')
+            group
+                .append('path')
                 .datum(pts)
                 .attr('class', `warning-band ${key}`)
                 .attr('d', lineGen)
@@ -861,8 +1046,12 @@ export class MollierHxCard extends LitElement {
         const layer = this._layer(P, 'data-points', true);
 
         if (this._coloring === 'chronological') {
-            const line = d3.line().x(p => p.cx).y(p => p.cy);
-            layer.append('path')
+            const line = d3
+                .line()
+                .x((p) => p.cx)
+                .y((p) => p.cy);
+            layer
+                .append('path')
                 .datum(points)
                 .attr('d', line)
                 .attr('fill', 'none')
@@ -870,15 +1059,16 @@ export class MollierHxCard extends LitElement {
                 .attr('stroke-width', 1);
         }
 
-        const circles = layer.selectAll('circle')
+        const circles = layer
+            .selectAll('circle')
             .data(points)
             .enter()
             .append('circle')
-            .attr('cx', p => p.cx)
-            .attr('cy', p => p.cy)
+            .attr('cx', (p) => p.cx)
+            .attr('cy', (p) => p.cy)
             .attr('r', 5)
-            .attr('fill', p => p.color)
-            .attr('opacity', p => p.opacity)
+            .attr('fill', (p) => p.color)
+            .attr('opacity', (p) => p.opacity)
             .attr('shape-rendering', 'optimizeSpeed');
 
         // Native listeners + getBoundingClientRect for reliable positioning
@@ -892,17 +1082,29 @@ export class MollierHxCard extends LitElement {
             const darkText = season !== 'winter' && season !== 'autumn';
             // 24 px touch target; neighbouring days may overlap, the later one wins.
             const hit = card._hitArea(layer, P, p.cx, p.cy, DAY_TARGET_PX, 5);
-            card._bindTooltip(P, hit, () => ({
-                html: `${dateFmt.format(p.date)}<br>x: ${(p.x * 1000).toFixed(2)} g/kg`
-                    + `<br>T: ${p.t.toFixed(2)} °C`
-                    + `<br>φ: ${(p.phi * 100).toFixed(2)} %`,
-                background: SEASON_COLORS[season],
-                color: darkText ? 'black' : 'white',
-            }), {
-                anchor: node,
-                onShow: () => { node.setAttribute('r', 10); node.setAttribute('opacity', 0.9); },
-                onHide: () => { node.setAttribute('r', 5); node.setAttribute('opacity', p.opacity); },
-            });
+            card._bindTooltip(
+                P,
+                hit,
+                () => ({
+                    html:
+                        `${dateFmt.format(p.date)}<br>x: ${(p.x * 1000).toFixed(2)} g/kg` +
+                        `<br>T: ${p.t.toFixed(2)} °C` +
+                        `<br>φ: ${(p.phi * 100).toFixed(2)} %`,
+                    background: SEASON_COLORS[season],
+                    color: darkText ? 'black' : 'white',
+                }),
+                {
+                    anchor: node,
+                    onShow: () => {
+                        node.setAttribute('r', 10);
+                        node.setAttribute('opacity', 0.9);
+                    },
+                    onHide: () => {
+                        node.setAttribute('r', 5);
+                        node.setAttribute('opacity', p.opacity);
+                    },
+                },
+            );
         });
     }
 
@@ -921,17 +1123,24 @@ export class MollierHxCard extends LitElement {
         const P = this._plot();
         if (!P) return;
         P.svg.select('#outdoor-history').remove();
-        const days = this._outHistory ? (this._outdoorDays || []) : [];
+        const days = this._outHistory ? this._outdoorDays || [] : [];
         if (!days.length) return;
         const layer = this._layer(P, 'outdoor-history', true);
         for (const d of days) {
             const xy = this._mollier.get_x_y(d.t, d.phi, this._pressure);
-            const cx = P.xs(xy.x), cy = P.ys(xy.y);
+            const cx = P.xs(xy.x),
+                cy = P.ys(xy.y);
             if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
-            layer.append('circle')
-                .attr('cx', cx).attr('cy', cy).attr('r', 3.5)
-                .attr('fill', OUTDOOR_COLOR).attr('fill-opacity', 0.28)
-                .attr('stroke', OUTDOOR_COLOR).attr('stroke-opacity', 0.45).attr('stroke-width', 0.8);
+            layer
+                .append('circle')
+                .attr('cx', cx)
+                .attr('cy', cy)
+                .attr('r', 3.5)
+                .attr('fill', OUTDOOR_COLOR)
+                .attr('fill-opacity', 0.28)
+                .attr('stroke', OUTDOOR_COLOR)
+                .attr('stroke-opacity', 0.45)
+                .attr('stroke-width', 0.8);
         }
     }
 
@@ -948,22 +1157,30 @@ export class MollierHxCard extends LitElement {
         const layer = this._layer(P, 'outdoor', false);
         const r = this._currentPoint;
         const res = hxDrawOutdoor(layer, P.ctx, { t: o.t, phi: o.phi }, r ? { t: r.t, phi: r.phi } : null, {
-            color: OUTDOOR_COLOR, ventilationLine: this._ventLine, note: false,
+            color: OUTDOOR_COLOR,
+            ventilationLine: this._ventLine,
+            note: false,
         });
         if (!res.marker) return;
         const pos = hxClampPoint(P.ctx, res.outdoor);
         const outHit = this._hitArea(layer, P, pos.cx, pos.cy, POINT_TARGET_PX);
-        this._bindTooltip(P, outHit, () => {
-            const eff = this._ventilationEffect();
-            return {
-                html: `${this._t('card.outdoor')}<br>x: ${(o.x * 1000).toFixed(2)} g/kg`
-                    + `<br>T: ${o.t.toFixed(1)} °C<br>φ: ${(o.phi * 100).toFixed(0)} %`
-                    + `<br>Td: ${this._dewPoint(o.t, o.phi).toFixed(1)} °C`
-                    + (eff ? `<br>${this._t(`card.ventilation_${eff}`)}` : ''),
-                background: OUTDOOR_COLOR,
-                color: 'white',
-            };
-        }, { anchor: res.marker.node() });
+        this._bindTooltip(
+            P,
+            outHit,
+            () => {
+                const eff = this._ventilationEffect();
+                return {
+                    html:
+                        `${this._t('card.outdoor')}<br>x: ${(o.x * 1000).toFixed(2)} g/kg` +
+                        `<br>T: ${o.t.toFixed(1)} °C<br>φ: ${(o.phi * 100).toFixed(0)} %` +
+                        `<br>Td: ${this._dewPoint(o.t, o.phi).toFixed(1)} °C` +
+                        (eff ? `<br>${this._t(`card.ventilation_${eff}`)}` : ''),
+                    background: OUTDOOR_COLOR,
+                    color: 'white',
+                };
+            },
+            { anchor: res.marker.node() },
+        );
     }
 
     // Live room point (black, vendored hxDrawStatePoint). Outside the axes it
@@ -982,17 +1199,25 @@ export class MollierHxCard extends LitElement {
         const { pos } = pt;
         const node = pt.marker.node();
         const hit = this._hitArea(layer, P, pos.cx, pos.cy, POINT_TARGET_PX);
-        this._bindTooltip(P, hit, () => ({
-            html: `${this._t('card.now')}<br>x: ${(c.x * 1000).toFixed(2)} g/kg`
-                + `<br>T: ${c.t.toFixed(2)} °C`
-                + `<br>φ: ${(c.phi * 100).toFixed(2)} %`,
-            background: 'black',
-            color: 'white',
-        }), pos.outside ? { anchor: node } : {
-            anchor: node,
-            onShow: () => node.setAttribute('r', 10),
-            onHide: () => node.setAttribute('r', 6),
-        });
+        this._bindTooltip(
+            P,
+            hit,
+            () => ({
+                html:
+                    `${this._t('card.now')}<br>x: ${(c.x * 1000).toFixed(2)} g/kg` +
+                    `<br>T: ${c.t.toFixed(2)} °C` +
+                    `<br>φ: ${(c.phi * 100).toFixed(2)} %`,
+                background: 'black',
+                color: 'white',
+            }),
+            pos.outside
+                ? { anchor: node }
+                : {
+                      anchor: node,
+                      onShow: () => node.setAttribute('r', 10),
+                      onHide: () => node.setAttribute('r', 6),
+                  },
+        );
     }
 
     _colorFor(d) {
@@ -1017,21 +1242,22 @@ export class MollierHxCard extends LitElement {
     }
 
     static getConfigElement() {
-        return document.createElement("mollier-hx-card-editor");
+        return document.createElement('mollier-hx-card-editor');
     }
 
     // A real sensor pair from this Home Assistant when there is one (with
     // long-term statistics), else placeholders the user replaces in the editor.
     static getStubConfig(hass) {
-        const pick = (deviceClass) => Object.keys(hass?.states || {}).find((id) => {
-            const a = hass.states[id]?.attributes || {};
-            return id.startsWith('sensor.') && a.device_class === deviceClass && a.state_class === 'measurement';
-        });
+        const pick = (deviceClass) =>
+            Object.keys(hass?.states || {}).find((id) => {
+                const a = hass.states[id]?.attributes || {};
+                return id.startsWith('sensor.') && a.device_class === deviceClass && a.state_class === 'measurement';
+            });
         return {
-            temperature_entity: pick('temperature') || "sensor.living_room_temperature",
-            humidity_entity: pick('humidity') || "sensor.living_room_humidity",
+            temperature_entity: pick('temperature') || 'sensor.living_room_temperature',
+            humidity_entity: pick('humidity') || 'sensor.living_room_humidity',
             days_to_show: 7,
-            coloring: "season",
+            coloring: 'season',
         };
     }
 

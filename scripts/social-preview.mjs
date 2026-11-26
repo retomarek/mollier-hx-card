@@ -20,14 +20,23 @@ function findChrome() {
         try {
             const p = execSync(`command -v ${name}`, { encoding: 'utf8' }).trim();
             if (p && existsSync(p)) return p;
-        } catch { /* not found */ }
+        } catch {
+            /* not found */
+        }
     }
     throw new Error('No Chrome/Chromium found. Set CHROME_PATH.');
 }
 
-const browser = await puppeteer.launch({ executablePath: findChrome(), headless: true, args: ['--no-sandbox', '--hide-scrollbars'] });
+const browser = await puppeteer.launch({
+    executablePath: findChrome(),
+    headless: true,
+    args: ['--no-sandbox', '--hide-scrollbars'],
+});
 try {
-    for (const [tpl, out, height] of [['social-preview.html', 'social-preview.png', 640], ['banner.html', 'banner.png', 320]]) {
+    for (const [tpl, out, height] of [
+        ['social-preview.html', 'social-preview.png', 640],
+        ['banner.html', 'banner.png', 320],
+    ]) {
         const tab = await browser.newPage();
         await tab.setViewport({ width: 1280, height, deviceScaleFactor: 1 });
         await tab.goto(pathToFileURL(resolve(root, 'scripts', tpl)).href, { waitUntil: 'networkidle0' });

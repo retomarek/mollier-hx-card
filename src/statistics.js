@@ -34,22 +34,28 @@ export function humidityFraction(values, unit) {
 // Returns [{ date, t, phi }] sorted by date; [] when there are no statistics.
 export async function fetchDailyMeans(hass, temperatureEntity, humidityEntity, days) {
     const now = Date.now();
-    const result = await withTimeout(hass.callWS({
-        type: 'recorder/statistics_during_period',
-        start_time: new Date(now - (days + 2) * DAY_MS).toISOString(),
-        end_time: new Date(now).toISOString(),
-        statistic_ids: [temperatureEntity, humidityEntity],
-        period: 'day',
-        types: ['mean'],
-        // Convert to °C on the server, so Fahrenheit sensors work too.
-        units: { temperature: '°C' },
-    }), FETCH_TIMEOUT_MS);
+    const result = await withTimeout(
+        hass.callWS({
+            type: 'recorder/statistics_during_period',
+            start_time: new Date(now - (days + 2) * DAY_MS).toISOString(),
+            end_time: new Date(now).toISOString(),
+            statistic_ids: [temperatureEntity, humidityEntity],
+            period: 'day',
+            types: ['mean'],
+            // Convert to °C on the server, so Fahrenheit sensors work too.
+            units: { temperature: '°C' },
+        }),
+        FETCH_TIMEOUT_MS,
+    );
     const tRows = result?.[temperatureEntity] || [];
     const hRows = result?.[humidityEntity] || [];
     // `start` is epoch ms on current HA (ISO strings on old versions).
     const ts = (v) => (typeof v === 'number' ? v : Date.parse(v));
     const hUnit = hass.states?.[humidityEntity]?.attributes?.unit_of_measurement;
-    const hFrac = humidityFraction(hRows.map((r) => r.mean), hUnit);
+    const hFrac = humidityFraction(
+        hRows.map((r) => r.mean),
+        hUnit,
+    );
     const byDay = new Map();
     for (const r of tRows) byDay.set(ts(r.start), { date: new Date(ts(r.start)), t: r.mean });
     hRows.forEach((r, i) => {
@@ -57,8 +63,12 @@ export async function fetchDailyMeans(hass, temperatureEntity, humidityEntity, d
         if (e) e.phi = hFrac[i];
     });
     return [...byDay.entries()]
-        .filter(([start, e]) => start + DAY_MS <= now                  // completed days only
-            && Number.isFinite(e.t) && Number.isFinite(e.phi))
+        .filter(
+            ([start, e]) =>
+                start + DAY_MS <= now && // completed days only
+                Number.isFinite(e.t) &&
+                Number.isFinite(e.phi),
+        )
         .map(([, e]) => e)
         .sort((a, b) => a.date - b.date)
         .slice(-days);
@@ -82,7 +92,7 @@ export function withTimeout(promise, ms) {
 export function stateCelsius(stateObj) {
     const v = parseFloat(stateObj?.state);
     if (!Number.isFinite(v)) return NaN;
-    return stateObj?.attributes?.unit_of_measurement === '°F' ? (v - 32) * 5 / 9 : v;
+    return stateObj?.attributes?.unit_of_measurement === '°F' ? ((v - 32) * 5) / 9 : v;
 }
 
 // Live relative humidity as a fraction 0..1, or NaN.
@@ -115,7 +125,7 @@ export function pressureFromConfig(config, fallback = 101325) {
     const pr = config.pressure;
     if (pr === undefined || pr === null || pr === '') return fallback;
     let p = Number(pr);
-    if (Number.isFinite(p) && p > 0 && p < 2000) p *= 100;          // hPa → Pa
+    if (Number.isFinite(p) && p > 0 && p < 2000) p *= 100; // hPa → Pa
     if (!Number.isFinite(p) || p < 30000 || p > 110000) {
         throw new Error(`pressure must be in hPa (300–1100) or Pa (30000–110000) (got ${pr})`);
     }

@@ -32,7 +32,11 @@ const READY = '#hx_mollier_diagram';
 // ---------------------------------------------------------------------------
 
 // Outside air with sensors, daily means and the ventilation line.
-const OUTDOOR = { outdoor_temperature_entity: 'sensor.ot', outdoor_humidity_entity: 'sensor.oh', outdoor_history: true };
+const OUTDOOR = {
+    outdoor_temperature_entity: 'sensor.ot',
+    outdoor_humidity_entity: 'sensor.oh',
+    outdoor_history: true,
+};
 
 // width: tile width; rows: sections row count (fixed height = rows*64-8 px);
 // layout: what HA sets ('grid' in sections, 'panel', or null for masonry);
@@ -47,16 +51,59 @@ const CASES = [
     { name: 'fixed-7rows-500', theme: 'dark', lang: 'en', width: 500, layout: 'grid', rows: 7 },
     { name: 'fixed-7rows-1400', theme: 'light', lang: 'en', width: 1400, layout: 'grid', rows: 7 },
     { name: 'panel-1200x700', theme: 'dark', lang: 'en', width: 1200, height: 700, layout: 'panel' },
-    { name: 'all-lines', theme: 'light', lang: 'en', width: 500, layout: 'grid', config: { lines: { density: true, enthalpy: true } } },
+    {
+        name: 'all-lines',
+        theme: 'light',
+        lang: 'en',
+        width: 500,
+        layout: 'grid',
+        config: { lines: { density: true, enthalpy: true } },
+    },
     { name: 'no-statistics', theme: 'dark', lang: 'en', width: 500, layout: 'grid', data: 'empty' },
     { name: 'fetch-error-de', theme: 'dark', lang: 'de', width: 500, layout: 'grid', data: 'error' },
-    { name: 'sensor-unavailable', theme: 'dark', lang: 'en', width: 500, layout: 'grid', states: { 'sensor.t': 'unavailable' } },
+    {
+        name: 'sensor-unavailable',
+        theme: 'dark',
+        lang: 'en',
+        width: 500,
+        layout: 'grid',
+        states: { 'sensor.t': 'unavailable' },
+    },
     { name: 'outdoor-de', theme: 'light', lang: 'de', width: 500, layout: 'grid', config: OUTDOOR },
-    { name: 'outdoor-off-axis', theme: 'dark', lang: 'en', width: 500, layout: 'grid', config: { ...OUTDOOR, temperature_range: [15, 30], x_range: [0, 15] } },
+    {
+        name: 'outdoor-off-axis',
+        theme: 'dark',
+        lang: 'en',
+        width: 500,
+        layout: 'grid',
+        config: { ...OUTDOOR, temperature_range: [15, 30], x_range: [0, 15] },
+    },
     { name: 'entity-missing', theme: 'dark', lang: 'en', width: 500, layout: 'grid', states: { 'sensor.t': null } },
-    { name: 'room-off-axis', theme: 'light', lang: 'en', width: 500, layout: 'grid', states: { 'sensor.h': '75' }, config: { x_range: [0, 10], temperature_range: [15, 30] } },
-    { name: 'fahrenheit-hint', theme: 'light', lang: 'de', width: 500, layout: 'grid', config: { comfort_zone: { temperature: [68, 79], humidity: [30, 65] } } },
-    { name: 'outdoor-weather-only', theme: 'dark', lang: 'en', width: 390, layout: null, config: { outdoor_weather_entity: 'weather.home' } },
+    {
+        name: 'room-off-axis',
+        theme: 'light',
+        lang: 'en',
+        width: 500,
+        layout: 'grid',
+        states: { 'sensor.h': '75' },
+        config: { x_range: [0, 10], temperature_range: [15, 30] },
+    },
+    {
+        name: 'fahrenheit-hint',
+        theme: 'light',
+        lang: 'de',
+        width: 500,
+        layout: 'grid',
+        config: { comfort_zone: { temperature: [68, 79], humidity: [30, 65] } },
+    },
+    {
+        name: 'outdoor-weather-only',
+        theme: 'dark',
+        lang: 'en',
+        width: 390,
+        layout: null,
+        config: { outdoor_weather_entity: 'weather.home' },
+    },
 ];
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -69,7 +116,9 @@ function findChrome() {
         try {
             const p = execSync(`command -v ${name}`, { encoding: 'utf8' }).trim();
             if (p && existsSync(p)) return p;
-        } catch { /* not found */ }
+        } catch {
+            /* not found */
+        }
     }
     throw new Error('No Chrome/Chromium found. Set CHROME_PATH.');
 }
@@ -133,27 +182,45 @@ const cases = only.length ? CASES.filter((c) => only.includes(c.name)) : CASES;
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 
-const browser = await puppeteer.launch({ executablePath: findChrome(), headless: true, args: ['--no-sandbox', '--disable-gpu', '--hide-scrollbars'] });
+const browser = await puppeteer.launch({
+    executablePath: findChrome(),
+    headless: true,
+    args: ['--no-sandbox', '--disable-gpu', '--hide-scrollbars'],
+});
 let failures = 0;
 try {
     for (const c of cases) {
         const tab = await browser.newPage();
         const errors = [];
         tab.on('pageerror', (e) => errors.push(e.message));
-        tab.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+        tab.on('console', (m) => {
+            if (m.type() === 'error') errors.push(m.text());
+        });
         await tab.setViewport({ width: c.width + 24, height: 900, deviceScaleFactor: 1 });
         await tab.setContent(html(c), { waitUntil: 'load' });
         let ready = true;
         try {
-            await tab.waitForFunction((tag, sel) => document.querySelector(tag)?.shadowRoot?.querySelector(sel), { timeout: 8000 }, TAG, READY);
-        } catch { ready = false; }
+            await tab.waitForFunction(
+                (tag, sel) => document.querySelector(tag)?.shadowRoot?.querySelector(sel),
+                { timeout: 8000 },
+                TAG,
+                READY,
+            );
+        } catch {
+            ready = false;
+        }
         await new Promise((r) => setTimeout(r, 300));
-        const size = await tab.evaluate(() => { const r = document.getElementById('card').getBoundingClientRect(); return `${Math.round(r.width)}x${Math.round(r.height)}`; });
+        const size = await tab.evaluate(() => {
+            const r = document.getElementById('card').getBoundingClientRect();
+            return `${Math.round(r.width)}x${Math.round(r.height)}`;
+        });
         const file = resolve(outDir, `${c.name}.png`);
         await (await tab.$('#slot')).screenshot({ path: file });
         const problems = [...(ready ? [] : ['never became ready']), ...errors];
         if (problems.length) failures++;
-        console.log(`${problems.length ? 'PROBLEM' : 'ok     '} ${c.name.padEnd(20)} card ${size.padEnd(10)} tmp/visual/${c.name}.png${problems.length ? '  ' + problems.join(' | ') : ''}`);
+        console.log(
+            `${problems.length ? 'PROBLEM' : 'ok     '} ${c.name.padEnd(20)} card ${size.padEnd(10)} tmp/visual/${c.name}.png${problems.length ? '  ' + problems.join(' | ') : ''}`,
+        );
         await tab.close();
     }
 } finally {
