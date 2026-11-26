@@ -14,7 +14,7 @@ if (!window.customCards.some((c) => c.type === 'mollier-hx-card'))
         type: 'mollier-hx-card',
         name: 'Mollier hx Card',
         description:
-            'A custom card which creates a mollier hx diagram out of a temperature- and humidity sensor entity.',
+            'A Mollier h,x (psychrometric) diagram of your room climate, one point per day, with comfort zone, warning bands and outside air.',
         preview: true,
         documentationURL: 'https://github.com/retomarek/mollier-hx-card',
     });

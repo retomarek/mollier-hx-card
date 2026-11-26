@@ -1,7 +1,7 @@
 {
   "name": "mollier-hx-card",
   "version": "0.1.0",
-  "description": "A Home Assistant custom card that renders a Mollier h-x diagram from temperature and humidity sensor data.",
+  "description": "Home Assistant card: a Mollier h,x (psychrometric) diagram of your room climate, one point per day, with comfort zone, warning bands and outside air.",
   "type": "module",
   "source": "src/mollier-hx-card.js",
   "scripts": {
