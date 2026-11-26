@@ -16,7 +16,9 @@
     "zoom_in": "Přiblížit",
     "zoom_out": "Oddálit",
     "fetch_timeout": "Home Assistant neodpověděl včas (vytížený, např. hned po restartu)",
-    "loading_slow": "Načítání historie … Home Assistant odpovídá pomalu."
+    "loading_slow": "Načítání historie … Home Assistant odpovídá pomalu.",
+    "celsius_hint": "Zóna pohodlí vypadá jako ve °C. S imperiálními jednotkami zadejte teploty ve °F.",
+    "invalid_config": "Neplatná konfigurace: {error}"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -25,7 +27,9 @@
     "density": "Hustota ρ [kg/m³]",
     "enthalpy": "Entalpie [kJ/kg]",
     "altitude": "{m} m n. m.",
-    "pressure": "{hpa} hPa"
+    "pressure": "{hpa} hPa",
+    "altitude_ip": "{ft} ft n. m.",
+    "pressure_ip": "{inhg} inHg"
   },
   "editor": {
     "fields": {
@@ -70,7 +74,8 @@
       "outdoor_history": "Denní průměry venku",
       "ventilation_line": "Čára větrání",
       "show_legend": "Zobrazit legendu",
-      "show_pressure": "Zobrazit nadmořskou výšku a tlak"
+      "show_pressure": "Zobrazit nadmořskou výšku a tlak",
+      "units": "Jednotky"
     },
     "options": {
       "season": "Podle ročního období",
@@ -81,7 +86,11 @@
       "classical": "Klasická (Recknagel)",
       "glueck": "Glück",
       "home": "Home Assistant ({m} m)",
-      "home_unset": "Home Assistant (nenastaveno: hladina moře)"
+      "home_unset": "Home Assistant (nenastaveno: hladina moře)",
+      "units_auto": "Z Home Assistant",
+      "units_metric": "Metrické (°C, g/kg)",
+      "units_imperial": "Imperiální (°F, gr/lb)",
+      "home_ip": "Home Assistant ({ft} ft)"
     },
     "sections": {
       "axes": "Osy",

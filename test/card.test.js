@@ -60,7 +60,7 @@ describe('setConfig', () => {
         [{ ...BASE, coloring: 'rainbow' }, /coloring must be one of/],
         [{ ...BASE, convention: 'modern' }, /convention must be one of/],
         [{ ...BASE, days_to_show: 0 }, /days_to_show/],
-        [{ ...BASE, altitude: 12000 }, /altitude/],
+        [{ ...BASE, altitude: 40000 }, /altitude/], // invalid in m and in ft
         [{ ...BASE, comfort_zone: { temperature: [20, 26] } }, /comfort_zone.humidity/],
     ])('rejects %j', (config, message) => {
         expect(() => card().setConfig(config)).toThrow(message);
@@ -157,5 +157,43 @@ describe('air pressure', () => {
         expect(c._airText()).toMatch(/^1['’]500 m a\.s\.l\. · 846 hPa$/); // ’ or ' depending on the ICU data
         c.hass = { states: {}, locale: { language: 'en' }, config: {}, callWS: async () => ({}) };
         expect(c._airText()).toBe('1,013 hPa');
+    });
+});
+
+describe('imperial units', () => {
+    const imperialHass = (extra = {}) => ({
+        states: {},
+        locale: { language: 'en' },
+        config: { unit_system: { temperature: '°F' }, elevation: 450 },
+        callWS: async () => ({}),
+        ...extra,
+    });
+    it('auto: zone, axis ranges and altitude in °F, gr/lb and ft once Home Assistant is US customary', () => {
+        const c = card();
+        c.setConfig({
+            ...BASE,
+            comfort_zone: { temperature: [68, 77], humidity: [30, 60], absolute_humidity: [0, 84] },
+            temperature_range: [32, 104],
+            x_range: [0, 140],
+        });
+        c.hass = imperialHass();
+        expect(c._units).toBe('imperial');
+        expect(c._comfortZone.range_t[1]).toBeCloseTo(25, 6);
+        expect(c._comfortZone.range_x[1]).toBeCloseTo(0.012, 10);
+        expect(c._domainY[0]).toBeCloseTo(0, 6);
+        expect(c._domainX[1]).toBeCloseTo(0.02, 10);
+        expect(c._airText()).toMatch(/^1,476 ft a\.s\.l\. · 28\.36 inHg$/);
+    });
+    it('imperial defaults: 10–110 °F, 0–180 gr/lb', () => {
+        const c = card();
+        c.setConfig({ ...BASE, units: 'imperial' });
+        expect(c._domainY[0]).toBeCloseTo(-12.22, 2);
+        expect(c._domainY[1]).toBeCloseTo(43.33, 2);
+        expect(c._domainX[1]).toBeCloseTo(180 / 7000, 10);
+    });
+    it('a zone that looks like °C with imperial units gives a hint', () => {
+        const c = card();
+        c.setConfig({ ...BASE, units: 'imperial', comfort_zone: { temperature: [20, 26], humidity: [30, 65] } });
+        expect(c._unitHint).toBe('card.celsius_hint');
     });
 });

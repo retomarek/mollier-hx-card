@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import '../src/mollier-hx-card.js';
 import { configToData, dataToConfig } from '../src/editor.js';
 
 const BASE = { type: 'custom:mollier-hx-card', temperature_entity: 'sensor.t', humidity_entity: 'sensor.h' };
@@ -89,5 +90,32 @@ describe('editor mapping', () => {
         const data = configToData(BASE, { config: { elevation: 1500 } });
         const out = dataToConfig({ ...data, air_mode: 'pressure' }, BASE);
         expect(out.pressure).toBe(84556);
+    });
+
+    it('imperial: the form shows °F / gr/lb defaults and writes nothing extra', () => {
+        const hass = { config: { unit_system: { temperature: '°F' } } };
+        const data = configToData(BASE, hass);
+        expect([data.y_min, data.y_max, data.x_max, data.comfort_t_min, data.red_dt]).toEqual([10, 110, 180, 68, 4.5]);
+        expect(dataToConfig(data, BASE, hass)).toEqual(BASE);
+        const own = { ...BASE, units: 'imperial', temperature_range: [20, 100] };
+        expect(dataToConfig(configToData(own), own)).toEqual(own);
+    });
+
+    it('switching the unit system converts zone, bands, axis ranges and pressure', () => {
+        const ed = document.createElement('mollier-hx-card-editor');
+        const metric = {
+            ...BASE,
+            comfort_zone: { temperature: [20, 25], humidity: [30, 60] },
+            temperature_range: [-10, 40],
+            pressure: 960,
+        };
+        ed.setConfig(metric);
+        let out;
+        ed.addEventListener('config-changed', (e) => (out = e.detail.config));
+        ed._valueChanged({ detail: { value: { ...configToData(metric), units: 'imperial' } } });
+        expect(out.units).toBe('imperial');
+        expect(out.comfort_zone.temperature).toEqual([68, 77]);
+        expect(out.temperature_range).toEqual([14, 104]);
+        expect(out.pressure).toBeCloseTo(28.35, 2);
     });
 });

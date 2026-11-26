@@ -16,7 +16,9 @@
     "zoom_in": "Zoom ind",
     "zoom_out": "Zoom ud",
     "fetch_timeout": "Home Assistant svarede ikke i tide (optaget, f.eks. lige efter en genstart)",
-    "loading_slow": "Indlæser historikken … Home Assistant svarer langsomt."
+    "loading_slow": "Indlæser historikken … Home Assistant svarer langsomt.",
+    "celsius_hint": "Komfortzonen ser ud til at være i °C. Med imperiale enheder skal temperaturer angives i °F.",
+    "invalid_config": "Ugyldig konfiguration: {error}"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -25,7 +27,9 @@
     "density": "Densitet ρ [kg/m³]",
     "enthalpy": "Entalpi [kJ/kg]",
     "altitude": "{m} m o.h.",
-    "pressure": "{hpa} hPa"
+    "pressure": "{hpa} hPa",
+    "altitude_ip": "{ft} ft o.h.",
+    "pressure_ip": "{inhg} inHg"
   },
   "editor": {
     "fields": {
@@ -70,7 +74,8 @@
       "outdoor_history": "Døgnmiddel ude",
       "ventilation_line": "Udluftningslinje",
       "show_legend": "Vis forklaring",
-      "show_pressure": "Vis højde og lufttryk"
+      "show_pressure": "Vis højde og lufttryk",
+      "units": "Enheder"
     },
     "options": {
       "season": "Efter årstid",
@@ -81,7 +86,11 @@
       "classical": "Klassisk (Recknagel)",
       "glueck": "Glück",
       "home": "Home Assistant ({m} m)",
-      "home_unset": "Home Assistant (ikke angivet: havniveau)"
+      "home_unset": "Home Assistant (ikke angivet: havniveau)",
+      "units_auto": "Fra Home Assistant",
+      "units_metric": "Metriske (°C, g/kg)",
+      "units_imperial": "Imperiale (°F, gr/lb)",
+      "home_ip": "Home Assistant ({ft} ft)"
     },
     "sections": {
       "axes": "Akser",

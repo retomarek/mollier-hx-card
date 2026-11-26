@@ -16,7 +16,9 @@
     "zoom_in": "Увеличить",
     "zoom_out": "Уменьшить",
     "fetch_timeout": "Home Assistant не ответил вовремя (занят, например сразу после перезапуска)",
-    "loading_slow": "Загрузка истории … Home Assistant отвечает медленно."
+    "loading_slow": "Загрузка истории … Home Assistant отвечает медленно.",
+    "celsius_hint": "Зона комфорта, похоже, указана в °C. С имперскими единицами указывайте температуру в °F.",
+    "invalid_config": "Неверная конфигурация: {error}"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -25,7 +27,9 @@
     "density": "Плотность ρ [kg/m³]",
     "enthalpy": "Энтальпия [kJ/kg]",
     "altitude": "{m} м над уровнем моря",
-    "pressure": "{hpa} гПа"
+    "pressure": "{hpa} гПа",
+    "altitude_ip": "{ft} фт над уровнем моря",
+    "pressure_ip": "{inhg} inHg"
   },
   "editor": {
     "fields": {
@@ -70,7 +74,8 @@
       "outdoor_history": "Среднесуточные снаружи",
       "ventilation_line": "Линия проветривания",
       "show_legend": "Показывать легенду",
-      "show_pressure": "Показать высоту и давление"
+      "show_pressure": "Показать высоту и давление",
+      "units": "Единицы"
     },
     "options": {
       "season": "По сезону",
@@ -81,7 +86,11 @@
       "classical": "Классическая (Recknagel)",
       "glueck": "Glück",
       "home": "Home Assistant ({m} м)",
-      "home_unset": "Home Assistant (не задано: уровень моря)"
+      "home_unset": "Home Assistant (не задано: уровень моря)",
+      "units_auto": "Из Home Assistant",
+      "units_metric": "Метрические (°C, g/kg)",
+      "units_imperial": "Имперские (°F, gr/lb)",
+      "home_ip": "Home Assistant ({ft} ft)"
     },
     "sections": {
       "axes": "Оси",

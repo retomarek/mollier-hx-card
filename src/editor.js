@@ -1,7 +1,16 @@
 import { html, LitElement } from 'lit';
 import { formatNumber, localize } from './localize/localize.js';
 import { LINE_DEFAULTS, parseLines } from './card.js';
-import { ALTITUDE_RANGE, elevationOf, MAX_DAYS, pressureAtAltitude, PRESSURE_PA_RANGE } from './statistics.js';
+import {
+    ALTITUDE_RANGE,
+    ALTITUDE_RANGE_FT,
+    elevationOf,
+    MAX_DAYS,
+    pressureAtAltitude,
+    PRESSURE_INHG_RANGE,
+    PRESSURE_PA_RANGE,
+} from './statistics.js';
+import { convertConfigUnits, mToFt, paToInhg, unitSystem, UNITS, UNITS_OPTIONS } from './units.js';
 
 const LINE_KEYS = Object.keys(LINE_DEFAULTS);
 
@@ -35,44 +44,75 @@ const DEFAULTS = {
     red_dx: 2.5,
 };
 
-const homePressure = (hass) => {
+// The values above are metric (°C, K, g/kg, m, Pa). With imperial units the
+// form works in °F, °F, gr/lb, ft and inHg; these replace them (src/units.js
+// has the same comfort zone and bands).
+const IMPERIAL_DEFAULTS = {
+    pressure: 29.92,
+    altitude: 1500,
+    x_min: 0, // gr/lb
+    x_max: 180,
+    y_min: 10, // °F
+    y_max: 110,
+    comfort_t_min: 68,
+    comfort_t_max: 79,
+    comfort_x_min: 0,
+    comfort_x_max: 84,
+    orange_dt: 2,
+    orange_dx: 7,
+    red_dt: 4.5,
+    red_dx: 17.5,
+};
+const defaultsFor = (system) => (system === 'imperial' ? { ...DEFAULTS, ...IMPERIAL_DEFAULTS } : DEFAULTS);
+
+// Home Assistant's elevation and the pressure there, in the units of `system`.
+const homeAltitude = (hass, system) => {
     const e = elevationOf(hass);
-    return e === null ? undefined : Math.round(pressureAtAltitude(e));
+    return e === null ? undefined : system === 'imperial' ? Math.round(mToFt(e)) : e;
+};
+const homePressure = (hass, system) => {
+    const e = elevationOf(hass);
+    if (e === null) return undefined;
+    const pa = pressureAtAltitude(e);
+    return system === 'imperial' ? Math.round(paToInhg(pa) * 100) / 100 : Math.round(pa);
 };
 
 export function configToData(config, hass = undefined) {
     const c = config || {};
+    const system = unitSystem(c, hass);
+    const D = defaultsFor(system);
     const hasAltitude = c.altitude !== undefined && c.altitude !== null && c.altitude !== '';
     const hasPressure = c.pressure !== undefined && c.pressure !== null && c.pressure !== '';
     const xr = c.x_range;
     const yr = c.temperature_range;
     const cz = c.comfort_zone && typeof c.comfort_zone === 'object' ? c.comfort_zone : null;
     return {
+        units: UNITS_OPTIONS.includes(c.units) ? c.units : 'auto',
         header: c.title ?? '',
         temperature_entity: c.temperature_entity ?? '',
         humidity_entity: c.humidity_entity ?? '',
-        days: c.days_to_show ?? DEFAULTS.days,
-        coloring: c.coloring ?? DEFAULTS.coloring,
+        days: c.days_to_show ?? D.days,
+        coloring: c.coloring ?? D.coloring,
         // Neither altitude nor pressure: the elevation set in Home Assistant.
         air_mode: hasAltitude ? 'altitude' : hasPressure ? 'pressure' : 'home',
         // Suggestion when switching to a pressure: the one at Home Assistant's elevation.
-        pressure: c.pressure ?? homePressure(hass) ?? DEFAULTS.pressure,
+        pressure: c.pressure ?? homePressure(hass, system) ?? D.pressure,
         // Suggestion when switching to an own altitude: Home Assistant's.
-        altitude: c.altitude ?? elevationOf(hass) ?? DEFAULTS.altitude,
-        convention: c.convention ?? DEFAULTS.convention,
-        x_min: xr?.[0] ?? DEFAULTS.x_min,
-        x_max: xr?.[1] ?? DEFAULTS.x_max,
-        y_min: yr?.[0] ?? DEFAULTS.y_min,
-        y_max: yr?.[1] ?? DEFAULTS.y_max,
+        altitude: c.altitude ?? homeAltitude(hass, system) ?? D.altitude,
+        convention: c.convention ?? D.convention,
+        x_min: xr?.[0] ?? D.x_min,
+        x_max: xr?.[1] ?? D.x_max,
+        y_min: yr?.[0] ?? D.y_min,
+        y_max: yr?.[1] ?? D.y_max,
         comfort_enabled: !!cz,
-        comfort_t_min: cz?.temperature?.[0] ?? DEFAULTS.comfort_t_min,
-        comfort_t_max: cz?.temperature?.[1] ?? DEFAULTS.comfort_t_max,
-        comfort_phi_min: cz?.humidity?.[0] ?? DEFAULTS.comfort_phi_min,
-        comfort_phi_max: cz?.humidity?.[1] ?? DEFAULTS.comfort_phi_max,
+        comfort_t_min: cz?.temperature?.[0] ?? D.comfort_t_min,
+        comfort_t_max: cz?.temperature?.[1] ?? D.comfort_t_max,
+        comfort_phi_min: cz?.humidity?.[0] ?? D.comfort_phi_min,
+        comfort_phi_max: cz?.humidity?.[1] ?? D.comfort_phi_max,
         // The absolute-humidity limit is optional: only on when the zone has one.
         comfort_x_enabled: Array.isArray(cz?.absolute_humidity),
-        comfort_x_min: cz?.absolute_humidity?.[0] ?? DEFAULTS.comfort_x_min,
-        comfort_x_max: cz?.absolute_humidity?.[1] ?? DEFAULTS.comfort_x_max,
+        comfort_x_min: cz?.absolute_humidity?.[0] ?? D.comfort_x_min,
+        comfort_x_max: cz?.absolute_humidity?.[1] ?? D.comfort_x_max,
         ...Object.fromEntries(Object.entries(parseLines(c.lines)).map(([k, v]) => [`line_${k}`, v])),
         outdoor_temperature_entity: c.outdoor_temperature_entity ?? '',
         outdoor_humidity_entity: c.outdoor_humidity_entity ?? '',
@@ -82,12 +122,12 @@ export function configToData(config, hass = undefined) {
         show_legend: c.show_legend !== false,
         show_pressure: c.show_pressure === true,
         bands_enabled: !!c.warning_bands,
-        orange_dt: c.warning_bands?.orange?.temperature ?? DEFAULTS.orange_dt,
-        orange_dphi: c.warning_bands?.orange?.humidity ?? DEFAULTS.orange_dphi,
-        orange_dx: c.warning_bands?.orange?.absolute_humidity ?? DEFAULTS.orange_dx,
-        red_dt: c.warning_bands?.red?.temperature ?? DEFAULTS.red_dt,
-        red_dphi: c.warning_bands?.red?.humidity ?? DEFAULTS.red_dphi,
-        red_dx: c.warning_bands?.red?.absolute_humidity ?? DEFAULTS.red_dx,
+        orange_dt: c.warning_bands?.orange?.temperature ?? D.orange_dt,
+        orange_dphi: c.warning_bands?.orange?.humidity ?? D.orange_dphi,
+        orange_dx: c.warning_bands?.orange?.absolute_humidity ?? D.orange_dx,
+        red_dt: c.warning_bands?.red?.temperature ?? D.red_dt,
+        red_dphi: c.warning_bands?.red?.humidity ?? D.red_dphi,
+        red_dx: c.warning_bands?.red?.absolute_humidity ?? D.red_dx,
         orange_label: c.warning_bands?.orange?.label ?? '',
         red_label: c.warning_bands?.red?.label ?? '',
     };
@@ -117,6 +157,7 @@ const OWNED_KEYS = [
     'ventilation_line',
     'show_legend',
     'show_pressure',
+    'units',
 ];
 
 // A cleared number field (undefined / null / '') falls back to the previous
@@ -127,7 +168,9 @@ const pickNum = (...candidates) => {
     return undefined;
 };
 
-export function dataToConfig(data, previous = {}) {
+export function dataToConfig(data, previous = {}, hass = undefined) {
+    const units = UNITS_OPTIONS.includes(data.units) ? data.units : previous.units;
+    const D = defaultsFor(unitSystem({ units }, hass));
     const config = { ...previous };
     for (const k of OWNED_KEYS) delete config[k];
     const prevX = previous.x_range;
@@ -135,26 +178,27 @@ export function dataToConfig(data, previous = {}) {
     const prevCz = previous.comfort_zone && typeof previous.comfort_zone === 'object' ? previous.comfort_zone : {};
     const prevBands =
         typeof previous.warning_bands === 'object' && previous.warning_bands ? previous.warning_bands : {};
-    const n = (field, prev) => pickNum(data[field], prev, DEFAULTS[field]);
+    const n = (field, prev) => pickNum(data[field], prev, D[field]);
 
     Object.assign(config, {
         type: 'custom:mollier-hx-card',
         temperature_entity: data.temperature_entity,
         humidity_entity: data.humidity_entity,
     });
+    if (units === 'metric' || units === 'imperial') config.units = units;
     // Like the comfort-compass-card editor: defaults stay out of the YAML.
     const days = Math.min(MAX_DAYS, Math.max(1, Math.round(n('days', previous.days_to_show))));
-    if (days !== DEFAULTS.days) config.days_to_show = days;
-    const coloring = data.coloring || DEFAULTS.coloring;
-    if (coloring !== DEFAULTS.coloring) config.coloring = coloring;
-    const convention = data.convention || DEFAULTS.convention;
-    if (convention !== DEFAULTS.convention) config.convention = convention;
+    if (days !== D.days) config.days_to_show = days;
+    const coloring = data.coloring || D.coloring;
+    if (coloring !== D.coloring) config.coloring = coloring;
+    const convention = data.convention || D.convention;
+    if (convention !== D.convention) config.convention = convention;
     // Write the axis ranges only when they differ from the card defaults, so
     // the card follows future default changes.
     const x = [n('x_min', prevX?.[0]), n('x_max', prevX?.[1])];
     const y = [n('y_min', prevY?.[0]), n('y_max', prevY?.[1])];
-    if (x[0] !== DEFAULTS.x_min || x[1] !== DEFAULTS.x_max) config.x_range = x;
-    if (y[0] !== DEFAULTS.y_min || y[1] !== DEFAULTS.y_max) config.temperature_range = y;
+    if (x[0] !== D.x_min || x[1] !== D.x_max) config.x_range = x;
+    if (y[0] !== D.y_min || y[1] !== D.y_max) config.temperature_range = y;
     if (data.header) config.title = data.header;
     // Store only the lines that differ from the defaults, to keep YAML short.
     const lines = {};
@@ -216,24 +260,31 @@ export function dataToConfig(data, previous = {}) {
     return config;
 }
 
-const bandRow = (key) => ({
+const bandRow = (key, U) => ({
     type: 'grid',
     schema: [
-        { name: `${key}_dt`, selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'K' } } },
+        {
+            name: `${key}_dt`,
+            selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: U.delta.unit } },
+        },
         {
             name: `${key}_dphi`,
             selector: { number: { min: 0, max: 100, step: 1, mode: 'box', unit_of_measurement: '%' } },
         },
-        { name: `${key}_dx`, selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'g/kg' } } },
+        {
+            name: `${key}_dx`,
+            selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: U.absHumidity.unit } },
+        },
     ],
 });
 
-const COMFORT_FIELDS = [
+const tempSel = (U) => ({ number: { step: U.temperature.step, mode: 'box', unit_of_measurement: U.temperature.unit } });
+const comfortFields = (U) => [
     {
         type: 'grid',
         schema: [
-            { name: 'comfort_t_min', selector: { number: { step: 0.5, mode: 'box', unit_of_measurement: '°C' } } },
-            { name: 'comfort_t_max', selector: { number: { step: 0.5, mode: 'box', unit_of_measurement: '°C' } } },
+            { name: 'comfort_t_min', selector: tempSel(U) },
+            { name: 'comfort_t_max', selector: tempSel(U) },
         ],
     },
     {
@@ -252,23 +303,23 @@ const COMFORT_FIELDS = [
     { name: 'comfort_x_enabled', selector: { boolean: {} } },
 ];
 
-const COMFORT_X_FIELDS = [
+const absSel = (U) => ({
+    number: { min: 0, step: U.absHumidity.step, mode: 'box', unit_of_measurement: U.absHumidity.unit },
+});
+const comfortXFields = (U) => [
     {
         type: 'grid',
         schema: [
-            {
-                name: 'comfort_x_min',
-                selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'g/kg' } },
-            },
-            {
-                name: 'comfort_x_max',
-                selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: 'g/kg' } },
-            },
+            { name: 'comfort_x_min', selector: absSel(U) },
+            { name: 'comfort_x_max', selector: absSel(U) },
         ],
     },
 ];
 
 function buildSchema(data, t, hass) {
+    const system = unitSystem({ units: data.units }, hass);
+    const U = UNITS[system];
+    const imperial = system === 'imperial';
     const elevation = elevationOf(hass);
     return [
         { name: 'header', selector: { text: {} } },
@@ -309,6 +360,16 @@ function buildSchema(data, t, hass) {
             type: 'grid',
             schema: [
                 {
+                    // auto: Home Assistant's unit system (°F = US customary → imperial).
+                    name: 'units',
+                    selector: {
+                        select: {
+                            mode: 'dropdown',
+                            options: UNITS_OPTIONS.map((u) => ({ value: u, label: t(`editor.options.units_${u}`) })),
+                        },
+                    },
+                },
+                {
                     name: 'air_mode',
                     selector: {
                         select: {
@@ -319,7 +380,11 @@ function buildSchema(data, t, hass) {
                                     label:
                                         elevation === null
                                             ? t('editor.options.home_unset')
-                                            : t('editor.options.home', { m: formatNumber(hass, elevation) }),
+                                            : imperial
+                                              ? t('editor.options.home_ip', {
+                                                    ft: formatNumber(hass, mToFt(elevation)),
+                                                })
+                                              : t('editor.options.home', { m: formatNumber(hass, elevation) }),
                                 },
                                 { value: 'altitude', label: t('editor.options.altitude') },
                                 { value: 'pressure', label: t('editor.options.pressure') },
@@ -333,11 +398,11 @@ function buildSchema(data, t, hass) {
                               name: 'altitude',
                               selector: {
                                   number: {
-                                      min: ALTITUDE_RANGE[0],
-                                      max: ALTITUDE_RANGE[1],
-                                      step: 10,
+                                      min: (imperial ? ALTITUDE_RANGE_FT : ALTITUDE_RANGE)[0],
+                                      max: (imperial ? ALTITUDE_RANGE_FT : ALTITUDE_RANGE)[1],
+                                      step: U.altitude.step,
                                       mode: 'box',
-                                      unit_of_measurement: 'm',
+                                      unit_of_measurement: U.altitude.unit,
                                   },
                               },
                           },
@@ -347,13 +412,21 @@ function buildSchema(data, t, hass) {
                             {
                                 name: 'pressure',
                                 selector: {
-                                    number: {
-                                        min: PRESSURE_PA_RANGE[0],
-                                        max: PRESSURE_PA_RANGE[1],
-                                        step: 1,
-                                        mode: 'box',
-                                        unit_of_measurement: 'Pa',
-                                    },
+                                    number: imperial
+                                        ? {
+                                              min: PRESSURE_INHG_RANGE[0],
+                                              max: PRESSURE_INHG_RANGE[1],
+                                              step: 0.01,
+                                              mode: 'box',
+                                              unit_of_measurement: 'inHg',
+                                          }
+                                        : {
+                                              min: PRESSURE_PA_RANGE[0],
+                                              max: PRESSURE_PA_RANGE[1],
+                                              step: 1,
+                                              mode: 'box',
+                                              unit_of_measurement: 'Pa',
+                                          },
                                 },
                             },
                         ]
@@ -418,15 +491,27 @@ function buildSchema(data, t, hass) {
                 {
                     type: 'grid',
                     schema: [
-                        { name: 'x_min', selector: { number: { step: 1, mode: 'box', unit_of_measurement: 'g/kg' } } },
-                        { name: 'x_max', selector: { number: { step: 1, mode: 'box', unit_of_measurement: 'g/kg' } } },
+                        {
+                            name: 'x_min',
+                            selector: { number: { step: 1, mode: 'box', unit_of_measurement: U.absHumidity.unit } },
+                        },
+                        {
+                            name: 'x_max',
+                            selector: { number: { step: 1, mode: 'box', unit_of_measurement: U.absHumidity.unit } },
+                        },
                     ],
                 },
                 {
                     type: 'grid',
                     schema: [
-                        { name: 'y_min', selector: { number: { step: 1, mode: 'box', unit_of_measurement: '°C' } } },
-                        { name: 'y_max', selector: { number: { step: 1, mode: 'box', unit_of_measurement: '°C' } } },
+                        {
+                            name: 'y_min',
+                            selector: { number: { step: 1, mode: 'box', unit_of_measurement: U.temperature.unit } },
+                        },
+                        {
+                            name: 'y_max',
+                            selector: { number: { step: 1, mode: 'box', unit_of_measurement: U.temperature.unit } },
+                        },
                     ],
                 },
             ],
@@ -437,8 +522,8 @@ function buildSchema(data, t, hass) {
             expanded: !!data.comfort_enabled,
             schema: [
                 { name: 'comfort_enabled', selector: { boolean: {} } },
-                ...(data.comfort_enabled ? COMFORT_FIELDS : []),
-                ...(data.comfort_enabled && data.comfort_x_enabled ? COMFORT_X_FIELDS : []),
+                ...(data.comfort_enabled ? comfortFields(U) : []),
+                ...(data.comfort_enabled && data.comfort_x_enabled ? comfortXFields(U) : []),
             ],
         },
         ...(data.comfort_enabled
@@ -452,9 +537,9 @@ function buildSchema(data, t, hass) {
                           ...(data.bands_enabled
                               ? [
                                     { name: 'orange_label', selector: { text: {} } },
-                                    bandRow('orange'),
+                                    bandRow('orange', U),
                                     { name: 'red_label', selector: { text: {} } },
-                                    bandRow('red'),
+                                    bandRow('red', U),
                                 ]
                               : []),
                       ],
@@ -493,7 +578,19 @@ export class MollierHxCardEditor extends LitElement {
     }
 
     _valueChanged(ev) {
-        const newConfig = dataToConfig(ev.detail.value, this._config);
+        const data = ev.detail.value;
+        const before = unitSystem(this._config, this.hass);
+        const after = unitSystem({ units: data.units }, this.hass);
+        let newConfig;
+        if (before !== after) {
+            // Switched the unit system: convert the zone, the bands, the axis
+            // ranges and the air pressure so they keep their meaning.
+            newConfig = convertConfigUnits({ ...this._config }, before, after);
+            if (data.units === 'metric' || data.units === 'imperial') newConfig.units = data.units;
+            else delete newConfig.units;
+        } else {
+            newConfig = dataToConfig(data, this._config, this.hass);
+        }
         this.dispatchEvent(
             new CustomEvent('config-changed', {
                 detail: { config: newConfig },

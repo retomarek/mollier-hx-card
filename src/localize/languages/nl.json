@@ -16,7 +16,9 @@
     "zoom_in": "Inzoomen",
     "zoom_out": "Uitzoomen",
     "fetch_timeout": "Home Assistant antwoordde niet op tijd (bezet, bijv. vlak na een herstart)",
-    "loading_slow": "Geschiedenis wordt geladen … Home Assistant reageert traag."
+    "loading_slow": "Geschiedenis wordt geladen … Home Assistant reageert traag.",
+    "celsius_hint": "De comfortzone lijkt in °C te staan. Geef met imperiale eenheden temperaturen op in °F.",
+    "invalid_config": "Ongeldige configuratie: {error}"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -25,7 +27,9 @@
     "density": "Dichtheid ρ [kg/m³]",
     "enthalpy": "Enthalpie [kJ/kg]",
     "altitude": "{m} m boven zeeniveau",
-    "pressure": "{hpa} hPa"
+    "pressure": "{hpa} hPa",
+    "altitude_ip": "{ft} ft boven zeeniveau",
+    "pressure_ip": "{inhg} inHg"
   },
   "editor": {
     "fields": {
@@ -70,7 +74,8 @@
       "outdoor_history": "Daggemiddelden buiten",
       "ventilation_line": "Ventilatielijn",
       "show_legend": "Legenda tonen",
-      "show_pressure": "Hoogte en luchtdruk tonen"
+      "show_pressure": "Hoogte en luchtdruk tonen",
+      "units": "Eenheden"
     },
     "options": {
       "season": "Per seizoen",
@@ -81,7 +86,11 @@
       "classical": "Klassiek (Recknagel)",
       "glueck": "Glück",
       "home": "Home Assistant ({m} m)",
-      "home_unset": "Home Assistant (niet ingesteld: zeeniveau)"
+      "home_unset": "Home Assistant (niet ingesteld: zeeniveau)",
+      "units_auto": "Uit Home Assistant",
+      "units_metric": "Metrisch (°C, g/kg)",
+      "units_imperial": "Imperiaal (°F, gr/lb)",
+      "home_ip": "Home Assistant ({ft} ft)"
     },
     "sections": {
       "axes": "Assen",

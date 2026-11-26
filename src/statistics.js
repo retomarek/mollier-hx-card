@@ -2,6 +2,8 @@
 // sensor values. Shared with retomarek/comfort-compass-card and
 // retomarek/mollier-hx-card: keep both copies identical (`npm run check-shared`).
 
+import { ftToM, inhgToPa } from './units.js';
+
 // Re-fetch interval while the card is on screen: a new day appears in the
 // statistics shortly after midnight, so hourly is plenty.
 export const REFRESH_MS = 60 * 60 * 1000;
@@ -20,6 +22,9 @@ export const MAX_DAYS = 3650;
 export const PRESSURE_PA_RANGE = [30000, 110000];
 export const PRESSURE_HPA_RANGE = [300, 1100];
 export const ALTITUDE_RANGE = [-500, 9000];
+// The same in imperial units (config and editor): ft and inHg.
+export const ALTITUDE_RANGE_FT = [-1600, 29500];
+export const PRESSURE_INHG_RANGE = [8.86, 32.48];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -127,20 +132,31 @@ const inRange = (v, [lo, hi]) => Number.isFinite(v) && v >= lo && v <= hi;
 // number; `pressure` is accepted in hPa (< 2000) or Pa. Throws on values outside
 // what is physically sensible, so a wrong unit is caught instead of silently
 // drawing nonsense. Neither set → `fallback` (null: take it from Home Assistant,
-// see airPressure()).
-export function pressureFromConfig(config, fallback = SEA_LEVEL_PA) {
+// see airPressure()). With the imperial unit system, `altitude` is in ft and
+// `pressure` in inHg.
+export function pressureFromConfig(config, fallback = SEA_LEVEL_PA, system = 'metric') {
+    const imperial = system === 'imperial';
     const alt = config.altitude;
     if (alt !== undefined && alt !== null && alt !== '') {
         const a = Number(alt);
-        if (!inRange(a, ALTITUDE_RANGE)) {
+        const range = imperial ? ALTITUDE_RANGE_FT : ALTITUDE_RANGE;
+        if (!inRange(a, range)) {
             throw new Error(
-                `altitude must be in metres between ${ALTITUDE_RANGE[0]} and ${ALTITUDE_RANGE[1]} (got ${alt})`,
+                `altitude must be in ${imperial ? 'feet' : 'metres'} between ${range[0]} and ${range[1]} (got ${alt})`,
             );
         }
-        return pressureAtAltitude(a);
+        return pressureAtAltitude(imperial ? ftToM(a) : a);
     }
     const pr = config.pressure;
     if (pr === undefined || pr === null || pr === '') return fallback;
+    if (imperial) {
+        const inhg = Number(pr);
+        if (!inRange(inhg, PRESSURE_INHG_RANGE)) {
+            const [i0, i1] = PRESSURE_INHG_RANGE;
+            throw new Error(`pressure must be in inHg (${i0}–${i1}) (got ${pr})`);
+        }
+        return inhgToPa(inhg);
+    }
     let p = Number(pr);
     if (Number.isFinite(p) && p > 0 && p < 2000) p *= 100; // hPa → Pa
     if (!Number.isFinite(p) || p < PRESSURE_PA_RANGE[0] || p > PRESSURE_PA_RANGE[1]) {
@@ -162,16 +178,19 @@ export function elevationOf(hass) {
 
 // The air pressure a card works with: `altitude` from the config, else
 // `pressure` from the config, else the elevation set in Home Assistant, else
-// sea level. Returns { pa, altitude (m, or null when only a pressure is known),
+// sea level (config values in the units of `system`). Returns { pa, altitude
+// (always m, or null when only a pressure is known),
 // source: 'altitude' | 'pressure' | 'home' | 'default' }. The config must have
 // passed pressureFromConfig() (it throws on invalid values).
-export function airPressure(config, hass) {
+export function airPressure(config, hass, system = 'metric') {
     const given = (v) => v !== undefined && v !== null && v !== '';
     if (given(config?.altitude)) {
-        const altitude = Number(config.altitude);
+        const altitude = system === 'imperial' ? ftToM(Number(config.altitude)) : Number(config.altitude);
         return { pa: pressureAtAltitude(altitude), altitude, source: 'altitude' };
     }
-    if (given(config?.pressure)) return { pa: pressureFromConfig(config), altitude: null, source: 'pressure' };
+    if (given(config?.pressure)) {
+        return { pa: pressureFromConfig(config, undefined, system), altitude: null, source: 'pressure' };
+    }
     const elevation = elevationOf(hass);
     if (elevation !== null) return { pa: pressureAtAltitude(elevation), altitude: elevation, source: 'home' };
     // No (valid) elevation in Home Assistant: sea level, but no altitude to show.

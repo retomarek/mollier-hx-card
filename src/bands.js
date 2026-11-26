@@ -4,8 +4,10 @@
 // drawn as dashed outlines around the comfort zone). Keep both copies identical;
 // `npm run check-shared` compares them.
 
+import { DEFAULT_BAND_VALUES, UNITS } from './units.js';
+
 // pyedautils defaults (temp_stage_limits, hum_stage_limits, hum_abs_stage_limits).
-// Offsets around the comfort zone: K, %-points RH, g/kg.
+// Offsets around the comfort zone, internal units: K, %-points RH, g/kg.
 export const DEFAULT_BANDS = {
     orange: { dt: 1.0, dphi: 5, dx: 1.0, color: '#E67E22', label: null },
     red: { dt: 2.5, dphi: 10, dx: 2.5, color: '#C0392B', label: null },
@@ -14,18 +16,23 @@ export const DEFAULT_BANDS = {
 const num = (v, fb) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : fb);
 
 // `warning_bands: true` → defaults; an object overrides per band; anything
-// falsy → null (no bands drawn; the compass then uses the defaults).
-export function parseWarningBands(cfg) {
+// falsy → null (no bands drawn; the compass then uses the defaults). The
+// config's offsets are in the units of `system` (metric: K and g/kg; imperial:
+// °F and gr/lb); the result is always in K, %-points and g/kg.
+export function parseWarningBands(cfg, system = 'metric') {
     if (!cfg) return null;
     const src = cfg === true ? {} : cfg;
+    const u = UNITS[system] || UNITS.metric;
+    const defaults = DEFAULT_BAND_VALUES[system] || DEFAULT_BAND_VALUES.metric;
     const out = {};
     for (const key of ['orange', 'red']) {
         const d = DEFAULT_BANDS[key];
+        const dv = defaults[key];
         const b = src[key] || {};
         out[key] = {
-            dt: Math.abs(num(b.temperature, d.dt)),
-            dphi: Math.abs(num(b.humidity, d.dphi)),
-            dx: Math.abs(num(b.absolute_humidity, d.dx)),
+            dt: Math.abs(u.delta.toK(num(b.temperature, dv.temperature))),
+            dphi: Math.abs(num(b.humidity, dv.humidity)),
+            dx: Math.abs(u.absHumidity.toGkg(num(b.absolute_humidity, dv.absolute_humidity))),
             color: typeof b.color === 'string' && b.color ? b.color : d.color,
             label: typeof b.label === 'string' && b.label ? b.label : null,
         };

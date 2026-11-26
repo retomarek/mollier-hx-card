@@ -16,7 +16,9 @@
     "zoom_in": "Vergrössern",
     "zoom_out": "Verkleinern",
     "fetch_timeout": "Home Assistant hat nicht rechtzeitig geantwortet (ausgelastet, z. B. kurz nach einem Neustart)",
-    "loading_slow": "Verlauf wird geladen … Home Assistant antwortet gerade langsam."
+    "loading_slow": "Verlauf wird geladen … Home Assistant antwortet gerade langsam.",
+    "celsius_hint": "Die Komfortzone sieht nach °C aus. Mit imperialen Einheiten Temperaturen in °F angeben.",
+    "invalid_config": "Ungültige Konfiguration: {error}"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -25,7 +27,9 @@
     "density": "Dichte ρ [kg/m³]",
     "enthalpy": "Enthalpie [kJ/kg]",
     "altitude": "{m} m ü. M.",
-    "pressure": "{hpa} hPa"
+    "pressure": "{hpa} hPa",
+    "altitude_ip": "{ft} ft ü. M.",
+    "pressure_ip": "{inhg} inHg"
   },
   "editor": {
     "fields": {
@@ -70,7 +74,8 @@
       "outdoor_history": "Tagesmittel aussen",
       "ventilation_line": "Lüftungslinie",
       "show_legend": "Legende anzeigen",
-      "show_pressure": "Höhe und Luftdruck anzeigen"
+      "show_pressure": "Höhe und Luftdruck anzeigen",
+      "units": "Einheiten"
     },
     "options": {
       "season": "Nach Jahreszeit",
@@ -81,7 +86,11 @@
       "classical": "Klassisch (Recknagel)",
       "glueck": "Glück",
       "home": "Home Assistant ({m} m ü. M.)",
-      "home_unset": "Home Assistant (nicht gesetzt: Meereshöhe)"
+      "home_unset": "Home Assistant (nicht gesetzt: Meereshöhe)",
+      "units_auto": "Aus Home Assistant",
+      "units_metric": "Metrisch (°C, g/kg)",
+      "units_imperial": "Imperial (°F, gr/lb)",
+      "home_ip": "Home Assistant ({ft} ft)"
     },
     "sections": {
       "axes": "Achsen",

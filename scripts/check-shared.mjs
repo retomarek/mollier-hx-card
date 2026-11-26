@@ -15,6 +15,8 @@ const SHARED = [
     ['src/bands.js', 'src/bands.js'],
     ['src/statistics.js', 'src/statistics.js'],
     ['src/localize/localize.js', 'src/localize/localize.js'],
+    ['src/units.js', 'src/units.js'],
+    ['test/units.test.js', 'test/units.test.js'],
     ['src/vendor/mollierFunctions.js', 'src/d3_mollierhx/mollierFunctions.js'],
     ['test/statistics.test.js', 'test/statistics.test.js'],
     ['test/bands.test.js', 'test/bands.test.js'],

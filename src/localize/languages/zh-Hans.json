@@ -16,7 +16,9 @@
     "zoom_in": "放大",
     "zoom_out": "缩小",
     "fetch_timeout": "Home Assistant 未及时响应（繁忙，例如刚重启后）",
-    "loading_slow": "正在加载历史记录 … Home Assistant 响应较慢。"
+    "loading_slow": "正在加载历史记录 … Home Assistant 响应较慢。",
+    "celsius_hint": "舒适区看起来是 °C。使用英制单位时，请以 °F 输入温度。",
+    "invalid_config": "配置无效：{error}"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -25,7 +27,9 @@
     "density": "密度 ρ [kg/m³]",
     "enthalpy": "焓 [kJ/kg]",
     "altitude": "海拔 {m} 米",
-    "pressure": "{hpa} hPa"
+    "pressure": "{hpa} hPa",
+    "altitude_ip": "海拔 {ft} 英尺",
+    "pressure_ip": "{inhg} inHg"
   },
   "editor": {
     "fields": {
@@ -70,7 +74,8 @@
       "outdoor_history": "室外日均值",
       "ventilation_line": "通风线",
       "show_legend": "显示图例",
-      "show_pressure": "显示海拔和气压"
+      "show_pressure": "显示海拔和气压",
+      "units": "单位"
     },
     "options": {
       "season": "按季节",
@@ -81,7 +86,11 @@
       "classical": "经典 (Recknagel)",
       "glueck": "Glück",
       "home": "Home Assistant（{m} 米）",
-      "home_unset": "Home Assistant（未设置：海平面）"
+      "home_unset": "Home Assistant（未设置：海平面）",
+      "units_auto": "来自 Home Assistant",
+      "units_metric": "公制（°C、g/kg）",
+      "units_imperial": "英制（°F、gr/lb）",
+      "home_ip": "Home Assistant（{ft} 英尺）"
     },
     "sections": {
       "axes": "坐标轴",

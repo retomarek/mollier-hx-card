@@ -16,7 +16,9 @@
     "zoom_in": "Zoom in",
     "zoom_out": "Zoom out",
     "fetch_timeout": "Home Assistant did not answer in time (busy, e.g. right after a restart)",
-    "loading_slow": "Loading the history … Home Assistant is answering slowly."
+    "loading_slow": "Loading the history … Home Assistant is answering slowly.",
+    "celsius_hint": "The comfort zone looks like °C. With imperial units, enter temperatures in °F.",
+    "invalid_config": "Invalid configuration: {error}"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -25,7 +27,9 @@
     "density": "Density ρ [kg/m³]",
     "enthalpy": "Enthalpy [kJ/kg]",
     "altitude": "{m} m a.s.l.",
-    "pressure": "{hpa} hPa"
+    "pressure": "{hpa} hPa",
+    "altitude_ip": "{ft} ft a.s.l.",
+    "pressure_ip": "{inhg} inHg"
   },
   "editor": {
     "fields": {
@@ -70,7 +74,8 @@
       "outdoor_history": "Outside daily means",
       "ventilation_line": "Ventilation line",
       "show_legend": "Show legend",
-      "show_pressure": "Show altitude and air pressure"
+      "show_pressure": "Show altitude and air pressure",
+      "units": "Units"
     },
     "options": {
       "season": "By season",
@@ -81,7 +86,11 @@
       "classical": "Classical (Recknagel)",
       "glueck": "Glück",
       "home": "Home Assistant ({m} m)",
-      "home_unset": "Home Assistant (not set: sea level)"
+      "home_unset": "Home Assistant (not set: sea level)",
+      "units_auto": "From Home Assistant",
+      "units_metric": "Metric (°C, g/kg)",
+      "units_imperial": "Imperial (°F, gr/lb)",
+      "home_ip": "Home Assistant ({ft} ft)"
     },
     "sections": {
       "axes": "Axes",

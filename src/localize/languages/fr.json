@@ -16,7 +16,9 @@
     "zoom_in": "Zoom avant",
     "zoom_out": "Zoom arrière",
     "fetch_timeout": "Home Assistant n'a pas répondu à temps (occupé, p. ex. juste après un redémarrage)",
-    "loading_slow": "Chargement de l'historique … Home Assistant répond lentement."
+    "loading_slow": "Chargement de l'historique … Home Assistant répond lentement.",
+    "celsius_hint": "La zone de confort semble être en °C. Avec les unités impériales, indiquez les températures en °F.",
+    "invalid_config": "Configuration invalide : {error}"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -25,7 +27,9 @@
     "density": "Masse volumique ρ [kg/m³]",
     "enthalpy": "Enthalpie [kJ/kg]",
     "altitude": "{m} m d’altitude",
-    "pressure": "{hpa} hPa"
+    "pressure": "{hpa} hPa",
+    "altitude_ip": "{ft} ft d’altitude",
+    "pressure_ip": "{inhg} inHg"
   },
   "editor": {
     "fields": {
@@ -70,7 +74,8 @@
       "outdoor_history": "Moyennes journalières extérieures",
       "ventilation_line": "Ligne d'aération",
       "show_legend": "Afficher la légende",
-      "show_pressure": "Afficher l’altitude et la pression"
+      "show_pressure": "Afficher l’altitude et la pression",
+      "units": "Unités"
     },
     "options": {
       "season": "Par saison",
@@ -81,7 +86,11 @@
       "classical": "Classique (Recknagel)",
       "glueck": "Glück",
       "home": "Home Assistant ({m} m)",
-      "home_unset": "Home Assistant (non défini : niveau de la mer)"
+      "home_unset": "Home Assistant (non défini : niveau de la mer)",
+      "units_auto": "Depuis Home Assistant",
+      "units_metric": "Métrique (°C, g/kg)",
+      "units_imperial": "Impérial (°F, gr/lb)",
+      "home_ip": "Home Assistant ({ft} ft)"
     },
     "sections": {
       "axes": "Axes",

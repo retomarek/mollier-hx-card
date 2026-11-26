@@ -27,21 +27,26 @@ import {
     SLOW_MS,
 } from './statistics.js';
 import styles from './card.styles';
+import { PA_PER_INHG, show, unitSystem, UNITS, UNITS_OPTIONS } from './units.js';
 
 const DEFAULT_DAYS = 7;
 const DEFAULT_COLORING = 'season';
 const DEFAULT_CONVENTION = 'classical';
 const VALID_COLORINGS = ['season', 'age', 'chronological'];
 const VALID_CONVENTIONS = ['classical', 'glueck'];
-// Internal units are kg/kg for x and °C for y; user config is expressed in
-// g/kg (x) and °C (y) — see parseDomain below.
-// Indoor climate range: -10..40 °C, 0..18 g/kg.
-const DEFAULT_DOMAIN_X = [0.0, 0.018];
-const DEFAULT_DOMAIN_Y = [-10.0, 40.0];
+// Internal units are kg/kg for x and °C for y; the config gives the axis
+// ranges in the units of the unit system (metric g/kg and °C, imperial gr/lb
+// and °F) — see parseDomain below. Indoor climate range: metric -10..40 °C,
+// 0..18 g/kg; imperial 10..110 °F, 0..180 gr/lb.
+const DEFAULT_RANGES = {
+    metric: { x: [0, 18], t: [-10, 40] },
+    imperial: { x: [0, 180], t: [10, 110] },
+};
 // A comfort zone without absolute_humidity has no upper limit on x.
 const OPEN_RANGE_X = [0, 1];
-// Comfort-zone temperatures above this look like °F (they must be °C).
-const FAHRENHEIT_HINT_ABOVE = 45;
+// A comfort zone above this many degrees is almost certainly entered in °F
+// (metric), one below it in °C (imperial).
+const UNIT_HINT_AT = 45;
 // A tooltip opened by a click / tap closes by itself after this time.
 const TOOLTIP_PIN_MS = 5000;
 // Iso-line families the user can switch on and off (config key → option of
@@ -113,48 +118,64 @@ function seasonForMonth(month /* 0-11 */) {
     return 'autumn';
 }
 
-// Convert a user-supplied 2-element [min, max] domain to internal units; users
-// give x in g/kg and y in °C, internal x is kg/kg (scale 1/1000) and y is °C
-// (scale 1). Falls back to the default when the value is missing or malformed.
-function parseDomain(input, fallback, scale) {
-    if (!Array.isArray(input) || input.length !== 2 || !input.every(Number.isFinite)) {
-        return fallback;
-    }
-    const [a, b] = input.map(Number);
-    if (a === b) return fallback;
-    const lo = Math.min(a, b) * scale;
-    const hi = Math.max(a, b) * scale;
-    return [lo, hi];
+// Convert a user-supplied 2-element [min, max] axis range to internal units
+// with `toInternal` (x: g/kg or gr/lb → kg/kg; temperature: °C or °F → °C).
+// Falls back to the default when the value is missing or malformed.
+function parseDomain(input, fallback, toInternal) {
+    const ok = Array.isArray(input) && input.length === 2 && input.every(Number.isFinite) && input[0] !== input[1];
+    const [a, b] = ok ? input.map(Number) : fallback;
+    return [toInternal(Math.min(a, b)), toInternal(Math.max(a, b))];
 }
 
 const isPair = (v) =>
     Array.isArray(v) && v.length === 2 && v.every((n) => n !== null && n !== '' && Number.isFinite(Number(n)));
 
-// Convert user-facing units (°C, %, g/kg) to the kg/kg + 0..1 units that
-// createComfort() expects. Returns null when no comfort zone is configured;
-// throws when it is configured but incomplete. absolute_humidity is optional
-// (no upper limit).
-export function parseComfortZone(cz) {
+// Convert user-facing units (metric °C, %, g/kg; imperial °F, %, gr/lb) to
+// the °C, kg/kg and 0..1 units that createComfort() expects. Returns null when
+// no comfort zone is configured; throws when it is configured but incomplete.
+// absolute_humidity is optional (no upper limit). `entered_max` is the upper
+// temperature as entered (for the °C / °F hint).
+export function parseComfortZone(cz, system = 'metric') {
     if (cz === undefined || cz === null || cz === false) return null;
+    const u = UNITS[system] || UNITS.metric;
+    const tu = u.temperature.unit;
+    const xu = u.absHumidity.unit;
     if (typeof cz !== 'object' || Array.isArray(cz)) {
         throw new Error(
-            'comfort_zone must be an object with temperature: [min, max] (°C) and humidity: [min, max] (%)',
+            `comfort_zone must be an object with temperature: [min, max] (${tu}) and humidity: [min, max] (%)`,
         );
     }
     const t = cz.temperature,
         h = cz.humidity,
         x = cz.absolute_humidity;
-    if (!isPair(t)) throw new Error(`comfort_zone.temperature must be [min, max] in °C (got ${JSON.stringify(t)})`);
+    if (!isPair(t)) throw new Error(`comfort_zone.temperature must be [min, max] in ${tu} (got ${JSON.stringify(t)})`);
     if (!isPair(h)) throw new Error(`comfort_zone.humidity must be [min, max] in % (got ${JSON.stringify(h)})`);
     const hasX = x !== undefined && x !== null;
     if (hasX && !isPair(x))
-        throw new Error(`comfort_zone.absolute_humidity must be [min, max] in g/kg (got ${JSON.stringify(x)})`);
+        throw new Error(`comfort_zone.absolute_humidity must be [min, max] in ${xu} (got ${JSON.stringify(x)})`);
     const n = (v) => v.map(Number).sort((a, b) => a - b); // [max, min] is accepted too
     return {
-        range_t: n(t),
+        range_t: n(t).map(u.temperature.toC),
         range_phi: n(h).map((v) => v / 100),
-        range_x: hasX ? n(x).map((v) => v / 1000) : [...OPEN_RANGE_X],
+        range_x: hasX ? n(x).map((v) => u.absHumidity.toGkg(v) / 1000) : [...OPEN_RANGE_X],
         hasX,
+        entered_max: n(t)[1],
+    };
+}
+
+// Everything in the config that depends on the unit system, read in the
+// units of `system`. Throws on invalid values.
+function parseUnitValues(config, system) {
+    const u = UNITS[system] || UNITS.metric;
+    // Validates altitude / pressure; neither set → the elevation set in Home Assistant.
+    pressureFromConfig(config, null, system);
+    const ranges = DEFAULT_RANGES[system] || DEFAULT_RANGES.metric;
+    return {
+        system,
+        comfortZone: parseComfortZone(config.comfort_zone, system),
+        bands: parseWarningBands(config.warning_bands, system),
+        domainX: parseDomain(config.x_range, ranges.x, (v) => u.absHumidity.toGkg(v) / 1000),
+        domainY: parseDomain(config.temperature_range, ranges.t, u.temperature.toC),
     };
 }
 
@@ -225,15 +246,28 @@ export class MollierHxCard extends LitElement {
         }
         // Validate everything before changing any state, so a broken edit in
         // the YAML editor shows an error and leaves the card as it was.
-        // Validates altitude / pressure; neither set → the elevation set in Home Assistant.
-        pressureFromConfig(config, null);
+        if (config.units != null && !UNITS_OPTIONS.includes(config.units)) {
+            throw new Error(`units must be one of ${UNITS_OPTIONS.join(', ')} (got ${JSON.stringify(config.units)})`);
+        }
+        // The unit system decides how the zone, the bands, the axis ranges and
+        // the air are read. With units: auto it comes from Home Assistant, which
+        // may not have arrived yet: then the values must be valid in one of the
+        // systems, and they are read again once hass tells which (_applyUnits).
+        const system = unitSystem(config, this._hass);
+        let parsed;
+        try {
+            parsed = parseUnitValues(config, system);
+        } catch (err) {
+            const auto = config.units == null || config.units === 'auto';
+            if (!auto || this._hass) throw err;
+            parsed = parseUnitValues(config, system === 'metric' ? 'imperial' : 'metric');
+        }
         if (config.show_pressure != null && typeof config.show_pressure !== 'boolean') {
             throw new Error(`show_pressure must be true or false (got ${JSON.stringify(config.show_pressure)})`);
         }
         const days = daysFromConfig(config, DEFAULT_DAYS);
         const coloring = enumOption(config, 'coloring', VALID_COLORINGS, DEFAULT_COLORING);
         const convention = enumOption(config, 'convention', VALID_CONVENTIONS, DEFAULT_CONVENTION);
-        const comfortZone = parseComfortZone(config.comfort_zone);
 
         this._config = config;
         this._updateSizingMode();
@@ -241,17 +275,10 @@ export class MollierHxCard extends LitElement {
         this._header = title === '' || title === undefined || title === null ? nothing : title;
         this._tempEntity = config.temperature_entity;
         this._humEntity = config.humidity_entity;
-        this._updateAir();
         this._showPressure = config.show_pressure === true;
         this._days = days;
         this._coloring = coloring;
-        this._comfortZone = comfortZone;
-        // Comfort zone and axes are always °C; a maximum above 45 is almost
-        // certainly a Fahrenheit value.
-        this._fahrenheitHint = !!comfortZone && Math.max(...comfortZone.range_t) > FAHRENHEIT_HINT_ABOVE;
-        this._warningBands = parseWarningBands(config.warning_bands);
-        this._domainX = parseDomain(config.x_range, DEFAULT_DOMAIN_X, 1 / 1000);
-        this._domainY = parseDomain(config.temperature_range, DEFAULT_DOMAIN_Y, 1);
+        this._setUnitValues(parsed);
         this._lines = parseLines(config.lines);
         this._convention = convention;
         this._mollier = createMollier(this._convention);
@@ -270,28 +297,84 @@ export class MollierHxCard extends LitElement {
         }
     }
 
-    // Air pressure for the diagram: altitude or pressure from the config, else
-    // the elevation set in Home Assistant, else sea level. _pressure is reactive:
-    // a change redraws the grid (it is part of the draw hash).
+    _setUnitValues({ system, comfortZone, bands, domainX, domainY }) {
+        this._units = system;
+        this._comfortZone = comfortZone;
+        this._warningBands = bands;
+        this._domainX = domainX;
+        this._domainY = domainY;
+        this._configError = undefined;
+        this._updateAir();
+        // A zone that looks like the other unit: °F entered with metric units,
+        // or °C with imperial ones.
+        const max = comfortZone?.entered_max;
+        this._unitHint = !comfortZone
+            ? null
+            : system === 'imperial'
+              ? max < UNIT_HINT_AT
+                  ? 'card.celsius_hint'
+                  : null
+              : max > UNIT_HINT_AT
+                ? 'card.fahrenheit_hint'
+                : null;
+    }
+
+    // units: auto and Home Assistant's unit system arrived or changed: read the
+    // unit-dependent values again. hass cannot reject a config, so an invalid
+    // value shows as a message on the card.
+    _applyUnits() {
+        if (!this._config) return;
+        const system = unitSystem(this._config, this._hass);
+        if (system === this._units) return;
+        try {
+            this._setUnitValues(parseUnitValues(this._config, system));
+        } catch (err) {
+            this._units = system;
+            this._configError = err.message;
+        }
+        this.requestUpdate();
+    }
+
+    // Air pressure for the diagram: altitude or pressure from the config (in
+    // the units of the unit system), else the elevation set in Home Assistant,
+    // else sea level. _pressure is reactive: a change redraws the grid (it is
+    // part of the draw hash).
     _updateAir() {
-        this._air = airPressure(this._config, this._hass);
+        // An air value that does not fit the unit system is already reported
+        // as _configError; keep the last pressure then.
+        if (this._configError) return;
+        this._air = airPressure(this._config, this._hass, this._units);
         this._pressure = this._air.pa;
     }
 
-    // "450 m a.s.l. · 960 hPa" (only the pressure when no altitude is known),
-    // numbers in the user's number format.
+    // Values with units in the card's unit system and the user's number format.
+    _show() {
+        return show(this._hass, this._units);
+    }
+
+    // "450 m a.s.l. · 960 hPa" or "1,476 ft a.s.l. · 28.35 inHg" (only the
+    // pressure when no altitude is known), numbers in the user's number format.
     _airText() {
         const a = this._air;
         if (!a) return '';
-        const num = (v) => formatNumber(this._hass, v);
-        const hpa = this._t('diagram.pressure', { hpa: num(a.pa / 100) });
-        return a.altitude === null ? hpa : `${this._t('diagram.altitude', { m: num(a.altitude) })} · ${hpa}`;
+        const imperial = this._units === 'imperial';
+        const num = (v, d = 0) => formatNumber(this._hass, v, d);
+        const p = imperial
+            ? this._t('diagram.pressure_ip', { inhg: num(a.pa / PA_PER_INHG, 2) })
+            : this._t('diagram.pressure', { hpa: num(a.pa / 100) });
+        if (a.altitude === null) return p;
+        const alt = imperial
+            ? this._t('diagram.altitude_ip', { ft: num(UNITS.imperial.altitude.fromM(a.altitude)) })
+            : this._t('diagram.altitude', { m: num(a.altitude) });
+        return `${alt} · ${p}`;
     }
 
     set hass(hass) {
         const firstAttach = !this._hass;
         const elevationChanged = this._hass?.config?.elevation !== hass?.config?.elevation;
+        const unitsChanged = this._hass?.config?.unit_system?.temperature !== hass?.config?.unit_system?.temperature;
         this._hass = hass;
+        if (unitsChanged) this._applyUnits();
         if (elevationChanged && this._config) this._updateAir();
         // Captions, legend and messages are translated: redraw on a language switch.
         const lang = getLanguage(hass);
@@ -582,8 +665,12 @@ export class MollierHxCard extends LitElement {
         if (this._slow && !this._error && !roomMissing) {
             lines.push(html`<p class="message">${this._t('card.loading_slow')}</p>`);
         }
-        if (this._fahrenheitHint) {
-            lines.push(html`<p class="message">${this._t('card.fahrenheit_hint')}</p>`);
+        if (this._configError) {
+            // The config does not fit Home Assistant's unit system (units: auto).
+            lines.push(html`<p class="error">${this._t('card.invalid_config', { error: this._configError })}</p>`);
+        }
+        if (this._unitHint) {
+            lines.push(html`<p class="message">${this._t(this._unitHint)}</p>`);
         }
         return lines.length ? html`<div class="messages">${lines}</div>` : nothing;
     }
@@ -600,19 +687,18 @@ export class MollierHxCard extends LitElement {
         const o = this._outdoorPoint;
         const c = this._currentPoint;
         if (!this._showLegend || (!cz && !o && !c)) return nothing;
-        const r = (v) => Math.round(v * 10) / 10;
+        const S = this._show();
+        const pct = (v) => formatNumber(this._hass, v * 100, 0);
+        const range = (a, b, f) => `${f(a).replace(/ [^ ]+$/, '')}–${f(b)}`; // "20–26 °C"
         const zone = cz
-            ? `${r(cz.range_t[0])}–${r(cz.range_t[1])} °C · ${r(cz.range_phi[0] * 100)}–${r(cz.range_phi[1] * 100)} %` +
-              (cz.hasX ? ` · ${r(cz.range_x[0] * 1000)}–${r(cz.range_x[1] * 1000)} g/kg` : '')
+            ? `${range(cz.range_t[0], cz.range_t[1], S.temperature)} · ${pct(cz.range_phi[0])}–${pct(cz.range_phi[1])} %` +
+              (cz.hasX ? ` · ${range(cz.range_x[0], cz.range_x[1], S.absHumidity)}` : '')
             : '';
-        const fmt = (k) => `±${k.dt} K · ±${k.dphi} %` + (cz.hasX ? ` · ±${k.dx} g/kg` : '');
+        const fmt = (k) => `±${S.delta(k.dt)} · ±${k.dphi} %` + (cz.hasX ? ` · ±${S.absHumidity(k.dx / 1000)}` : '');
         const eff = this._ventilationEffect();
-        const outTitle = o
-            ? `${o.t.toFixed(1)} °C · ${(o.phi * 100).toFixed(0)} % · ${(o.x * 1000).toFixed(1)} g/kg`
-            : '';
-        const nowTitle = c
-            ? `${c.t.toFixed(1)} °C · ${(c.phi * 100).toFixed(0)} % · ${(c.x * 1000).toFixed(1)} g/kg`
-            : '';
+        const values = (p) => `${S.temperature(p.t)} · ${pct(p.phi)} % · ${S.absHumidity(p.x)}`;
+        const outTitle = o ? values(o) : '';
+        const nowTitle = c ? values(c) : '';
         return html`
             <div class="zone-legend">
                 ${cz ? html`<span title=${zone}><i class="swatch fill"></i>${this._t('card.comfort_zone')}</span>` : nothing}
@@ -821,7 +907,7 @@ export class MollierHxCard extends LitElement {
     _tryDraw() {
         const host = this.renderRoot.querySelector('.mollier-host');
         if (!host) return;
-        const hash = `${this._domainX[0]}|${this._domainX[1]}|${this._domainY[0]}|${this._domainY[1]}|${this._pressure}|${this._convention}|${getLanguage(this._hass)}|${JSON.stringify(this._lines)}`;
+        const hash = `${this._domainX[0]}|${this._domainX[1]}|${this._domainY[0]}|${this._domainY[1]}|${this._pressure}|${this._convention}|${this._units}|${getLanguage(this._hass)}|${JSON.stringify(this._lines)}`;
         const hasSvg = !!host.querySelector('svg');
         if (hasSvg && this._drawHash === hash) {
             this._drawn = true;
@@ -1059,6 +1145,7 @@ export class MollierHxCard extends LitElement {
     }
 
     _drawPoints() {
+        const S = this._show();
         const P = this._plot();
         if (!P) return;
         P.svg.select('#data-points').remove();
@@ -1122,9 +1209,9 @@ export class MollierHxCard extends LitElement {
                 hit,
                 () => ({
                     html:
-                        `${dateFmt.format(p.date)}<br>x: ${(p.x * 1000).toFixed(2)} g/kg` +
-                        `<br>T: ${p.t.toFixed(2)} °C` +
-                        `<br>φ: ${(p.phi * 100).toFixed(2)} %`,
+                        `${dateFmt.format(p.date)}<br>x: ${S.absHumidity(p.x, 2)}` +
+                        `<br>T: ${S.temperature(p.t, 2)}` +
+                        `<br>φ: ${formatNumber(card._hass, p.phi * 100, 2)} %`,
                     background: SEASON_COLORS[season],
                     color: darkText ? 'black' : 'white',
                 }),
@@ -1184,6 +1271,7 @@ export class MollierHxCard extends LitElement {
     // marker sits on the edge with an arrow and the value, instead of changing
     // the axes. The ventilation note is in the legend, not in the diagram.
     _drawOutdoor() {
+        const S = this._show();
         const P = this._plot();
         if (!P) return;
         P.svg.select('#outdoor').remove();
@@ -1206,9 +1294,9 @@ export class MollierHxCard extends LitElement {
                 const eff = this._ventilationEffect();
                 return {
                     html:
-                        `${this._t('card.outdoor')}<br>x: ${(o.x * 1000).toFixed(2)} g/kg` +
-                        `<br>T: ${o.t.toFixed(1)} °C<br>φ: ${(o.phi * 100).toFixed(0)} %` +
-                        `<br>Td: ${this._dewPoint(o.t, o.phi).toFixed(1)} °C` +
+                        `${this._t('card.outdoor')}<br>x: ${S.absHumidity(o.x, 2)}` +
+                        `<br>T: ${S.temperature(o.t)}<br>φ: ${formatNumber(this._hass, o.phi * 100, 0)} %` +
+                        `<br>Td: ${S.temperature(this._dewPoint(o.t, o.phi))}` +
                         (eff ? `<br>${this._t(`card.ventilation_${eff}`)}` : ''),
                     background: OUTDOOR_COLOR,
                     color: 'white',
@@ -1221,6 +1309,7 @@ export class MollierHxCard extends LitElement {
     // Live room point (black, vendored hxDrawStatePoint). Outside the axes it
     // is drawn as an arrow on the edge with its value, like the outside point.
     _drawCurrentPoint() {
+        const S = this._show();
         const P = this._plot();
         if (!P) return;
         // Re-append on every update so this group stays last in paint order
@@ -1239,9 +1328,9 @@ export class MollierHxCard extends LitElement {
             hit,
             () => ({
                 html:
-                    `${this._t('card.now')}<br>x: ${(c.x * 1000).toFixed(2)} g/kg` +
-                    `<br>T: ${c.t.toFixed(2)} °C` +
-                    `<br>φ: ${(c.phi * 100).toFixed(2)} %`,
+                    `${this._t('card.now')}<br>x: ${S.absHumidity(c.x, 2)}` +
+                    `<br>T: ${S.temperature(c.t, 2)}` +
+                    `<br>φ: ${formatNumber(this._hass, c.phi * 100, 2)} %`,
                 background: 'black',
                 color: 'white',
             }),

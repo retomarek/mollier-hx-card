@@ -16,7 +16,9 @@
     "zoom_in": "Aumentar zoom",
     "zoom_out": "Diminuir zoom",
     "fetch_timeout": "O Home Assistant não respondeu a tempo (ocupado, p. ex. logo após um reinício)",
-    "loading_slow": "A carregar o histórico … o Home Assistant está a responder lentamente."
+    "loading_slow": "A carregar o histórico … o Home Assistant está a responder lentamente.",
+    "celsius_hint": "A zona de conforto parece estar em °C. Com unidades imperiais, indique as temperaturas em °F.",
+    "invalid_config": "Configuração inválida: {error}"
   },
   "diagram": {
     "x_axis": "x [g/kg]",
@@ -25,7 +27,9 @@
     "density": "Densidade ρ [kg/m³]",
     "enthalpy": "Entalpia [kJ/kg]",
     "altitude": "{m} m de altitude",
-    "pressure": "{hpa} hPa"
+    "pressure": "{hpa} hPa",
+    "altitude_ip": "{ft} ft de altitude",
+    "pressure_ip": "{inhg} inHg"
   },
   "editor": {
     "fields": {
@@ -70,7 +74,8 @@
       "outdoor_history": "Médias diárias externas",
       "ventilation_line": "Linha de ventilação",
       "show_legend": "Mostrar legenda",
-      "show_pressure": "Mostrar altitude e pressão"
+      "show_pressure": "Mostrar altitude e pressão",
+      "units": "Unidades"
     },
     "options": {
       "season": "Por estação",
@@ -81,7 +86,11 @@
       "classical": "Clássico (Recknagel)",
       "glueck": "Glück",
       "home": "Home Assistant ({m} m)",
-      "home_unset": "Home Assistant (não definido: nível do mar)"
+      "home_unset": "Home Assistant (não definido: nível do mar)",
+      "units_auto": "Do Home Assistant",
+      "units_metric": "Métrico (°C, g/kg)",
+      "units_imperial": "Imperial (°F, gr/lb)",
+      "home_ip": "Home Assistant ({ft} ft)"
     },
     "sections": {
       "axes": "Eixos",
