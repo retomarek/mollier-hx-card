@@ -112,12 +112,9 @@ const startLang =
         'en',
     ])[0];
 
-// Home Assistant's unit system in the demo: imperial for US visitors (or
-// ?units=imperial), metric otherwise.
-const startUnits =
-    params.get('units') === 'imperial' || (params.get('units') !== 'metric' && browserLang === 'en-us')
-        ? 'imperial'
-        : 'metric';
+// Home Assistant's unit system in the demo: metric (SI), imperial only with
+// ?units=imperial or the switch.
+const startUnits = params.get('units') === 'imperial' ? 'imperial' : 'metric';
 
 const state = {
     units: startUnits,
