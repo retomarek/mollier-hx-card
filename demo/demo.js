@@ -112,7 +112,15 @@ const startLang =
         'en',
     ])[0];
 
+// Home Assistant's unit system in the demo: imperial for US visitors (or
+// ?units=imperial), metric otherwise.
+const startUnits =
+    params.get('units') === 'imperial' || (params.get('units') !== 'metric' && browserLang === 'en-us')
+        ? 'imperial'
+        : 'metric';
+
 const state = {
+    units: startUnits,
     preset: startPreset,
     days: 120,
     // 'home': the elevation set in Home Assistant (nothing in the YAML);
@@ -142,6 +150,41 @@ const state = {
 const stats = Object.assign({}, ...PRESETS.map(dailyMeans));
 
 // --- card configs -----------------------------------------------------------
+
+// The demo keeps its values metric; with imperial units (US customary in Home
+// Assistant) the cards read their config in °F, °F differences, gr/lb and ft,
+// so the YAML is converted (like the cards' editors do when switching units).
+const imperial = () => state.units === 'imperial';
+const toF = (c) => Math.round(((c * 9) / 5 + 32) * 2) / 2;
+const toDeltaF = (k) => Math.round(k * 1.8 * 2) / 2;
+const toGr = (g) => Math.round(g * 7 * 2) / 2;
+const toFt = (m) => Math.round(m / 0.3048);
+function inUnits(c) {
+    if (!imperial()) return c;
+    const out = { ...c };
+    if (out.comfort_zone) {
+        const cz = { ...out.comfort_zone };
+        cz.temperature = cz.temperature.map(toF);
+        if (cz.absolute_humidity) cz.absolute_humidity = cz.absolute_humidity.map(toGr);
+        out.comfort_zone = cz;
+    }
+    if (out.warning_bands && typeof out.warning_bands === 'object') {
+        const wb = {};
+        for (const [k, b] of Object.entries(out.warning_bands)) {
+            wb[k] = { ...b };
+            if ('temperature' in b) wb[k].temperature = toDeltaF(b.temperature);
+            if ('absolute_humidity' in b) wb[k].absolute_humidity = toGr(b.absolute_humidity);
+        }
+        out.warning_bands = wb;
+    }
+    if ('altitude' in out) out.altitude = toFt(out.altitude);
+    return out;
+}
+// Slider labels in the units the cards show.
+const tLabel = (c, d = 1) =>
+    imperial() ? `${round((c * 9) / 5 + 32, d).toFixed(d)} °F` : `${round(c, d).toFixed(d)} °C`;
+const dtLabel = (k) => (imperial() ? `± ${round(k * 1.8, 1)} °F` : `± ${k} K`);
+const xLabel = (g) => (imperial() ? `${round(g * 7, 1)} gr/lb` : `${g} g/kg`);
 
 const round = (v, d = 2) => +Number(v).toFixed(d);
 const sameZone = () =>
@@ -186,7 +229,7 @@ function compassConfig() {
     if (!state.showCurrent) c.show_current = false;
     if (state.showCurrent && state.breathing !== DEFAULT_BREATHING) c.breathing = state.breathing;
     if (!state.nowLine) c.show_current_legend = false;
-    return c;
+    return inUnits(c);
 }
 
 function mollierConfig() {
@@ -209,7 +252,7 @@ function mollierConfig() {
     if (!state.ventilation) c.ventilation_line = false;
     if (!state.mollierLegend) c.show_legend = false;
     if (state.showPressure) c.show_pressure = true;
-    return c;
+    return inUnits(c);
 }
 
 // --- YAML -------------------------------------------------------------------
@@ -401,7 +444,7 @@ function section(ic, title, sub, tiles, open = false) {
     return s;
 }
 
-const c1 = (v) => `${round(v, 1).toFixed(1)} °C`;
+const c1 = (v) => tLabel(v);
 const C = {
     temp: 'var(--deep-orange-color)',
     hum: 'var(--blue-color)',
@@ -443,7 +486,7 @@ function buildControls() {
             step: 0.5,
             get: () => state.bands[k].temperature,
             set: (v) => setBand(k, 'temperature', v),
-            fmt: (v) => `± ${v} K`,
+            fmt: dtLabel,
         }),
         slider({
             ic: 'waterPercent',
@@ -465,7 +508,7 @@ function buildControls() {
             step: 0.5,
             get: () => state.bands[k].absolute_humidity,
             set: (v) => setBand(k, 'absolute_humidity', v),
-            fmt: (v) => `± ${v} g/kg`,
+            fmt: (v) => `± ${xLabel(v)}`,
             wide: true,
         }),
     ];
@@ -533,7 +576,7 @@ function buildControls() {
                 step: 0.5,
                 get: () => state.zone.t,
                 set: (v) => (state.zone.t = v),
-                fmt: (a, b) => `${a} – ${b} °C`,
+                fmt: (a, b) => `${tLabel(a).replace(/ °[CF]$/, '')} – ${tLabel(b)}`,
                 wide: true,
             }),
             range({
@@ -557,7 +600,7 @@ function buildControls() {
                 step: 0.5,
                 get: () => state.zone.x,
                 set: (v) => (state.zone.x = v),
-                fmt: (v) => `≤ ${v} g/kg`,
+                fmt: (v) => `≤ ${xLabel(v)}`,
             }),
         ]),
         section(
@@ -587,7 +630,9 @@ function buildControls() {
                     get: () => state.altitude,
                     set: (v) => (state.altitude = v),
                     fmt: (v) =>
-                        `${v} m · ${Math.round((101325 * Math.pow(1 - 2.25577e-5 * v, 5.25588)) / 100)} hPa` +
+                        (imperial()
+                            ? `${toFt(v)} ft · ${round((101325 * Math.pow(1 - 2.25577e-5 * v, 5.25588)) / 3386.389, 2)} inHg`
+                            : `${v} m · ${Math.round((101325 * Math.pow(1 - 2.25577e-5 * v, 5.25588)) / 100)} hPa`) +
                         (state.airSource === 'home' ? ' · Settings → System → General' : ' · altitude in the YAML'),
                     wide: true,
                 }),
@@ -599,6 +644,18 @@ function buildControls() {
             ...bandSliders('red', C.red, 'Red'),
         ]),
         section('tune', 'Display', '', [
+            segments({
+                ic: 'ruler',
+                name: 'Units (Home Assistant unit system)',
+                color: C.display,
+                options: [
+                    ['metric', 'Metric'],
+                    ['imperial', 'US customary'],
+                ],
+                get: () => state.units,
+                set: (v) => (state.units = v),
+                wide: true,
+            }),
             segments({
                 ic: 'brightness',
                 name: 'Theme',
@@ -809,6 +866,7 @@ function render() {
         // The simulated Home Assistant elevation follows the slider in both modes,
         // so switching to 'own' starts from the same value.
         elevation: state.altitude,
+        units: state.units,
         onFetch: (msg) => window.__demo.fetches.push(msg.statistic_ids.join(',')),
     });
     compass.hass = hass;
