@@ -1,6 +1,6 @@
 {
   "name": "mollier-hx-card",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Home Assistant card: a Mollier h,x (psychrometric) diagram of your room climate, one point per day, with comfort zone, warning bands and outside air.",
   "type": "module",
   "source": "src/mollier-hx-card.js",

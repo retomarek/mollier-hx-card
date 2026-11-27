@@ -4,6 +4,8 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-27
+
 ### Added
 
 - Imperial units (US customary): `units: auto | metric | imperial`, where `auto` follows Home Assistant's unit system. With imperial units the card draws the ASHRAE **psychrometric chart** (dry-bulb temperature in °F across, humidity ratio in gr/lb on the right, enthalpy in Btu/lb, density in lb/ft³) and reads the comfort zone, the warning bands, the axis ranges, the altitude and the pressure in °F, gr/lb, ft and inHg. Tooltips, legend, edge arrows and `show_pressure` follow. Imperial defaults: axes 10–110 °F and 0–180 gr/lb. The visual editor converts the values when the unit system is switched.
@@ -12,7 +14,7 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 ### Changed
 
 - **US customary users with a metric config:** with `units: auto` (the default) a Home Assistant set to US customary now reads the config in imperial units, so a zone or axis range like `temperature: [20, 26]` would mean °F. Add `units: metric` to such a card, or switch *Units* in the visual editor, which converts the values. The card shows a hint when the zone looks like °C.
-- Diagram code from d3-mollierhx 5ef2810 (psychrometric orientation and IP units; the metric diagram is unchanged).
+- Diagram code from d3-mollierhx 0.3.0 (psychrometric orientation and IP units; the metric diagram is unchanged).
 
 ## [0.1.1] - 2026-11-27
 
@@ -43,6 +45,7 @@ First public version. The earlier 0.1.0, 1.0.0 betas and release candidates were
 - Unit tests (vitest), ESLint and Prettier, CI on every push, and a check that the code shared with the Comfort Compass Card is identical in both repositories.
 - End-to-end tests of both cards in a real Home Assistant (stable and beta) on every push and weekly.
 
-[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/retomarek/mollier-hx-card/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/retomarek/mollier-hx-card/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/retomarek/mollier-hx-card/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/retomarek/mollier-hx-card/releases/tag/v0.1.0
