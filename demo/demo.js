@@ -181,10 +181,10 @@ function inUnits(c) {
     return out;
 }
 // Slider labels in the units the cards show.
-const tLabel = (c, d = 1) =>
-    imperial() ? `${round((c * 9) / 5 + 32, d).toFixed(d)} °F` : `${round(c, d).toFixed(d)} °C`;
-const dtLabel = (k) => (imperial() ? `± ${round(k * 1.8, 1)} °F` : `± ${k} K`);
-const xLabel = (g) => (imperial() ? `${round(g * 7, 1)} gr/lb` : `${g} g/kg`);
+// Imperial labels use the same rounding as the YAML (inUnits), so they match it.
+const tLabel = (c, d = 1) => (imperial() ? `${toF(c).toFixed(d)} °F` : `${round(c, d).toFixed(d)} °C`);
+const dtLabel = (k) => (imperial() ? `± ${toDeltaF(k)} °F` : `± ${k} K`);
+const xLabel = (g) => (imperial() ? `${toGr(g)} gr/lb` : `${g} g/kg`);
 
 const round = (v, d = 2) => +Number(v).toFixed(d);
 const sameZone = () =>
@@ -236,7 +236,7 @@ function mollierConfig() {
     const ids = entities(state.preset);
     const c = {
         type: 'custom:mollier-hx-card',
-        title: 'h,x diagram',
+        title: imperial() ? 'Psychrometric chart' : 'h,x diagram',
         temperature_entity: ids.t,
         humidity_entity: ids.h,
     };

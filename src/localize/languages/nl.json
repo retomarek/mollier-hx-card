@@ -17,7 +17,7 @@
     "zoom_out": "Uitzoomen",
     "fetch_timeout": "Home Assistant antwoordde niet op tijd (bezet, bijv. vlak na een herstart)",
     "loading_slow": "Geschiedenis wordt geladen … Home Assistant reageert traag.",
-    "celsius_hint": "De comfortzone lijkt in °C te staan. Geef met imperiale eenheden temperaturen op in °F.",
+    "celsius_hint": "De comfortzone lijkt in °C te staan. Geef met imperiale eenheden temperaturen op in °F (units: metric).",
     "invalid_config": "Ongeldige configuratie: {error}"
   },
   "diagram": {
@@ -95,7 +95,9 @@
       "units_auto": "Uit Home Assistant",
       "units_metric": "Metrisch (°C, g/kg)",
       "units_imperial": "Imperiaal (°F, gr/lb)",
-      "home_ip": "Home Assistant ({ft} ft)"
+      "home_ip": "Home Assistant ({ft} ft)",
+      "altitude_ip": "Hoogte (ft)",
+      "pressure_ip": "Druk (inHg)"
     },
     "sections": {
       "axes": "Assen",

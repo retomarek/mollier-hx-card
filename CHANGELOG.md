@@ -11,6 +11,7 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ### Changed
 
+- **US customary users with a metric config:** with `units: auto` (the default) a Home Assistant set to US customary now reads the config in imperial units, so a zone or axis range like `temperature: [20, 26]` would mean °F. Add `units: metric` to such a card, or switch *Units* in the visual editor, which converts the values. The card shows a hint when the zone looks like °C.
 - Diagram code from d3-mollierhx 5ef2810 (psychrometric orientation and IP units; the metric diagram is unchanged).
 
 ## [0.1.1] - 2026-11-27

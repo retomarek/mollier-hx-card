@@ -121,12 +121,12 @@ The zone is where all given ranges hold (°C, % and optionally g/kg); the warnin
 
 ```yaml
 comfort_zone:
-  temperature: [20, 26]        # °C (always °C, also with °F sensors)
+  temperature: [20, 26]        # °C (imperial: °F), whatever unit the sensors report
   humidity: [30, 65]           # % relative humidity
-  absolute_humidity: [0, 12]   # g/kg, optional
+  absolute_humidity: [0, 12]   # g/kg (imperial: gr/lb), optional
 ```
 
-`temperature` and `humidity` are required, `absolute_humidity` is optional: without it the zone has no absolute-humidity limit. The zone is where all given ranges hold. If the temperatures look like °F (maximum above 45), the card shows a hint.
+`temperature` and `humidity` are required, `absolute_humidity` is optional: without it the zone has no absolute-humidity limit. The zone is where all given ranges hold. If the temperatures look like the other unit (maximum above 45 with metric, below 45 with imperial), the card shows a hint.
 
 #### `warning_bands`
 
@@ -182,7 +182,7 @@ The numbers in the YAML are read in these units, so a config written for one sys
 
 ### Altitude and air pressure
 
-The air pressure changes how much water the air holds at a given relative humidity: at 1500 m the same 21 °C and 60 % are about 11 g/kg instead of 9.3 g/kg at sea level. The curves of the diagram shift accordingly; `show_pressure: true` writes the altitude and the pressure above the diagram. By default the card takes the **elevation set in Home Assistant** (*Settings → System → General → Elevation*) and follows it when you change it. Set `altitude` (m) or `pressure` (hPa or Pa) to use another value, e.g. for a sensor in a holiday flat; in the visual editor: *Air pressure from*.
+The air pressure changes how much water the air holds at a given relative humidity: at 1500 m the same 21 °C and 60 % are about 11 g/kg instead of 9.3 g/kg at sea level. The curves of the diagram shift accordingly; `show_pressure: true` writes the altitude and the pressure above the diagram. By default the card takes the **elevation set in Home Assistant** (*Settings → System → General → Elevation*) and follows it when you change it. Set `altitude` (m, imperial ft) or `pressure` (hPa or Pa, imperial inHg) to use another value, e.g. for a sensor in a holiday flat; in the visual editor: *Air pressure from*.
 
 ### Size in the dashboard
 

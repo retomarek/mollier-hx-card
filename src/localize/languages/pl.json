@@ -17,7 +17,7 @@
     "zoom_out": "Pomniejsz",
     "fetch_timeout": "Home Assistant nie odpowiedział na czas (zajęty, np. tuż po restarcie)",
     "loading_slow": "Wczytywanie historii … Home Assistant odpowiada powoli.",
-    "celsius_hint": "Strefa komfortu wygląda na °C. Przy jednostkach imperialnych podaj temperatury w °F.",
+    "celsius_hint": "Strefa komfortu wygląda na °C. Przy jednostkach imperialnych podaj temperatury w °F (units: metric).",
     "invalid_config": "Nieprawidłowa konfiguracja: {error}"
   },
   "diagram": {
@@ -95,7 +95,9 @@
       "units_auto": "Z Home Assistant",
       "units_metric": "Metryczne (°C, g/kg)",
       "units_imperial": "Imperialne (°F, gr/lb)",
-      "home_ip": "Home Assistant ({ft} ft)"
+      "home_ip": "Home Assistant ({ft} ft)",
+      "altitude_ip": "Wysokość (ft)",
+      "pressure_ip": "Ciśnienie (inHg)"
     },
     "sections": {
       "axes": "Osie",

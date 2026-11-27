@@ -37,16 +37,16 @@ export const inhgToPa = (inhg) => inhg * PA_PER_INHG;
 // deeper inside), altitude in m.
 export const UNITS = {
     metric: {
-        temperature: { unit: '°C', toC: (v) => v, fromC: (v) => v, step: 0.5 },
-        delta: { unit: 'K', toK: (v) => v, fromK: (v) => v, step: 0.5 },
-        absHumidity: { unit: 'g/kg', toGkg: (v) => v, fromGkg: (v) => v, step: 0.5 },
-        altitude: { unit: 'm', toM: (v) => v, fromM: (v) => v, step: 10 },
+        temperature: { unit: '°C', toC: (v) => v, fromC: (v) => v, step: 'any' },
+        delta: { unit: 'K', toK: (v) => v, fromK: (v) => v, step: 'any' },
+        absHumidity: { unit: 'g/kg', toGkg: (v) => v, fromGkg: (v) => v, step: 'any' },
+        altitude: { unit: 'm', toM: (v) => v, fromM: (v) => v, step: 'any' },
     },
     imperial: {
-        temperature: { unit: '°F', toC: fToC, fromC: cToF, step: 1 },
-        delta: { unit: '°F', toK: (v) => v / 1.8, fromK: (v) => v * 1.8, step: 0.5 },
-        absHumidity: { unit: 'gr/lb', toGkg: (v) => v / GR_PER_G, fromGkg: (v) => v * GR_PER_G, step: 1 },
-        altitude: { unit: 'ft', toM: ftToM, fromM: mToFt, step: 50 },
+        temperature: { unit: '°F', toC: fToC, fromC: cToF, step: 'any' },
+        delta: { unit: '°F', toK: (v) => v / 1.8, fromK: (v) => v * 1.8, step: 'any' },
+        absHumidity: { unit: 'gr/lb', toGkg: (v) => v / GR_PER_G, fromGkg: (v) => v * GR_PER_G, step: 'any' },
+        altitude: { unit: 'ft', toM: ftToM, fromM: mToFt, step: 'any' },
     },
 };
 
@@ -95,7 +95,9 @@ export function show(hass, system) {
 // Converts the unit-bearing keys of a card config from one system to the
 // other (used by the editors when the user switches `units`), so the zone,
 // the bands, the axis ranges and the air pressure keep their meaning. Rounded
-// to sensible steps. Keys the config does not have stay out.
+// finely enough that switching back and forth gives the same values again
+// (°F and gr/lb to 0.1, °C, K and g/kg to 0.01). Keys the
+// config does not have stay out.
 export function convertConfigUnits(config, from, to) {
     if (from === to || !config) return config;
     const a = UNITS[from];
@@ -108,11 +110,14 @@ export function convertConfigUnits(config, from, to) {
     const temp = (v) => b.temperature.fromC(a.temperature.toC(v));
     const delta = (v) => b.delta.fromK(a.delta.toK(v));
     const absH = (v) => b.absHumidity.fromGkg(a.absHumidity.toGkg(v));
+    // Finer steps on the metric side, so imperial → metric → imperial is exact too.
+    const tStep = to === 'imperial' ? 0.1 : 0.01;
+    const absStep = to === 'imperial' ? 0.1 : 0.01;
     const out = { ...config };
     if (out.comfort_zone && typeof out.comfort_zone === 'object' && !Array.isArray(out.comfort_zone)) {
         const cz = { ...out.comfort_zone };
-        if ('temperature' in cz) cz.temperature = pair(cz.temperature, temp, b.temperature.step);
-        if ('absolute_humidity' in cz) cz.absolute_humidity = pair(cz.absolute_humidity, absH, b.absHumidity.step);
+        if ('temperature' in cz) cz.temperature = pair(cz.temperature, temp, tStep);
+        if ('absolute_humidity' in cz) cz.absolute_humidity = pair(cz.absolute_humidity, absH, absStep);
         out.comfort_zone = cz;
     }
     if (out.warning_bands && typeof out.warning_bands === 'object') {
@@ -120,22 +125,22 @@ export function convertConfigUnits(config, from, to) {
         for (const k of ['orange', 'red']) {
             if (!wb[k] || typeof wb[k] !== 'object') continue;
             const band = { ...wb[k] };
-            if (isNum(band.temperature)) band.temperature = r(round(delta(Number(band.temperature)), 0.5));
+            if (isNum(band.temperature)) band.temperature = r(round(delta(Number(band.temperature)), tStep));
             if (isNum(band.absolute_humidity)) {
-                band.absolute_humidity = r(round(absH(Number(band.absolute_humidity)), b.absHumidity.step / 2));
+                band.absolute_humidity = r(round(absH(Number(band.absolute_humidity)), absStep));
             }
             wb[k] = band;
         }
         out.warning_bands = wb;
     }
-    if ('temperature_range' in out) out.temperature_range = pair(out.temperature_range, temp, 1);
-    if ('x_range' in out) out.x_range = pair(out.x_range, absH, 1);
+    if ('temperature_range' in out) out.temperature_range = pair(out.temperature_range, temp, tStep);
+    if ('x_range' in out) out.x_range = pair(out.x_range, absH, absStep);
     if (isNum(out.altitude)) out.altitude = r(round(b.altitude.fromM(a.altitude.toM(Number(out.altitude))), 1));
     if (isNum(out.pressure)) {
-        // metric pressure is hPa (< 2000) or Pa, imperial inHg
+        // metric pressure is hPa (< 2000) or Pa (written as Pa, like the editor), imperial inHg
         const p = Number(out.pressure);
         const pa = from === 'imperial' ? inhgToPa(p) : p < 2000 ? p * 100 : p;
-        out.pressure = to === 'imperial' ? r(round(paToInhg(pa), 0.01)) : Math.round(pa / 100);
+        out.pressure = to === 'imperial' ? r(round(paToInhg(pa), 0.01)) : Math.round(pa);
     }
     return out;
 }

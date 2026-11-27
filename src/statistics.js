@@ -22,9 +22,13 @@ export const MAX_DAYS = 3650;
 export const PRESSURE_PA_RANGE = [30000, 110000];
 export const PRESSURE_HPA_RANGE = [300, 1100];
 export const ALTITUDE_RANGE = [-500, 9000];
-// The same in imperial units (config and editor): ft and inHg.
-export const ALTITUDE_RANGE_FT = [-1600, 29500];
-export const PRESSURE_INHG_RANGE = [8.86, 32.48];
+// The same in imperial units (config and editor): ft and inHg, from the
+// metric limits so a converted value is always accepted.
+export const ALTITUDE_RANGE_FT = [Math.floor(ALTITUDE_RANGE[0] / 0.3048), Math.ceil(ALTITUDE_RANGE[1] / 0.3048)];
+export const PRESSURE_INHG_RANGE = [
+    Math.floor((PRESSURE_PA_RANGE[0] / 3386.389) * 100) / 100,
+    Math.ceil((PRESSURE_PA_RANGE[1] / 3386.389) * 100) / 100,
+];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

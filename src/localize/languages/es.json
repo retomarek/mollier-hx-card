@@ -17,7 +17,7 @@
     "zoom_out": "Alejar",
     "fetch_timeout": "Home Assistant no respondió a tiempo (ocupado, p. ej. justo después de un reinicio)",
     "loading_slow": "Cargando el historial … Home Assistant responde lentamente.",
-    "celsius_hint": "La zona de confort parece estar en °C. Con unidades imperiales, introduce las temperaturas en °F.",
+    "celsius_hint": "La zona de confort parece estar en °C. Con unidades imperiales, introduce las temperaturas en °F (units: metric).",
     "invalid_config": "Configuración no válida: {error}"
   },
   "diagram": {
@@ -95,7 +95,9 @@
       "units_auto": "De Home Assistant",
       "units_metric": "Métrico (°C, g/kg)",
       "units_imperial": "Imperial (°F, gr/lb)",
-      "home_ip": "Home Assistant ({ft} ft)"
+      "home_ip": "Home Assistant ({ft} ft)",
+      "altitude_ip": "Altitud (ft)",
+      "pressure_ip": "Presión (inHg)"
     },
     "sections": {
       "axes": "Ejes",

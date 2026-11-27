@@ -17,7 +17,7 @@
     "zoom_out": "Zoom ud",
     "fetch_timeout": "Home Assistant svarede ikke i tide (optaget, f.eks. lige efter en genstart)",
     "loading_slow": "Indlæser historikken … Home Assistant svarer langsomt.",
-    "celsius_hint": "Komfortzonen ser ud til at være i °C. Med imperiale enheder skal temperaturer angives i °F.",
+    "celsius_hint": "Komfortzonen ser ud til at være i °C. Med imperiale enheder skal temperaturer angives i °F (units: metric).",
     "invalid_config": "Ugyldig konfiguration: {error}"
   },
   "diagram": {
@@ -95,7 +95,9 @@
       "units_auto": "Fra Home Assistant",
       "units_metric": "Metriske (°C, g/kg)",
       "units_imperial": "Imperiale (°F, gr/lb)",
-      "home_ip": "Home Assistant ({ft} ft)"
+      "home_ip": "Home Assistant ({ft} ft)",
+      "altitude_ip": "Højde (ft)",
+      "pressure_ip": "Tryk (inHg)"
     },
     "sections": {
       "axes": "Akser",

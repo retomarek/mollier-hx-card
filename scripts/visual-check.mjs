@@ -189,7 +189,7 @@ const CASES = [
         layout: 'grid',
         imperial: true,
         states: { 'sensor.h': '75' },
-        config: { ...IMPERIAL, ...OUTDOOR, temperature_range: [60, 85], x_range: [0, 90] },
+        config: { ...IMPERIAL, ...OUTDOOR, temperature_range: [60, 85], x_range: [0, 70] },
     },
     {
         name: 'imperial-full-width-1400',

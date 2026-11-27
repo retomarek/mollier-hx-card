@@ -17,7 +17,7 @@
     "zoom_out": "缩小",
     "fetch_timeout": "Home Assistant 未及时响应（繁忙，例如刚重启后）",
     "loading_slow": "正在加载历史记录 … Home Assistant 响应较慢。",
-    "celsius_hint": "舒适区看起来是 °C。使用英制单位时，请以 °F 输入温度。",
+    "celsius_hint": "舒适区看起来是 °C。使用英制单位时，请以 °F 输入温度（或设置 units: metric）。",
     "invalid_config": "配置无效：{error}"
   },
   "diagram": {
@@ -95,7 +95,9 @@
       "units_auto": "来自 Home Assistant",
       "units_metric": "公制（°C、g/kg）",
       "units_imperial": "英制（°F、gr/lb）",
-      "home_ip": "Home Assistant（{ft} 英尺）"
+      "home_ip": "Home Assistant（{ft} 英尺）",
+      "altitude_ip": "海拔 (ft)",
+      "pressure_ip": "气压 (inHg)"
     },
     "sections": {
       "axes": "坐标轴",

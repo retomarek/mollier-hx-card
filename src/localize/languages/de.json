@@ -17,7 +17,7 @@
     "zoom_out": "Verkleinern",
     "fetch_timeout": "Home Assistant hat nicht rechtzeitig geantwortet (ausgelastet, z. B. kurz nach einem Neustart)",
     "loading_slow": "Verlauf wird geladen … Home Assistant antwortet gerade langsam.",
-    "celsius_hint": "Die Komfortzone sieht nach °C aus. Mit imperialen Einheiten Temperaturen in °F angeben.",
+    "celsius_hint": "Die Komfortzone sieht nach °C aus. Mit imperialen Einheiten Temperaturen in °F angeben oder units: metric setzen.",
     "invalid_config": "Ungültige Konfiguration: {error}"
   },
   "diagram": {
@@ -95,7 +95,9 @@
       "units_auto": "Aus Home Assistant",
       "units_metric": "Metrisch (°C, g/kg)",
       "units_imperial": "Imperial (°F, gr/lb)",
-      "home_ip": "Home Assistant ({ft} ft)"
+      "home_ip": "Home Assistant ({ft} ft)",
+      "altitude_ip": "Höhe (ft)",
+      "pressure_ip": "Druck (inHg)"
     },
     "sections": {
       "axes": "Achsen",

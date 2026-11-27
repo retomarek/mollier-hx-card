@@ -485,6 +485,17 @@ async function checkViews(tokens, haVersion) {
 // cards show °F, the altitude comes in ft and the pressure in inHg.
 async function checkImperial(tokens, ws, haVersion) {
     log('imperial (US customary)');
+    try {
+        await imperialPass(tokens, ws, haVersion);
+    } catch (err) {
+        check(false, `imperial: ${err.message}`);
+    } finally {
+        // Back to metric, so a kept instance (--keep) is as set up.
+        await ws.call({ type: 'config/core/update', unit_system: 'metric' }).catch(() => {});
+    }
+}
+
+async function imperialPass(tokens, ws, haVersion) {
     await ws.call({ type: 'config/core/update', unit_system: 'us_customary' });
     const zone = { temperature: [68, 79], humidity: [30, 65], absolute_humidity: [0, 84] };
     await ws.call({
@@ -514,68 +525,79 @@ async function checkImperial(tokens, ws, haVersion) {
         executablePath: findChrome(),
         args: ['--no-sandbox', '--hide-scrollbars'],
     });
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1400, height: 1000 });
-    const errors = [];
-    page.on('pageerror', (e) => errors.push(e.message));
-    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-    await page.evaluateOnNewDocument((t) => localStorage.setItem('hassTokens', JSON.stringify(t)), {
-        hassUrl: HA,
-        clientId: tokens.clientId,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        token_type: 'Bearer',
-        expires_in: tokens.expires_in,
-        expires: Date.now() + tokens.expires_in * 1000,
-    });
-    await page.evaluateOnNewDocument(DEEP);
-    await page.goto(`${HA}/${DASHBOARD}/imperial`, { waitUntil: 'networkidle0', timeout: 90e3 });
     try {
-        await page.waitForFunction(
-            () =>
-                window.__deep('mollier-hx-card').some((el) => el.shadowRoot?.querySelector('#data-points circle')) &&
-                window.__deep('comfort-compass-card').some((el) => el.shadowRoot?.querySelector('.glyph .seg')),
-            { timeout: 60e3 },
+        const page = await browser.newPage();
+        await page.setViewport({ width: 1400, height: 1000 });
+        const errors = [];
+        page.on('pageerror', (e) => errors.push(e.message));
+        page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+        await page.evaluateOnNewDocument((t) => localStorage.setItem('hassTokens', JSON.stringify(t)), {
+            hassUrl: HA,
+            clientId: tokens.clientId,
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+            token_type: 'Bearer',
+            expires_in: tokens.expires_in,
+            expires: Date.now() + tokens.expires_in * 1000,
+        });
+        await page.evaluateOnNewDocument(DEEP);
+        await page.goto(`${HA}/${DASHBOARD}/imperial`, { waitUntil: 'networkidle0', timeout: 90e3 });
+        try {
+            await page.waitForFunction(
+                () =>
+                    window
+                        .__deep('mollier-hx-card')
+                        .some((el) => el.shadowRoot?.querySelector('#data-points circle')) &&
+                    window.__deep('comfort-compass-card').some((el) => el.shadowRoot?.querySelector('.glyph .seg')),
+                { timeout: 60e3 },
+            );
+        } catch {
+            /* reported below */
+        }
+        await sleep(800);
+        await page.screenshot({ path: join(OUT, `${haVersion}-imperial.png`), fullPage: true });
+        const info = await page.evaluate(() => {
+            const c = window.__deep('comfort-compass-card')[0];
+            const m = window.__deep('mollier-hx-card')[0];
+            const svgText = [...(m?.shadowRoot?.querySelectorAll('#hx_mollier_diagram text') || [])]
+                .map((t) => t.textContent)
+                .join(' ');
+            return {
+                compassUnits: c?._units,
+                compassText: c?.shadowRoot?.textContent || '',
+                compassHint: !!c?._unitHint,
+                mollierUnits: m?._units,
+                mollierHint: !!m?._unitHint,
+                points: m?.shadowRoot?.querySelectorAll('#data-points circle').length || 0,
+                svgText,
+                air: m?.shadowRoot?.querySelector('.air-info')?.textContent || '',
+                errorCard: window.__deep('hui-error-card').length,
+            };
+        });
+        check(info.errorCard === 0, 'imperial: no error card');
+        check(
+            info.compassUnits === 'imperial' && info.mollierUnits === 'imperial',
+            'imperial: both cards follow Home Assistant (units: auto)',
         );
-    } catch {
-        /* reported below */
+        check(
+            /°F/.test(info.compassText) && /gr\/lb/.test(info.compassText),
+            'imperial: compass "Now" values in °F and gr/lb',
+        );
+        check(!info.compassHint && !info.mollierHint, 'imperial: the °F zone gives no unit hint');
+        check(info.points >= DAYS - 5, `imperial: psychrometric chart with ${info.points} days`);
+        check(/°F/.test(info.svgText) && /gr\/lb/.test(info.svgText), 'imperial: chart captions in °F and gr/lb');
+        check(
+            /ft/.test(info.air) && /inHg/.test(info.air),
+            `imperial: altitude and pressure in ft / inHg ("${info.air}")`,
+        );
+        const ours = errors.filter((e) => /compass|mollier|hx-card/i.test(e));
+        check(
+            ours.length === 0,
+            `imperial: no console errors from the cards${ours.length ? `: ${ours.join(' | ')}` : ''}`,
+        );
+    } finally {
+        await browser.close();
     }
-    await sleep(800);
-    await page.screenshot({ path: join(OUT, `${haVersion}-imperial.png`), fullPage: true });
-    const info = await page.evaluate(() => {
-        const c = window.__deep('comfort-compass-card')[0];
-        const m = window.__deep('mollier-hx-card')[0];
-        const svgText = [...(m?.shadowRoot?.querySelectorAll('#hx_mollier_diagram text') || [])]
-            .map((t) => t.textContent)
-            .join(' ');
-        return {
-            compassUnits: c?._units,
-            compassText: c?.shadowRoot?.textContent || '',
-            compassHint: !!c?._unitHint,
-            mollierUnits: m?._units,
-            mollierHint: !!m?._unitHint,
-            points: m?.shadowRoot?.querySelectorAll('#data-points circle').length || 0,
-            svgText,
-            air: m?.shadowRoot?.querySelector('.air-info')?.textContent || '',
-            errorCard: window.__deep('hui-error-card').length,
-        };
-    });
-    check(info.errorCard === 0, 'imperial: no error card');
-    check(
-        info.compassUnits === 'imperial' && info.mollierUnits === 'imperial',
-        'imperial: both cards follow Home Assistant (units: auto)',
-    );
-    check(
-        /°F/.test(info.compassText) && /gr\/lb/.test(info.compassText),
-        'imperial: compass "Now" values in °F and gr/lb',
-    );
-    check(!info.compassHint && !info.mollierHint, 'imperial: the °F zone gives no unit hint');
-    check(info.points >= DAYS - 5, `imperial: psychrometric chart with ${info.points} days`);
-    check(/°F/.test(info.svgText) && /gr\/lb/.test(info.svgText), 'imperial: chart captions in °F and gr/lb');
-    check(/ft/.test(info.air) && /inHg/.test(info.air), `imperial: altitude and pressure in ft / inHg ("${info.air}")`);
-    const ours = errors.filter((e) => /compass|mollier|hx-card/i.test(e));
-    check(ours.length === 0, `imperial: no console errors from the cards${ours.length ? `: ${ours.join(' | ')}` : ''}`);
-    await browser.close();
 }
 
 // --- run -------------------------------------------------------------------------------------

@@ -17,7 +17,7 @@
     "zoom_out": "Уменьшить",
     "fetch_timeout": "Home Assistant не ответил вовремя (занят, например сразу после перезапуска)",
     "loading_slow": "Загрузка истории … Home Assistant отвечает медленно.",
-    "celsius_hint": "Зона комфорта, похоже, указана в °C. С имперскими единицами указывайте температуру в °F.",
+    "celsius_hint": "Зона комфорта, похоже, указана в °C. С имперскими единицами указывайте температуру в °F (units: metric).",
     "invalid_config": "Неверная конфигурация: {error}"
   },
   "diagram": {
@@ -95,7 +95,9 @@
       "units_auto": "Из Home Assistant",
       "units_metric": "Метрические (°C, g/kg)",
       "units_imperial": "Имперские (°F, gr/lb)",
-      "home_ip": "Home Assistant ({ft} ft)"
+      "home_ip": "Home Assistant ({ft} ft)",
+      "altitude_ip": "Высота (ft)",
+      "pressure_ip": "Давление (inHg)"
     },
     "sections": {
       "axes": "Оси",

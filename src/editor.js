@@ -265,7 +265,7 @@ const bandRow = (key, U) => ({
     schema: [
         {
             name: `${key}_dt`,
-            selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: U.delta.unit } },
+            selector: { number: { min: 0, step: 'any', mode: 'box', unit_of_measurement: U.delta.unit } },
         },
         {
             name: `${key}_dphi`,
@@ -273,7 +273,7 @@ const bandRow = (key, U) => ({
         },
         {
             name: `${key}_dx`,
-            selector: { number: { min: 0, step: 0.5, mode: 'box', unit_of_measurement: U.absHumidity.unit } },
+            selector: { number: { min: 0, step: 'any', mode: 'box', unit_of_measurement: U.absHumidity.unit } },
         },
     ],
 });
@@ -386,8 +386,14 @@ function buildSchema(data, t, hass) {
                                                 })
                                               : t('editor.options.home', { m: formatNumber(hass, elevation) }),
                                 },
-                                { value: 'altitude', label: t('editor.options.altitude') },
-                                { value: 'pressure', label: t('editor.options.pressure') },
+                                {
+                                    value: 'altitude',
+                                    label: t(imperial ? 'editor.options.altitude_ip' : 'editor.options.altitude'),
+                                },
+                                {
+                                    value: 'pressure',
+                                    label: t(imperial ? 'editor.options.pressure_ip' : 'editor.options.pressure'),
+                                },
                             ],
                         },
                     },
@@ -493,11 +499,11 @@ function buildSchema(data, t, hass) {
                     schema: [
                         {
                             name: 'x_min',
-                            selector: { number: { step: 1, mode: 'box', unit_of_measurement: U.absHumidity.unit } },
+                            selector: { number: { step: 'any', mode: 'box', unit_of_measurement: U.absHumidity.unit } },
                         },
                         {
                             name: 'x_max',
-                            selector: { number: { step: 1, mode: 'box', unit_of_measurement: U.absHumidity.unit } },
+                            selector: { number: { step: 'any', mode: 'box', unit_of_measurement: U.absHumidity.unit } },
                         },
                     ],
                 },
@@ -506,11 +512,11 @@ function buildSchema(data, t, hass) {
                     schema: [
                         {
                             name: 'y_min',
-                            selector: { number: { step: 1, mode: 'box', unit_of_measurement: U.temperature.unit } },
+                            selector: { number: { step: 'any', mode: 'box', unit_of_measurement: U.temperature.unit } },
                         },
                         {
                             name: 'y_max',
-                            selector: { number: { step: 1, mode: 'box', unit_of_measurement: U.temperature.unit } },
+                            selector: { number: { step: 'any', mode: 'box', unit_of_measurement: U.temperature.unit } },
                         },
                     ],
                 },

@@ -17,7 +17,7 @@
     "zoom_out": "Zooma ut",
     "fetch_timeout": "Home Assistant svarade inte i tid (upptagen, t.ex. direkt efter en omstart)",
     "loading_slow": "Läser in historiken … Home Assistant svarar långsamt.",
-    "celsius_hint": "Komfortzonen verkar vara i °C. Med imperiska enheter anger du temperaturer i °F.",
+    "celsius_hint": "Komfortzonen verkar vara i °C. Med imperiska enheter anger du temperaturer i °F (units: metric).",
     "invalid_config": "Ogiltig konfiguration: {error}"
   },
   "diagram": {
@@ -95,7 +95,9 @@
       "units_auto": "Från Home Assistant",
       "units_metric": "Metriska (°C, g/kg)",
       "units_imperial": "Imperiska (°F, gr/lb)",
-      "home_ip": "Home Assistant ({ft} ft)"
+      "home_ip": "Home Assistant ({ft} ft)",
+      "altitude_ip": "Höjd (ft)",
+      "pressure_ip": "Tryck (inHg)"
     },
     "sections": {
       "axes": "Axlar",

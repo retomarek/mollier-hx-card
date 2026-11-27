@@ -351,6 +351,7 @@ export class MollierHxCard extends LitElement {
         } catch (err) {
             this._units = system;
             this._configError = err.message;
+            this._unitHint = null;
         }
         this.requestUpdate();
     }
@@ -401,7 +402,8 @@ export class MollierHxCard extends LitElement {
         const elevationChanged = this._hass?.config?.elevation !== hass?.config?.elevation;
         const unitsChanged = this._hass?.config?.unit_system?.temperature !== hass?.config?.unit_system?.temperature;
         this._hass = hass;
-        if (unitsChanged) this._applyUnits();
+        // Also on the first hass: a config read before it may have used the other system.
+        if (unitsChanged || firstAttach) this._applyUnits();
         if (elevationChanged && this._config) this._updateAir();
         // Captions, legend and messages are translated: redraw on a language switch.
         const lang = getLanguage(hass);
@@ -716,12 +718,18 @@ export class MollierHxCard extends LitElement {
         if (!this._showLegend || (!cz && !o && !c)) return nothing;
         const S = this._show();
         const pct = (v) => formatNumber(this._hass, v * 100, 0);
+        const U = UNITS[this._units];
+        // Decimals only where the value in the display unit needs them ("20–26 °C", "±17.5 gr/lb").
+        const dig = (v) => (Math.abs(v - Math.round(v)) < 0.05 ? 0 : 1);
+        const t = (c) => S.temperature(c, dig(U.temperature.fromC(c)));
+        const xx = (x) => S.absHumidity(x, dig(U.absHumidity.fromGkg(x * 1000)));
         const range = (a, b, f) => `${f(a).replace(/ [^ ]+$/, '')}–${f(b)}`; // "20–26 °C"
         const zone = cz
-            ? `${range(cz.range_t[0], cz.range_t[1], S.temperature)} · ${pct(cz.range_phi[0])}–${pct(cz.range_phi[1])} %` +
-              (cz.hasX ? ` · ${range(cz.range_x[0], cz.range_x[1], S.absHumidity)}` : '')
+            ? `${range(cz.range_t[0], cz.range_t[1], t)} · ${pct(cz.range_phi[0])}–${pct(cz.range_phi[1])} %` +
+              (cz.hasX ? ` · ${range(cz.range_x[0], cz.range_x[1], xx)}` : '')
             : '';
-        const fmt = (k) => `±${S.delta(k.dt)} · ±${k.dphi} %` + (cz.hasX ? ` · ±${S.absHumidity(k.dx / 1000)}` : '');
+        const fmt = (k) =>
+            `±${S.delta(k.dt, dig(U.delta.fromK(k.dt)))} · ±${k.dphi} %` + (cz.hasX ? ` · ±${xx(k.dx / 1000)}` : '');
         const eff = this._ventilationEffect();
         const values = (p) => `${S.temperature(p.t)} · ${pct(p.phi)} % · ${S.absHumidity(p.x)}`;
         const outTitle = o ? values(o) : '';

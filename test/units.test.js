@@ -105,16 +105,51 @@ describe('convertConfigUnits', () => {
         };
         const imperial = convertConfigUnits(metric, 'metric', 'imperial');
         expect(imperial.comfort_zone).toEqual({
-            temperature: [68, 79],
+            temperature: [68, 78.8],
             humidity: [30, 65],
             absolute_humidity: [0, 84],
         });
-        expect(imperial.warning_bands.orange).toEqual({ temperature: 2, absolute_humidity: 7, color: '#f80' });
+        expect(imperial.warning_bands.orange).toEqual({ temperature: 1.8, absolute_humidity: 7, color: '#f80' });
         expect(imperial.temperature_range).toEqual([14, 104]);
         expect(imperial.x_range).toEqual([0, 126]);
         expect(imperial.altitude).toBe(1476);
         expect(convertConfigUnits({ pressure: 960 }, 'metric', 'imperial').pressure).toBeCloseTo(28.35, 2);
-        expect(convertConfigUnits({ pressure: 28.35 }, 'imperial', 'metric').pressure).toBe(960);
+        expect(convertConfigUnits({ pressure: 28.35 }, 'imperial', 'metric').pressure).toBe(96004); // Pa, like the editor writes
         expect(convertConfigUnits(metric, 'metric', 'metric')).toBe(metric);
+    });
+    it('switching back and forth gives the same values again', () => {
+        const metric = {
+            comfort_zone: { temperature: [17.5, 22.5], humidity: [30, 65], absolute_humidity: [0, 12.5] },
+            warning_bands: {
+                orange: { temperature: 0.5, absolute_humidity: 0.5 },
+                red: { temperature: 3, absolute_humidity: 2.5 },
+            },
+            temperature_range: [-12, 37],
+            x_range: [0, 17],
+            altitude: 500,
+            pressure: 96500,
+        };
+        const back = convertConfigUnits(convertConfigUnits(metric, 'metric', 'imperial'), 'imperial', 'metric');
+        // The pressure goes through 0.01 inHg (34 Pa) steps.
+        expect(Math.abs(back.pressure - metric.pressure)).toBeLessThan(20);
+        expect({ ...back, pressure: metric.pressure }).toEqual(metric);
+        const imperial = {
+            comfort_zone: { temperature: [65, 77.5], humidity: [30, 65], absolute_humidity: [0, 85] },
+            warning_bands: {
+                orange: { temperature: 1.5, absolute_humidity: 5 },
+                red: { temperature: 4, absolute_humidity: 15 },
+            },
+            temperature_range: [10, 110],
+            x_range: [0, 180],
+        };
+        expect(convertConfigUnits(convertConfigUnits(imperial, 'imperial', 'metric'), 'metric', 'imperial')).toEqual(
+            imperial,
+        );
+    });
+    it('a converted altitude stays within the accepted range', () => {
+        for (const altitude of [-500, 9000]) {
+            const c = convertConfigUnits({ altitude }, 'metric', 'imperial');
+            expect(() => pressureFromConfig(c, null, 'imperial')).not.toThrow();
+        }
     });
 });
