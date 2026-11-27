@@ -29,7 +29,12 @@
     "altitude": "{m} m n. m.",
     "pressure": "{hpa} hPa",
     "altitude_ip": "{ft} ft n. m.",
-    "pressure_ip": "{inhg} inHg"
+    "pressure_ip": "{inhg} inHg",
+    "temperature_ip": "Teplota suchého teploměru [°F]",
+    "rel_humidity_ip": "Relativní vlhkost [%]",
+    "density_ip": "Hustota [lb/ft³]",
+    "enthalpy_ip": "Entalpie [Btu/lb]",
+    "x_axis_ip": "Měrná vlhkost W [gr/lb]"
   },
   "editor": {
     "fields": {

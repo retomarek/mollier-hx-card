@@ -29,7 +29,12 @@
     "altitude": "{m} m s. n. m.",
     "pressure": "{hpa} hPa",
     "altitude_ip": "{ft} ft s. n. m.",
-    "pressure_ip": "{inhg} inHg"
+    "pressure_ip": "{inhg} inHg",
+    "temperature_ip": "Temperatura de bulbo seco [°F]",
+    "rel_humidity_ip": "Humedad relativa [%]",
+    "density_ip": "Densidad [lb/ft³]",
+    "enthalpy_ip": "Entalpía [Btu/lb]",
+    "x_axis_ip": "Relación de humedad W [gr/lb]"
   },
   "editor": {
     "fields": {

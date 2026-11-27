@@ -29,7 +29,12 @@
     "altitude": "{m} m boven zeeniveau",
     "pressure": "{hpa} hPa",
     "altitude_ip": "{ft} ft boven zeeniveau",
-    "pressure_ip": "{inhg} inHg"
+    "pressure_ip": "{inhg} inHg",
+    "temperature_ip": "Droge-boltemperatuur [°F]",
+    "rel_humidity_ip": "Relatieve luchtvochtigheid [%]",
+    "density_ip": "Dichtheid [lb/ft³]",
+    "enthalpy_ip": "Enthalpie [Btu/lb]",
+    "x_axis_ip": "Vochtgehalte W [gr/lb]"
   },
   "editor": {
     "fields": {

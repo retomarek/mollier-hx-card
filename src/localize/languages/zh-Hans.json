@@ -29,7 +29,12 @@
     "altitude": "海拔 {m} 米",
     "pressure": "{hpa} hPa",
     "altitude_ip": "海拔 {ft} 英尺",
-    "pressure_ip": "{inhg} inHg"
+    "pressure_ip": "{inhg} inHg",
+    "temperature_ip": "干球温度 [°F]",
+    "rel_humidity_ip": "相对湿度 [%]",
+    "density_ip": "密度 [lb/ft³]",
+    "enthalpy_ip": "焓 [Btu/lb]",
+    "x_axis_ip": "含湿量 W [gr/lb]"
   },
   "editor": {
     "fields": {

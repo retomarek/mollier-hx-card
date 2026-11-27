@@ -29,7 +29,12 @@
     "altitude": "{m} m ö.h.",
     "pressure": "{hpa} hPa",
     "altitude_ip": "{ft} ft ö.h.",
-    "pressure_ip": "{inhg} inHg"
+    "pressure_ip": "{inhg} inHg",
+    "temperature_ip": "Torr temperatur [°F]",
+    "rel_humidity_ip": "Relativ luftfuktighet [%]",
+    "density_ip": "Densitet [lb/ft³]",
+    "enthalpy_ip": "Entalpi [Btu/lb]",
+    "x_axis_ip": "Fukthalt W [gr/lb]"
   },
   "editor": {
     "fields": {

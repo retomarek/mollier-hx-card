@@ -1,6 +1,7 @@
 import { html, LitElement, nothing } from 'lit';
 import * as d3 from './d3_mollierhx/d3.js';
 import { drawHXCoordinates } from './d3_mollierhx/coordinateGenerator.js';
+import { hxProjection } from './d3_mollierhx/hxUnits.js';
 import {
     createComfort,
     hxAddClipPath,
@@ -66,8 +67,23 @@ const LINE_OPTS = {
     enthalpy: 'showEnthalpy',
 };
 // Caption keys of the vendored drawHXCoordinates (opts.captions); the texts
-// are the `diagram.*` translations. x_axis_title stays empty (upstream default).
+// are the `diagram.*` translations, `diagram.*_ip` for imperial units (°F,
+// gr/lb, Btu/lb, lb/ft³). x_axis_title stays empty (upstream default); in the
+// psychrometric chart x_axis is the caption of the humidity-ratio axis.
 const CAPTION_KEYS = ['temperature', 'rel_humidity', 'density', 'enthalpy', 'x_axis'];
+export function captionKeys(units) {
+    const suffix = units === 'imperial' ? '_ip' : '';
+    return Object.fromEntries(CAPTION_KEYS.map((k) => [k, `diagram.${k}${suffix}`]));
+}
+
+// The layout follows the unit system: metric → Mollier h,x diagram (SI),
+// imperial → ASHRAE psychrometric chart (dry-bulb temperature horizontal,
+// humidity ratio on the right; IP units). The data stay SI in both.
+export function diagramLayout(units) {
+    return units === 'imperial'
+        ? { orientation: 'psychrometric', units: 'ip', margin: MARGIN_PSYCHROMETRIC }
+        : { orientation: 'mollier', units: 'si', margin: MARGIN };
+}
 export function parseLines(cfg) {
     const out = { ...LINE_DEFAULTS };
     if (cfg && typeof cfg === 'object') {
@@ -96,6 +112,10 @@ const DAY_TARGET_PX = 24;
 const ROOM_COLOR = HX_ROOM_COLOR;
 
 const MARGIN = { top: 30, right: 60, bottom: 40, left: 50 };
+// Psychrometric chart: the humidity-ratio scale and its caption on the right,
+// the temperature caption below the bottom axis, only the (rotated) family
+// captions on the left.
+const MARGIN_PSYCHROMETRIC = { top: 30, right: 60, bottom: 44, left: 24 };
 const WIDTH = 600;
 const HEIGHT = 420;
 
@@ -369,6 +389,13 @@ export class MollierHxCard extends LitElement {
         return `${alt} · ${p}`;
     }
 
+    // Above the left end of the plot (the CSS default is the metric margin).
+    _renderAirInfo() {
+        const left = diagramLayout(this._units).margin.left;
+        const style = left === MARGIN.left ? nothing : `left: calc(100% * ${left} / ${WIDTH})`;
+        return html`<div class="air-info" style=${style}>${this._airText()}</div>`;
+    }
+
     set hass(hass) {
         const firstAttach = !this._hass;
         const elevationChanged = this._hass?.config?.elevation !== hass?.config?.elevation;
@@ -599,7 +626,7 @@ export class MollierHxCard extends LitElement {
                         <div class="diagram-wrap">
                             <div class="zoom-viewport">
                                 <div class="mollier-host"></div>
-                                ${this._showPressure ? html`<div class="air-info">${this._airText()}</div>` : nothing}
+                                ${this._showPressure ? this._renderAirInfo() : nothing}
                             </div>
                             <div class="tooltip"></div>
                             <div
@@ -919,13 +946,19 @@ export class MollierHxCard extends LitElement {
         const lineOpts = {};
         for (const [k, opt] of Object.entries(LINE_OPTS)) lineOpts[opt] = this._lines[k];
         // Translated captions; the vendored generator lays them out for the
-        // diagram height (right-edge captions stacked, x caption in the margin).
-        lineOpts.captions = Object.fromEntries(CAPTION_KEYS.map((k) => [k, this._t(`diagram.${k}`)]));
+        // diagram height (family captions stacked along an edge, humidity caption in
+        // the right margin). Imperial units: psychrometric chart, IP captions.
+        const L = diagramLayout(this._units);
+        lineOpts.captions = Object.fromEntries(
+            Object.entries(captionKeys(this._units)).map(([k, key]) => [k, this._t(key)]),
+        );
+        lineOpts.orientation = L.orientation;
+        lineOpts.units = L.units;
         drawHXCoordinates(
             d3.select(host),
             WIDTH,
             HEIGHT,
-            MARGIN,
+            L.margin,
             this._domainX,
             this._domainY,
             this._pressure,
@@ -944,8 +977,8 @@ export class MollierHxCard extends LitElement {
         this._clipUrl = hxAddClipPath(
             d3.select(host).select('#hx_mollier_diagram'),
             this._clipId,
-            WIDTH - MARGIN.left - MARGIN.right,
-            HEIGHT - MARGIN.top - MARGIN.bottom,
+            WIDTH - L.margin.left - L.margin.right,
+            HEIGHT - L.margin.top - L.margin.bottom,
         );
         this._drawHash = hash;
         this._drawn = true;
@@ -958,27 +991,39 @@ export class MollierHxCard extends LitElement {
         if (!this._drawn || !host || !wrap) return null;
         const svg = d3.select(host).select('#hx_mollier_diagram');
         if (svg.empty()) return null;
-        const innerW = WIDTH - MARGIN.left - MARGIN.right;
-        const innerH = HEIGHT - MARGIN.top - MARGIN.bottom;
-        const xs = d3.scaleLinear().range([0, innerW]).domain(this._domainX);
-        const ys = d3.scaleLinear().range([innerH, 0]).domain(this._domainY);
+        const L = diagramLayout(this._units);
+        const innerW = WIDTH - L.margin.left - L.margin.right;
+        const innerH = HEIGHT - L.margin.top - L.margin.bottom;
+        // Screen projection of the diagram plane (x kg/kg, diagram-y °C) into
+        // the axes: Mollier (x horizontal) or psychrometric (x vertical).
+        const proj = hxProjection(innerW, innerH, this._domainX, this._domainY, L.orientation);
         return {
             svg,
             wrap,
+            margin: L.margin,
             innerW,
             innerH,
-            xs,
-            ys,
+            project: proj.project,
+            line: proj.line,
             tooltip: wrap.querySelector('.tooltip'),
             // Context of the vendored overlay helpers (hxDrawStatePoint, ...).
-            ctx: { x: xs, y: ys, width: innerW, height: innerH, mollier: this._mollier, pressure: this._pressure },
+            ctx: {
+                x: proj.xScale,
+                y: proj.yScale,
+                project: proj.project,
+                units: L.units,
+                width: innerW,
+                height: innerH,
+                mollier: this._mollier,
+                pressure: this._pressure,
+            },
         };
     }
 
     // A layer in plot coordinates; `clip` keeps its content inside the axes.
     _layer(P, id, clip) {
         P.svg.select(`#${id}`).remove();
-        const g = P.svg.append('g').attr('id', id).attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+        const g = P.svg.append('g').attr('id', id).attr('transform', `translate(${P.margin.left},${P.margin.top})`);
         if (clip) g.attr('clip-path', this._clipUrl);
         return g;
     }
@@ -1110,10 +1155,7 @@ export class MollierHxCard extends LitElement {
         const points = Array.isArray(polygon[0]) ? polygon[0] : polygon;
         if (points.length < 2) return;
 
-        const lineGen = d3
-            .line()
-            .x((p) => P.xs(p.x))
-            .y((p) => P.ys(p.y));
+        const lineGen = P.line;
         const group = this._layer(P, 'comfort-zone', true);
         group
             .append('path')
@@ -1153,9 +1195,10 @@ export class MollierHxCard extends LitElement {
 
         const points = this._dailyData.map((d, i) => {
             const xy = this._mollier.get_x_y(d.t, d.phi, this._pressure);
+            const [cx, cy] = P.project(xy.x, xy.y);
             return {
-                cx: P.xs(xy.x),
-                cy: P.ys(xy.y),
+                cx,
+                cy,
                 x: xy.x,
                 color: this._colorFor(d, i),
                 opacity: this._opacityFor(d, i),
@@ -1250,8 +1293,7 @@ export class MollierHxCard extends LitElement {
         const layer = this._layer(P, 'outdoor-history', true);
         for (const d of days) {
             const xy = this._mollier.get_x_y(d.t, d.phi, this._pressure);
-            const cx = P.xs(xy.x),
-                cy = P.ys(xy.y);
+            const [cx, cy] = P.project(xy.x, xy.y);
             if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
             layer
                 .append('circle')

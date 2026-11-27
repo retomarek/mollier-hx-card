@@ -29,7 +29,12 @@
     "altitude": "{m} м над уровнем моря",
     "pressure": "{hpa} гПа",
     "altitude_ip": "{ft} фт над уровнем моря",
-    "pressure_ip": "{inhg} inHg"
+    "pressure_ip": "{inhg} inHg",
+    "temperature_ip": "Температура сухого термометра [°F]",
+    "rel_humidity_ip": "Относительная влажность [%]",
+    "density_ip": "Плотность [lb/ft³]",
+    "enthalpy_ip": "Энтальпия [Btu/lb]",
+    "x_axis_ip": "Влагосодержание W [gr/lb]"
   },
   "editor": {
     "fields": {
