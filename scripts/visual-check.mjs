@@ -38,6 +38,13 @@ const OUTDOOR = {
     outdoor_history: true,
 };
 
+// US customary (case flag `imperial: true`, Home Assistant's unit system in
+// °F): psychrometric chart in IP units; zone in °F and gr/lb, altitude in ft.
+const IMPERIAL = {
+    altitude: null,
+    comfort_zone: { temperature: [68, 79], humidity: [30, 65], absolute_humidity: [0, 84] },
+};
+
 // width: tile width; rows: sections row count (fixed height = rows*64-8 px);
 // layout: what HA sets ('grid' in sections, 'panel', or null for masonry);
 // data: 'ok' | 'empty' (no statistics) | 'error' (fetch fails); states: live sensor
@@ -125,6 +132,74 @@ const CASES = [
         layout: null,
         config: { outdoor_weather_entity: 'weather.home' },
     },
+    // Imperial: the ASHRAE psychrometric chart (°F, gr/lb, axis on the right).
+    {
+        name: 'imperial-light-en',
+        theme: 'light',
+        lang: 'en',
+        width: 500,
+        layout: 'grid',
+        imperial: true,
+        config: IMPERIAL,
+    },
+    {
+        name: 'imperial-dark-legend-outdoor',
+        theme: 'dark',
+        lang: 'en',
+        width: 500,
+        layout: 'grid',
+        imperial: true,
+        elevation: 450,
+        config: { ...IMPERIAL, ...OUTDOOR, show_pressure: true },
+    },
+    {
+        name: 'imperial-fixed-7rows',
+        theme: 'dark',
+        lang: 'en',
+        width: 500,
+        layout: 'grid',
+        rows: 7,
+        imperial: true,
+        config: IMPERIAL,
+    },
+    {
+        name: 'imperial-narrow-330',
+        theme: 'light',
+        lang: 'en',
+        width: 330,
+        layout: 'grid',
+        imperial: true,
+        config: IMPERIAL,
+    },
+    {
+        name: 'imperial-all-lines-de',
+        theme: 'light',
+        lang: 'de',
+        width: 500,
+        layout: 'grid',
+        imperial: true,
+        config: { ...IMPERIAL, altitude: 1500, lines: { density: true, enthalpy: true } },
+    },
+    // Room and outside points off the axes: edge arrows with °F labels.
+    {
+        name: 'imperial-off-axis',
+        theme: 'light',
+        lang: 'en',
+        width: 500,
+        layout: 'grid',
+        imperial: true,
+        states: { 'sensor.h': '75' },
+        config: { ...IMPERIAL, ...OUTDOOR, temperature_range: [60, 85], x_range: [0, 90] },
+    },
+    {
+        name: 'imperial-full-width-1400',
+        theme: 'dark',
+        lang: 'en',
+        width: 1400,
+        layout: 'grid',
+        imperial: true,
+        config: IMPERIAL,
+    },
 ];
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -154,6 +229,16 @@ function html(c) {
     const height = c.rows ? c.rows * 64 - 8 : c.height;
     const config = { ...BASE_CONFIG, ...(c.config || {}), ...(c.rows ? { grid_options: { rows: c.rows } } : {}) };
     const states = { 'sensor.t': '21.8', 'sensor.h': '43', 'sensor.ot': '6.8', 'sensor.oh': '89', ...(c.states || {}) };
+    // Imperial: the temperature sensors report °F, like in a US installation.
+    const attrs = {};
+    if (c.imperial) {
+        for (const k of ['sensor.t', 'sensor.ot']) {
+            const v = parseFloat(states[k]);
+            if (Number.isFinite(v)) states[k] = ((v * 9) / 5 + 32).toFixed(1);
+            attrs[k] = { unit_of_measurement: '°F' };
+        }
+    }
+    const unitSystem = c.imperial ? `, unit_system: { temperature: '°F' }` : '';
     return `<!doctype html><html><head><meta charset="utf-8"><style>
   body { margin: 0; padding: 12px; background: ${th.page}; font-family: Roboto, "Noto Sans", sans-serif; color: ${th.text};
     --primary-text-color: ${th.text}; --secondary-text-color: ${th.muted}; --divider-color: ${th.divider};
@@ -186,8 +271,8 @@ function html(c) {
   ${c.layout ? `card.layout = ${JSON.stringify(c.layout)};` : ''}
   card.setConfig(${JSON.stringify(config)});
   card.hass = {
-    language: '${c.lang}', locale: { language: '${c.lang}' }, config: { time_zone: 'Europe/Zurich'${c.elevation !== undefined ? `, elevation: ${c.elevation}` : ''} }, themes: { darkMode: ${c.theme === 'dark'} },
-    states: { ...Object.fromEntries(Object.entries(${JSON.stringify(states)}).filter(([, v]) => v !== null).map(([k, v]) => [k, { entity_id: k, state: v, attributes: {} }])),
+    language: '${c.lang}', locale: { language: '${c.lang}' }, config: { time_zone: 'Europe/Zurich'${c.elevation !== undefined ? `, elevation: ${c.elevation}` : ''}${unitSystem} }, themes: { darkMode: ${c.theme === 'dark'} },
+    states: { ...Object.fromEntries(Object.entries(${JSON.stringify(states)}).filter(([, v]) => v !== null).map(([k, v]) => [k, { entity_id: k, state: v, attributes: ${JSON.stringify(attrs)}[k] || {} }])),
       'weather.home': { entity_id: 'weather.home', state: 'cloudy', attributes: { temperature: 41, temperature_unit: '°F', humidity: 85 } } },
     callWS: async (msg) => {
       if (data === 'error') throw new Error('Connection lost');
