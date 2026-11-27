@@ -4,6 +4,15 @@ All notable changes to this card. The format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Added
+
+- Imperial units (US customary): `units: auto | metric | imperial`, where `auto` follows Home Assistant's unit system. With imperial units the card draws the ASHRAE **psychrometric chart** (dry-bulb temperature in °F across, humidity ratio in gr/lb on the right, enthalpy in Btu/lb, density in lb/ft³) and reads the comfort zone, the warning bands, the axis ranges, the altitude and the pressure in °F, gr/lb, ft and inHg. Tooltips, legend, edge arrows and `show_pressure` follow. Imperial defaults: axes 10–110 °F and 0–180 gr/lb. The visual editor converts the values when the unit system is switched.
+- Live demo: switch between metric and US customary units.
+
+### Changed
+
+- Diagram code from d3-mollierhx 5ef2810 (psychrometric orientation and IP units; the metric diagram is unchanged).
+
 ## [0.1.1] - 2026-11-27
 
 ### Changed

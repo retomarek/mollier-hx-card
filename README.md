@@ -23,7 +23,7 @@
   <img src="https://raw.githubusercontent.com/retomarek/mollier-hx-card/main/docs/screenshot-light-de.png" alt="The same card in the light theme with German labels" width="49%">
 </p>
 
-Plot your room climate where it belongs: on a Mollier h,x diagram. The card reads the daily means of a temperature and a humidity sensor from Home Assistant's long-term statistics and plots one point per day. Draw your comfort zone and add orange and red warning bands around it.
+Plot your room climate where it belongs: on a Mollier h,x diagram, or, with US customary units, on the ASHRAE psychrometric chart. The card reads the daily means of a temperature and a humidity sensor from Home Assistant's long-term statistics and plots one point per day. Draw your comfort zone and add orange and red warning bands around it.
 
 **[▶ Try it in the live demo](https://retomarek.github.io/mollier-hx-card/)**: both cards side by side, with sample rooms, sliders for the comfort zone, the room and the outside air, themes and languages, and the YAML to copy.
 
@@ -75,7 +75,7 @@ outdoor_weather_entity: weather.home   # fallback for the current outside point
 
 ### Options
 
-Units: all temperatures in the card config (comfort zone, `temperature_range`) are **°C**, also when your sensors report °F; warning-band offsets are in **K**. Humidity sensors report relative humidity in **%**.
+Units: the config is read in the units of the card's [unit system](#units-metric-or-imperial): metric **°C**, **K** (band offsets), **g/kg**, **m**, hPa / Pa; imperial **°F**, **°F**, **gr/lb**, **ft**, **inHg**, also when your sensors report the other unit. Humidity sensors report relative humidity in **%**.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -84,11 +84,12 @@ Units: all temperatures in the card config (comfort zone, `temperature_range`) a
 | `title` | string | | Card title. |
 | `days_to_show` | number | `7` | Days of history, 1 to 3650 (daily statistics are kept indefinitely). |
 | `coloring` | string | `season` | `season`, `age` (older days fade) or `chronological` (days joined by a line). |
-| `altitude` | number | Home Assistant's elevation | Altitude in m above sea level (−500 to 9000). Sets the air pressure from the standard atmosphere and overrides `pressure`. See [Altitude and air pressure](#altitude-and-air-pressure). |
-| `pressure` | number | from the altitude | Air pressure in hPa (300–1100) or Pa (30000–110000), instead of an altitude. |
+| `units` | `auto` \| `metric` \| `imperial` | `auto` | Unit system of the config and of the diagram: metric draws the Mollier h,x diagram, imperial the ASHRAE psychrometric chart in °F and gr/lb. `auto` follows Home Assistant. See [Units](#units-metric-or-imperial). |
+| `altitude` | number | Home Assistant's elevation | Altitude above sea level in m (−500 to 9000) or ft (imperial). Sets the air pressure from the standard atmosphere and overrides `pressure`. See [Altitude and air pressure](#altitude-and-air-pressure). |
+| `pressure` | number | from the altitude | Air pressure in hPa (300–1100) or Pa (30000–110000); imperial in inHg. Instead of an altitude. |
 | `convention` | string | `classical` | `classical` (per kg dry air, Recknagel) or `glueck` (per kg moist air). Same physics, slightly different tilt of the isotherms. |
-| `x_range` | `[min, max]` | `[0, 18]` | Absolute-humidity axis in g/kg. |
-| `temperature_range` | `[min, max]` | `[-10, 40]` | Temperature axis in °C. Room and outside points beyond the axes show as an arrow on the edge. |
+| `x_range` | `[min, max]` | `[0, 18]` g/kg (imperial `[0, 180]` gr/lb) | Absolute-humidity axis. |
+| `temperature_range` | `[min, max]` | `[-10, 40]` °C (imperial `[10, 110]` °F) | Temperature axis. Room and outside points beyond the axes show as an arrow on the edge. |
 | `comfort_zone` | object | | Comfort zone, see [below](#comfort-zone-and-warning-bands). |
 | `warning_bands` | `true` or object | | Needs `comfort_zone`. `true` uses the defaults, see [below](#comfort-zone-and-warning-bands). |
 | `outdoor_temperature_entity` | string | | Outside temperature sensor. With `outdoor_humidity_entity` it gives the current outside point. |
@@ -162,6 +163,22 @@ With an outside sensor pair (or a weather entity) the card adds the outside air 
 Hover or tap the outside point for its temperature, humidity, water content and dew point (tap again or tap the diagram to close; the daily points and the current room point work the same way). See [The h,x diagram in five minutes](#the-hx-diagram-in-five-minutes) for the background.
 
 </details>
+
+### Units: metric or imperial
+
+The card follows Home Assistant's unit system (*Settings → System → General → Unit system*): with **US customary** it works in imperial units and draws the **psychrometric chart** used in the US (ASHRAE): dry-bulb temperature in °F across, humidity ratio in gr/lb up the right side, the saturation curve top left. It is the same physics as the h,x diagram, transposed. With metric units it draws the Mollier h,x diagram. `units: metric` or `units: imperial` sets it per card.
+
+| | metric | imperial |
+| --- | --- | --- |
+| Diagram | Mollier h,x | ASHRAE psychrometric chart |
+| Temperatures (`comfort_zone`, `temperature_range`) | °C | °F |
+| Band offsets (`warning_bands`) | K | °F |
+| Absolute humidity (`x_range`, zone, bands) | g/kg | gr/lb (grains per pound, g/kg × 7) |
+| `altitude` / `pressure` | m / hPa or Pa | ft / inHg |
+| Default axes | −10 to 40 °C, 0–18 g/kg | 10–110 °F, 0–180 gr/lb |
+| Default comfort zone (Comfort Compass Card) | 20–26 °C, 30–65 %, ≤ 12 g/kg | 68–79 °F, 30–65 %, ≤ 84 gr/lb |
+
+The numbers in the YAML are read in these units, so a config written for one system means something else in the other. In the visual editor, switching *Units* converts the values. A comfort zone that looks like the other unit (above 45 with metric, below 45 with imperial) shows a hint on the card.
 
 ### Altitude and air pressure
 
