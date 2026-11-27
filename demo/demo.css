@@ -464,6 +464,11 @@ details.section[open] > summary.heading {
     color: #c2185b;
 }
 
+.yaml-card .c {
+    color: var(--secondary-text-color, #727272);
+    font-style: italic;
+}
+
 :root.dark .yaml-card .k {
     color: #81d4fa;
 }

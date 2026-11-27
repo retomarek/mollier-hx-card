@@ -280,6 +280,7 @@ function highlight(yaml) {
     return yaml
         .split('\n')
         .map((line) => {
+            if (line.startsWith('#')) return `<span class="c">${esc(line)}</span>`;
             const m = line.match(/^(\s*)([\w]+):(\s?)(.*)$/);
             if (!m) return esc(line);
             const [, sp, key, gap, val] = m;
@@ -877,7 +878,10 @@ function render() {
 
 const yamlText = new Map();
 function showYaml(sel, config) {
-    const text = toYaml(config);
+    // The units come from Home Assistant (units: auto), not from the YAML: say
+    // which unit system the numbers are meant for.
+    const note = imperial() ? '# for Home Assistant with US customary units (°F, gr/lb)\n' : '';
+    const text = note + toYaml(config);
     yamlText.set(sel, text);
     $(`${sel} pre`).innerHTML = highlight(text);
 }
